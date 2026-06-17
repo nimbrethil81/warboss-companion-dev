@@ -1,4 +1,3 @@
-Wargame companion - development and test repo
 # Warboss Companion
 
 A web app to guide wargamers through the process of creating their army, playing games and learning from their experiences.
