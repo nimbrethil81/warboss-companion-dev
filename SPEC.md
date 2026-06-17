@@ -103,6 +103,15 @@ Game-specific values — number of turns, phase names, prompt text, unit stats �
 | Offline state | localStorage | Game state held locally during play; written to Sheets at game end only |
 | Game content | JSON files in `/data/` | Static, version-controlled, works offline, easy to extend |
 
+### Repositories & Deployment
+
+| Repo | URL | Purpose |
+|---|---|---|
+| Live | https://nimbrethil81.github.io/warboss-companion/ | Production — stable, tested releases only |
+| Development | https://nimbrethil81.github.io/warboss-companion-dev/ | Active development and testing |
+
+**Workflow:** All changes are built and tested in the dev repo first. A GitHub Action copies changed files from dev to live, overwriting files of the same name. No change goes to live without passing in dev first.
+
 ### Repository & File Structure
 
 ```
@@ -129,9 +138,12 @@ warboss-companion/
 │
 ├── data/
 │   ├── systems/
+│   │   ├── index.json      ← Manifest of all supported game systems
 │   │   └── kow.json        ← KoW turn sequence, phases, prompts, rules
 │   └── armies/
-│       └── goblins.json    ← Goblin unit roster with stats
+│       └── kow/
+│           ├── index.json  ← Manifest of all KoW factions
+│           └── goblins.json ← Goblin unit roster with stats
 │
 └── assets/
     └── icons/              ← PWA icons (multiple sizes)
@@ -142,7 +154,9 @@ warboss-companion/
 - `sheets.js` is the only file that touches Google Sheets. When migrating to a new database, only this file changes.
 - `storage.js` is the only file that touches localStorage. Centralises offline fallback.
 - `data/systems/kow.json` is the single source of truth for all KoW game rules, turn sequence, and prompts. Adding a new game system means adding a new JSON file alongside it — no code changes required.
-- `data/armies/goblins.json` holds static unit reference data. This belongs in version control, not in Sheets. Sheets stores game results and reflections.
+- `data/armies/kow/goblins.json` holds static unit reference data. This belongs in version control, not in Sheets. Sheets stores game results and reflections.
+- `data/armies/kow/index.json` is a manifest listing all available factions for KoW. The app reads this to discover armies without needing to enumerate directory contents (which browsers cannot do natively). Adding a new army means adding the file and one line to this manifest.
+- `data/systems/index.json` is a manifest listing all supported game systems. Adding a new game system means adding a new systems JSON file, a new `armies/{system}/` folder, and one line to this manifest.
 
 ### Data Flow
 
@@ -430,7 +444,32 @@ This file is the single source of truth for all Kings of War game rules, turn st
 }
 ```
 
-### `goblins.json` — Army Reference Data
+### `data/systems/index.json` — Game System Manifest
+
+Allows the app to discover all supported game systems without hardcoding them in JS.
+
+```json
+{
+  "systems": [
+    { "id": "kow", "name": "Kings of War", "version": "v4", "file": "kow.json" }
+  ]
+}
+```
+
+### `data/armies/kow/index.json` — Army Manifest
+
+Allows the app to discover all available factions for a given game system.
+
+```json
+{
+  "system": "kow",
+  "armies": [
+    { "id": "goblins", "name": "Goblins", "file": "goblins.json" }
+  ]
+}
+```
+
+### `data/armies/kow/goblins.json` — Army Reference Data
 
 Static reference for the Goblin army. Used in Muster to build rosters and in Battle to populate the unit list with relevant stats and special rules.
 
@@ -584,11 +623,13 @@ Static reference for the Goblin army. Used in Muster to build rosters and in Bat
 Adding a second game system requires no changes to application code. The process is:
 
 1. Create `data/systems/{system_id}.json` following the schema defined in section 4
-2. Create `data/armies/{faction}.json` for at least one army in that system
-3. Add the system to a `data/systems/index.json` manifest so the app can discover it
-4. Test that all prompts and quick reference rules render correctly in Battle mode
+2. Add the new system to `data/systems/index.json`
+3. Create `data/armies/{system_id}/` folder
+4. Create `data/armies/{system_id}/index.json` listing available factions
+5. Create `data/armies/{system_id}/{faction}.json` for at least one army
+6. Test that all prompts and quick reference rules render correctly in Battle mode
 
-The app's JS reads the game system dynamically from the JSON — there are no hardcoded references to Kings of War in `battle.js`, `muster.js`, or `chronicle.js`.
+The app's JS reads the game system dynamically from the JSON manifests — there are no hardcoded references to Kings of War in `battle.js`, `muster.js`, or `chronicle.js`.
 
 ---
 
