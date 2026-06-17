@@ -1,0 +1,22 @@
+{
+  "army_id": "goblins",
+  "army_name": "Goblins",
+  "game_system": "kow",
+  "units": [
+    {
+      "unit_id": "goblin-rabble-regiment",
+      "name": "Goblin Rabble",
+      "size": "Regiment",
+      "type": "Infantry",
+      "sp": 5,
+      "me": "5+",
+      "sh": "-",
+      "de": "3+",
+      "att": 15,
+      "ne": "14/16",
+      "pts": 80,
+      "special_rules": ["Rabble"],
+      "traits": ["Goblin"]
+    }
+  ]
+}
