@@ -1,0 +1,43 @@
+name: Deploy to Live
+
+on:
+ 
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Download all files from this (dev) repo
+      - name: Checkout dev repo
+        uses: actions/checkout@v4
+        with:
+          path: dev
+
+      # Step 2: Download the live repo
+      - name: Checkout live repo
+        uses: actions/checkout@v4
+        with:
+          repository: nimbrethil81/warboss-companion
+          token: ${{ secrets.LIVE_REPO_PAT }}
+          path: live
+
+      # Step 3: Copy all dev files into the live repo folder
+      #         The .github folder is excluded so the live repo keeps its own settings
+      - name: Copy files from dev to live
+        run: |
+          rsync -av --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            dev/ live/
+
+      # Step 4: Commit and push the changes to the live repo
+      - name: Commit and push to live repo
+        run: |
+          cd live
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Deploy from dev: ${{ github.sha }}"
+          git push
