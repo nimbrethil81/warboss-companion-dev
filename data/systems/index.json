@@ -1,0 +1,5 @@
+{
+  "systems": [
+    { "id": "kow", "name": "Kings of War", "version": "v4", "file": "kow.json" }
+  ]
+}
