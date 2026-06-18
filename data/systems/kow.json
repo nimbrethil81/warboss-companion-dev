@@ -6,167 +6,217 @@
   "phases": [
     {
       "phase_id": "movement",
-      "phase_name": "Movement phase",
+      "phase_name": "Movement Phase",
       "turn": "yours",
       "prompts": [
         {
           "prompt_id": "regeneration",
-          "text": "Resolve Regeneration for any eligible units before moving",
+          "text": "Resolve Regeneration before moving",
           "priority": "high",
-          "detail": "Regeneration is declared at the start of the Movement phase, before any orders are issued."
+          "detail": "Regeneration is declared at the start of the Movement Phase, before any orders are issued. If a unit is also Withdrawing, regeneration is still rolled first — then the Nerve test for the Withdraw follows."
         },
         {
           "prompt_id": "commands",
-          "text": "Issue Command Orders before units move",
+          "text": "Issue Command Orders — but not mid-pivot",
           "priority": "high",
-          "detail": "Commands can be issued at any point during a unit's move, but declaring them first avoids forgetting."
+          "detail": "Commands can be issued at any point during a unit's move. However, a Command Order cannot be issued mid-pivot — complete the pivot first. Commanders can each issue commands independently at different points in the phase."
         },
         {
-          "prompt_id": "chaff_angles",
-          "text": "Are vulnerable units protected? Check chaff unit angles",
-          "priority": "medium",
-          "detail": "Angle chaff units in front of valuable shooting units to prevent enemy charges fitting in gaps."
-        },
-        {
-          "prompt_id": "pivot_clear",
-          "text": "Pivoting: you can pivot through units — but must end clear",
-          "priority": "medium",
-          "detail": "Units can pivot through friendly and enemy units and all terrain types, but the entire move must end clear."
+          "prompt_id": "wild_charge",
+          "text": "Wild Charge: measure first, declare, then roll",
+          "priority": "high",
+          "detail": "Measure to target first. If the distance is within [Sp×2 + max possible Wild Charge distance], you may declare the charge, then roll. If the roll is not enough, give a different order — you cannot select a new charge target. If carrying a Loot Counter, the unit uses its actual Speed (not reduced to 5) for the purpose of measuring Wild Charge range."
         },
         {
           "prompt_id": "charge_blocking",
           "text": "Charging units treat all friendlies as Blocking Terrain",
           "priority": "high",
-          "detail": "You cannot charge through friendly units. Exception: other units simultaneously charging the same target."
+          "detail": "You cannot charge through friendly units. The one exception: other friendly units that are also simultaneously charging the same target move as if friendly units are not there. Check all charging paths before moving anyone."
         },
         {
-          "prompt_id": "wild_charge",
-          "text": "Wild Charge units: measure first, declare, then roll",
-          "priority": "high",
-          "detail": "Measure to target first. If in range of [Sp×2 + max Wild Charge], declare the charge, then roll. If roll fails, give a different order — you cannot select a new charge target."
+          "prompt_id": "pivot_clear",
+          "text": "Pivoting: you can pivot through anything — but must end clear",
+          "priority": "medium",
+          "detail": "Units can pivot through friendly units, enemy units, and all terrain types including Blocking Terrain. The entire move must still end clear of any unit or Blocking Terrain. You can begin a pivot while overlapping a friendly unit (e.g. after moving forward into overlap), as long as you end clear."
+        },
+        {
+          "prompt_id": "chaff_angles",
+          "text": "Check chaff unit angles — are your valuable units protected?",
+          "priority": "medium",
+          "detail": "Angle chaff units carefully in front of vulnerable shooting units or heroes. A small gap can allow an enemy charge to slip through. Think about where the front-facing mid-point of a potential charger sits — that determines which facing they charge."
+        },
+        {
+          "prompt_id": "multi_charge_fit",
+          "text": "Multiple charges: measure fit before moving anyone",
+          "priority": "medium",
+          "detail": "If declaring a multiple charge, check that all units can physically fit against the target before moving any of them. If a unit is later found not to fit, it does not charge — but it still blocks movement for the other chargers. Measure first."
         }
       ]
     },
     {
       "phase_id": "ranged",
-      "phase_name": "Ranged phase",
+      "phase_name": "Ranged Phase",
       "turn": "yours",
       "prompts": [
         {
           "prompt_id": "check_all_shooters",
-          "text": "Check every unit — heroes, spellcasters, ranged weapons",
+          "text": "Check every unit — heroes, spellcasters, war engines",
           "priority": "high",
-          "detail": "Individual heroes, spellcasters, and units with ranged special rules are easy to forget. Go through the full roster."
-        },
-        {
-          "prompt_id": "cover",
-          "text": "Cover check: -1 to hit unless height difference is 3+ levels",
-          "priority": "medium",
-          "detail": "Target is in cover if you cannot draw a line to at least half its facing without obstruction, or its centre-point is in Difficult Terrain. Ignore if intervening unit/terrain is 3+ height levels smaller than both shooter and target."
+          "detail": "Individual heroes, spellcasters, and war engines are easy to forget. Go through the full roster before declaring you are done. A unit that moved At the Double cannot shoot. Engaged units cannot shoot — with the rare exception of units Engaged only with a Yielding hero, who may shoot at other targets."
         },
         {
           "prompt_id": "ranged_nerve",
-          "text": "Ranged attacks cause Wavering only — not Rout (unless target is Devastated)",
+          "text": "Ranged Nerve tests: Wavering only — not Rout",
           "priority": "high",
-          "detail": "A failed Nerve test from ranged fire results in Wavering, not removal. Exception: Devastated units treat Wavering as Rout."
+          "detail": "A failed Nerve test from ranged fire results in Wavering, not removal. The unit is restricted to Halt!, Change Facing!, or Back! until the end of its next Turn, and cannot shoot. Exception: Devastated units treat Wavering results as Routs. Double 6 from a ranged attack causes Wavering even if the unit would otherwise have passed."
+        },
+        {
+          "prompt_id": "cover",
+          "text": "Cover check: -1 to hit if target is obscured",
+          "priority": "medium",
+          "detail": "Target is in cover if you cannot draw a line to at least half its facing without it being blocked, or if its centre-point is inside Difficult Terrain. Height exception: intervening units or terrain 3+ height levels smaller than both shooter and target provide no cover. Multiple cover sources still only apply a single -1 modifier."
         },
         {
           "prompt_id": "terrain_shooting",
           "text": "Shooting from within Difficult Terrain: no penalty to the shooter",
           "priority": "medium",
-          "detail": "A unit with its centre-point inside Difficult Terrain can ignore that terrain when determining its own LOS."
+          "detail": "A unit with any part of its front facing inside Difficult Terrain can ignore that terrain when drawing its own Line of Sight. The terrain may still provide cover to the target, but does not affect the shooter's ability to see out."
+        },
+        {
+          "prompt_id": "halt_aiming",
+          "text": "Did you Halt? You get +1 to hit",
+          "priority": "medium",
+          "detail": "A unit that received a Halt! order this Turn (including a unit that did not move) gets +1 on all to-hit rolls in the Ranged Phase. Remember to apply this before rolling."
         }
       ]
     },
     {
       "phase_id": "combat",
-      "phase_name": "Combat phase",
+      "phase_name": "Combat Phase",
       "turn": "yours",
       "prompts": [
         {
           "prompt_id": "hindered",
-          "text": "Hindered charge? -1 to hit for this combat",
+          "text": "Hindered charge? -1 to hit for this Combat",
           "priority": "high",
-          "detail": "A charge is Hindered if the charging unit's move went through or ended over any Difficult Terrain or Obstacle. Units ordered to Reform are never Hindered."
+          "detail": "A charge is Hindered if the charging unit's move (including pivot, alignment, or slide) went through or ended over any Difficult Terrain or Obstacle. Units given a Reform! order are never Hindered by terrain. A unit can only be Hindered once per charge regardless of how many terrain pieces it crossed."
         },
         {
-          "prompt_id": "brutal",
-          "text": "Any units with Brutal? Apply modifier to damage rolls",
-          "priority": "medium",
-          "detail": "Brutal adds to the damage roll result. Multiple sources of Brutal are cumulative."
-        },
-        {
-          "prompt_id": "elite_vicious",
-          "text": "Elite or Vicious? Re-roll misses / re-roll 1s to damage",
-          "priority": "medium",
-          "detail": "Elite: re-roll all failed to-hit dice. Vicious: re-roll all dice that score a natural unmodified 1 when rolling to damage."
-        },
-        {
-          "prompt_id": "iron_resolve",
-          "text": "Iron Resolve? If Steady, regain (n) damage points (max 3)",
-          "priority": "medium",
-          "detail": "If the unit passes its Nerve test (is Steady), it regains n points of previously suffered damage, up to a maximum of 3."
+          "prompt_id": "flank_rear_bonus",
+          "text": "Check your attack facing — flank doubles, rear trebles",
+          "priority": "high",
+          "detail": "Attacks directed at a flank are doubled before rolling to hit. Attacks directed at a rear are trebled. The facing is determined by where the attacking unit's front facing mid-point sits relative to the target's arcs at the time of the charge. War Engines are always treated as attacked from the rear regardless of actual facing."
         },
         {
           "prompt_id": "magic_items",
-          "text": "Check magic items on this unit before rolling",
+          "text": "Check magic items and special rules on this unit before rolling",
+          "priority": "high",
+          "detail": "Review artefacts on the attacking unit and apply any combat modifiers before rolling to hit. Common ones to check: Blade of Slashing (re-roll one failed to-hit die), Crushing Strength (bonus to damage rolls), Elite (re-roll failed to-hit dice)."
+        },
+        {
+          "prompt_id": "brutal",
+          "text": "Any units with Brutal? Apply to damage rolls",
           "priority": "medium",
-          "detail": "Review artefacts on the attacking unit. Apply any combat modifiers before rolling to hit."
+          "detail": "Brutal adds a fixed bonus to damage roll results. Multiple sources of Brutal from different items or abilities are cumulative — add them all together."
+        },
+        {
+          "prompt_id": "elite_vicious",
+          "text": "Elite or Vicious? Check for re-rolls",
+          "priority": "medium",
+          "detail": "Elite: re-roll all failed to-hit dice (the re-roll result stands). Vicious: re-roll all dice that score a natural, unmodified 1 when rolling to damage. These are separate rules and both can apply."
+        },
+        {
+          "prompt_id": "iron_resolve",
+          "text": "Iron Resolve? If Steady, regain damage points",
+          "priority": "medium",
+          "detail": "If a unit with Iron Resolve (n) passes its Nerve test (is Steady), it regains n points of previously suffered damage, up to a maximum of 3 points per test."
+        },
+        {
+          "prompt_id": "random_attacks_split",
+          "text": "Random attacks (e.g. D6): roll first, then decide how to split",
+          "priority": "medium",
+          "detail": "If a unit has a random number of attacks, determine the total first by rolling, then decide how to allocate them between engaged enemy units. Special attacks that only apply against certain unit types (Rampage, Slayer) can only be allocated to qualifying targets."
         }
       ]
     },
     {
       "phase_id": "opponent_turn",
-      "phase_name": "Opponent's turn",
+      "phase_name": "Opponent's Turn",
       "turn": "opponent",
       "prompts": [
         {
-          "prompt_id": "your_defence",
-          "text": "Know your Defence stat when being damaged",
+          "prompt_id": "wavering_status",
+          "text": "Any of your units Wavering? Limited orders only",
           "priority": "high",
-          "detail": "Your opponent needs to match or beat your De value when rolling to damage. Know it before they roll."
+          "detail": "Wavering units can only be issued Halt!, Change Facing!, or Back!. They cannot charge, shoot, or use most other orders. Wavering is removed at the end of the Wavering unit's own next Turn — so a unit that Wavered in the opponent's Turn recovers at the end of your next Turn."
         },
         {
           "prompt_id": "your_nerve",
-          "text": "Know your Nerve stat — check if you're at risk before the roll",
+          "text": "Know your Nerve — check if any units are at risk",
           "priority": "high",
-          "detail": "Add current damage to the 2D6 roll. If the total meets or exceeds your Ne value, you fail."
-        },
-        {
-          "prompt_id": "wavering_status",
-          "text": "Any of your units Wavering? They can only Halt!, Change Facing!, or Back!",
-          "priority": "high",
-          "detail": "Wavering units cannot charge, shoot, or use most orders. Wavering is removed at the end of the unit's own next Turn."
+          "detail": "Your opponent adds your current damage to their 2D6 roll. If the total meets or exceeds your Ne value, you fail. Double 1 always passes. Double 6 from ranged Wavers you even if passed; from combat or Withdraw causes D6 additional damage (no further test). Check which of your units are close to their Nerve threshold before your opponent rolls."
         },
         {
           "prompt_id": "inspiring_check",
-          "text": "Inspiring nearby? Failed Nerve test must be re-rolled",
+          "text": "Inspiring nearby? You must re-roll a failed Nerve test",
+          "priority": "high",
+          "detail": "If a friendly Inspiring unit is within 6\" (or 9\" for Very Inspiring) when a Nerve test is failed, that test must be re-rolled. The second result stands — even if it's worse. This applies during both Ranged and Combat Nerve tests, and during Withdraw tests."
+        },
+        {
+          "prompt_id": "your_defence",
+          "text": "Know your Defence stat before your opponent rolls to damage",
           "priority": "medium",
-          "detail": "If a friendly Inspiring unit is within 6\" (or 9\" for Very Inspiring), re-roll the failed Nerve test. Second result stands."
+          "detail": "Your opponent needs to match or beat your De value on each die. Any die rolling a 1 always fails to damage. Any die rolling a 6 always succeeds. Check if any special rules affect your Defence this phase (e.g. cover, Phalanx)."
+        },
+        {
+          "prompt_id": "devastated_check",
+          "text": "Are any of your units Devastated?",
+          "priority": "medium",
+          "detail": "A unit is Devastated the moment its damage total exceeds its Nerve value. It immediately halves its Attacks (round down) and any subsequent failed Nerve test causes Rout — there are no more Wavering results for a Devastated unit. Mark Devastated units clearly."
         }
       ]
     }
   ],
   "quick_reference": [
     {
+      "rule_id": "nerve_test",
+      "title": "Nerve Tests",
+      "body": "Roll 2D6, add current damage on the unit. Compare to the unit's Ne value (written as 'Waver/Rout', e.g. 14/16). If total is lower than Waver value: Steady. If total is equal to or higher than Waver value but lower than Rout: Wavering (from ranged) or Rout (from combat). If total equals or exceeds Rout value: Rout. Double 1 always passes. Double 6: from ranged = Waver even if passed; from combat or Withdraw = D6 extra damage, no further test."
+    },
+    {
       "rule_id": "withdraw",
-      "title": "Withdrawing",
-      "body": "Take a Nerve test first. Pass: face enemy, move 2D6\" directly backward — terrain does not affect this movement. Touch an enemy unit = Routed. Touch Blocking Terrain = stop and Wavering. Can move through friendlies; if you cannot clear them, keep going until clear then Wavering."
+      "title": "Withdraw!",
+      "body": "Can only be ordered to a unit Engaged on one facing only. If the unit has Regeneration, roll it first, then take the Nerve test. On a failed Nerve test: Routed, removed immediately. On a pass: pivot to face the enemy (if needed), then move 2D6\" directly backward — terrain and obstacles do not affect this move. Touch an enemy unit = Routed. Touch Blocking Terrain = stop and Wavering. Moving through friendlies: if the 2D6 roll is enough to clear them, fine. If not, keep going until clear, then stop — Wavering. A unit that Withdraws must drop any Loot Counters it carries at the start of the order."
     },
     {
       "rule_id": "devastated",
-      "title": "Devastated units",
-      "body": "When damage exceeds the unit's Nerve value, it is Devastated. Halve Attacks (round down). Any failed Nerve test now causes Rout — no more Wavering results."
-    },
-    {
-      "rule_id": "double_six",
-      "title": "We Are Doomed (double 6)",
-      "body": "Ranged: unit Wavers even if it would have passed. Combat or Withdraw: unit takes D6 extra damage (no further Nerve test triggered). Double 1 always passes regardless of damage."
+      "title": "Devastated Units",
+      "body": "When a unit's damage total exceeds its Nerve value (not the Rout threshold — any excess), the unit is immediately Devastated. Halve Attacks stat (round down) — this applies to all attacks including ranged and Magical Missiles. Any failed Nerve test from this point causes Rout. There are no more Wavering results. If damage is subsequently reduced below the Nerve value (e.g. by Heal), the Devastated status is removed."
     },
     {
       "rule_id": "flank_rear",
-      "title": "Flank and rear charges",
-      "body": "Attacks directed at a flank are doubled before rolling to hit. Attacks directed at a rear are tripled. Determined by where the charging unit's front facing mid-point sits at time of declaration."
+      "title": "Flank and Rear Charges",
+      "body": "Determine which arc the charging unit's front facing mid-point falls in — that is the facing being charged. Flank: attacks doubled before rolling to hit. Rear: attacks tripled before rolling to hit. War Engines: always treated as attacked from the rear. Individuals: do not double or treble their own attacks against flanks or rears (but enemies still double/treble against them)."
+    },
+    {
+      "rule_id": "inspiring",
+      "title": "Inspiring / Very Inspiring",
+      "body": "If a unit fails a Nerve test (including a Withdraw test) and a friendly Inspiring unit is within 6\" (or 9\" for Very Inspiring), the test must be re-rolled. Second result stands. Inspiring only affects the units specified — 'friendly units' does not include the Inspiring unit itself unless explicitly stated (e.g. Aura)."
+    },
+    {
+      "rule_id": "individual",
+      "title": "Individual Units",
+      "body": "May pivot freely before receiving an order (unless Engaged). Enemies suffer -1 to hit against Individuals in ranged. Individuals do not double/treble their own attacks against flanks/rears — but enemies still do against them. Individuals do treble attacks against War Engines. Non-Individual units automatically pass the Nerve test when Withdrawing from a combat where they are only Engaged with Individuals. Individuals cannot pick up or carry Loot Counters."
+    },
+    {
+      "rule_id": "post_combat_orders",
+      "title": "Post-Combat Orders",
+      "body": "After routing all enemies in a Combat, units that are no longer Engaged may be given one post-combat order: Hold! (pivot to any facing), Fall Back! (D3\" directly backward, treats friends as Blocking Terrain), Sideways! (D3\" left or right), Forward! (D6\" directly forward). These are declared first for all eligible units, then resolved in the order of your choice. Forward! can trigger a new Combat if contact is made with an enemy."
+    },
+    {
+      "rule_id": "loot_counters",
+      "title": "Loot Counters",
+      "body": "While carrying a Loot Counter, a unit's Speed is reduced to 5 (unless it is already less than 5). A unit with a Loot Counter cannot be moved by Wind Blast, Enthral, or Surge spells. A unit must drop its Loot Counter at the start of a Withdraw! order. Individuals cannot pick up or carry Loot Counters."
     }
   ]
 }
