@@ -341,7 +341,6 @@
     <!-- ── Gear / settings button ──────────────────────── -->
     <button
       id="gear-btn"
-      onclick="openModal()"
       aria-label="Open settings"
       aria-haspopup="dialog"
       type="button"
@@ -360,6 +359,19 @@
         <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
       </svg>
     </button>
+
+    <!--
+      ── Status notices ────────────────────────────────────
+      Both hidden by default. app.js shows them as needed.
+      #offline-banner: shown when navigator.onLine is false.
+      #data-notice:    shown when JSON config fetch fails or
+                       falls back to cache.
+      Skin CSS handles the visual treatment of both.
+    -->
+    <div id="offline-banner" role="status" aria-live="polite" hidden>
+      Playing offline — some features unavailable
+    </div>
+    <div id="data-notice" role="status" aria-live="polite" hidden></div>
 
 
     <!--
@@ -408,7 +420,6 @@
       id="page-battle"
       role="main"
       aria-labelledby="battle-title"
-      hidden
     >
       <div class="page-header">
         <div>
@@ -473,7 +484,6 @@
       role="dialog"
       aria-modal="true"
       aria-label="Theme settings"
-      onclick="overlayClick(event)"
     >
       <div id="modal">
         <div class="modal-handle" aria-hidden="true"></div>
@@ -488,13 +498,15 @@
           <div class="toggle-track" id="track-world">
             <button
               class="toggle-opt on"
-              onclick="setAxis('world', 'fantasy')"
+              data-axis="world"
+              data-value="fantasy"
               type="button"
               aria-pressed="true"
             >Fantasy</button>
             <button
               class="toggle-opt"
-              onclick="setAxis('world', 'scifi')"
+              data-axis="world"
+              data-value="scifi"
               type="button"
               aria-pressed="false"
             >Sci-Fi</button>
@@ -512,13 +524,15 @@
           <div class="toggle-track" id="track-tone">
             <button
               class="toggle-opt on"
-              onclick="setAxis('tone', 'grimdark')"
+              data-axis="tone"
+              data-value="grimdark"
               type="button"
               aria-pressed="true"
             >Grimdark</button>
             <button
               class="toggle-opt"
-              onclick="setAxis('tone', 'madcap')"
+              data-axis="tone"
+              data-value="madcap"
               type="button"
               aria-pressed="false"
             >Madcap</button>
@@ -549,7 +563,6 @@
     <button
       class="nav-btn active"
       id="btn-muster"
-      onclick="switchTab('muster')"
       aria-label="Muster — prepare your army"
       aria-current="page"
       type="button"
@@ -578,7 +591,6 @@
       <button
         class="nav-battle-btn"
         id="btn-battle"
-        onclick="switchTab('battle')"
         aria-label="Battle — track the current game"
         type="button"
       >
@@ -625,7 +637,6 @@
     <button
       class="nav-btn"
       id="btn-chronicle"
-      onclick="switchTab('chronicle')"
       aria-label="Chronicle — record the battle"
       type="button"
     >
