@@ -13,7 +13,7 @@
  *   wbc_system_config  — cached kow.json content
  */
 
-const Storage = (() => {
+const WBCStorage = (() => {
 
   // ─── KEYS ────────────────────────────────────────────────────────────────────
   // All key strings live here. No magic strings anywhere else in this module.
