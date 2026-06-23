@@ -11,10 +11,10 @@
  *
  * Dependencies (must be loaded before this file):
  *   - skins.js  → window.WBC_SKINS
- *   - storage.js → window.WBC_STORAGE
+ *   - storage.js → window.WBCStorage
  *
  * Does NOT:
- *   - Touch localStorage directly (all via WBC_STORAGE)
+ *   - Touch localStorage directly (all via WBCStorage)
  *   - Touch Google Sheets (all via sheets.js, called from mode modules)
  *   - Hardcode any game-specific values (all content from kow.json)
  *   - Implement mode logic (muster.js / battle.js / chronicle.js handle that)
@@ -91,7 +91,7 @@
   /* ─── Skin initialisation ──────────────────────────────────────────────── */
 
   function _initSkin() {
-    var savedKey = WBC_STORAGE.get(STORAGE_KEY_SKIN) || DEFAULT_SKIN;
+    var savedKey = WBCStorage.get(STORAGE_KEY_SKIN) || DEFAULT_SKIN;
     _applySkinKey(savedKey);
     _syncSkinModal(savedKey);
   }
@@ -112,7 +112,7 @@
     }
     /* Update internal state so modal toggles reflect current skin */
     _skinState = _skinKeyToState(key);
-    WBC_STORAGE.set(STORAGE_KEY_SKIN, key);
+    WBCStorage.set(STORAGE_KEY_SKIN, key);
   }
 
   function _syncSkinModal(key) {
@@ -292,7 +292,7 @@
           throw new Error('System config is malformed');
         }
         WBC.config = config;
-        WBC_STORAGE.set(STORAGE_KEY_CONFIG, JSON.stringify(config));
+        WBCStorage.set(STORAGE_KEY_CONFIG, JSON.stringify(config));
         _onConfigReady();
         return _loadArmyIndex(WBC.currentSystem);
       })
@@ -304,7 +304,7 @@
 
   function _loadConfigFromCache() {
     try {
-      var raw = WBC_STORAGE.get(STORAGE_KEY_CONFIG);
+      var raw = WBCStorage.get(STORAGE_KEY_CONFIG);
       if (raw) {
         WBC.config = JSON.parse(raw);
         WBC.currentSystem = WBC.config.system_id || DEFAULT_SYSTEM;
@@ -343,12 +343,12 @@
           throw new Error('Army index malformed for system: ' + systemId);
         }
         WBC.armyIndex = index;
-        WBC_STORAGE.set(STORAGE_KEY_ARMY_INDEX, JSON.stringify(index));
+        WBCStorage.set(STORAGE_KEY_ARMY_INDEX, JSON.stringify(index));
       })
       .catch(function (err) {
         console.warn('WBC: army index fetch failed, attempting cache:', err);
         try {
-          var raw = WBC_STORAGE.get(STORAGE_KEY_ARMY_INDEX);
+          var raw = WBCStorage.get(STORAGE_KEY_ARMY_INDEX);
           if (raw) {
             WBC.armyIndex = JSON.parse(raw);
           }
