@@ -1,0 +1,1191 @@
+/*
+ * Warboss Companion — style.css
+ *
+ * This is the STATIC layer. It styles:
+ *   - Shell resets and app frame
+ *   - Offline and data-notice banners
+ *   - Gear button and theme modal
+ *   - Battle mode active UI (tracker, prompts, roster, quick reference)
+ *   - Shared form inputs
+ *   - Utility classes
+ *
+ * What this file does NOT touch:
+ *   - .phone-wrap, .screen, .page, .bottom-nav, .nav-btn, .nav-label,
+ *     .nav-battle-wrap, .nav-battle-btn, .battle-label — all owned by skins.js
+ *   - .army-card, .chronicle-entry, .page-header, .page-title — owned by skins.js
+ *   - Any skin colour variables — those are defined by the active skin block
+ *
+ * CSS custom properties (--gold, --blood, --ash, etc.) are available at runtime
+ * because the skin's <style id="skin-style"> block is injected before this
+ * stylesheet applies to the DOM.
+ *
+ * Dependency: none. This is a pure CSS file; no JavaScript required.
+ */
+
+/* ═══════════════════════════════════════════════════════
+   1. RESET & APP FRAME
+   ═══════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  /* Prevent pull-to-refresh and overscroll bounce — important for table use */
+  overscroll-behavior: none;
+}
+
+/* Prevent text selection during quick taps on the table */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  /* Allow selection inside text inputs and textareas */
+}
+
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Root app container — fills viewport, centres the phone wrap */
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  background: #0a0807; /* ink surround, visible on wider screens */
+}
+
+/* ═══════════════════════════════════════════════════════
+   2. NOTIFICATION BANNERS
+   ═══════════════════════════════════════════════════════ */
+
+/*
+ * Both banners are hidden by default (display:none in index.html).
+ * app.js toggles them by removing/adding the 'hidden' attribute.
+ * They slide in from the top via animation when shown.
+ */
+
+#offline-banner,
+#data-notice {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 800;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  line-height: 1.4;
+  animation: banner-drop 200ms ease forwards;
+}
+
+#offline-banner[hidden],
+#data-notice[hidden] {
+  display: none;
+}
+
+@keyframes banner-drop {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+/* Offline banner: amber/warning — readable on both dark and light skins */
+#offline-banner {
+  background: rgba(160, 100, 0, 0.92);
+  border-bottom: 1px solid rgba(255, 165, 0, 0.4);
+  color: #fff;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#offline-banner::before {
+  content: '⚠';
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* Data notice: muted error — softer than offline because it's recoverable */
+#data-notice {
+  background: rgba(80, 20, 20, 0.92);
+  border-bottom: 1px solid rgba(180, 40, 40, 0.4);
+  color: #f0d8d8;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+#data-notice::before {
+  content: '✕';
+  font-size: 14px;
+  flex-shrink: 0;
+  opacity: 0.8;
+}
+
+/* Dismiss button inside banners — injected by app.js */
+.banner-dismiss {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit;
+  opacity: 0.7;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 4px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.banner-dismiss:hover {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════
+   3. GEAR BUTTON
+   ═══════════════════════════════════════════════════════ */
+
+/*
+ * Positioned inside .phone-wrap (position:relative set by skin).
+ * index.html places it at z-index:500 directly in the HTML.
+ * We only supplement what the inline styles don't cover.
+ */
+
+#gear-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 500;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+#gear-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+#gear-btn:active {
+  transform: scale(0.94);
+}
+
+/* ═══════════════════════════════════════════════════════
+   4. THEME MODAL
+   ═══════════════════════════════════════════════════════ */
+
+#modal-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 600;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  align-items: flex-end;
+}
+
+#modal-overlay.open {
+  display: flex;
+}
+
+#modal {
+  background: #1c1c1e;
+  border: 1px solid #333;
+  border-radius: 20px 20px 0 0;
+  padding: 12px 20px 44px;
+  width: 100%;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.7);
+}
+
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: #3a3a3c;
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+
+.modal-title {
+  font-family: -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #555;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.toggle-row {
+  margin-bottom: 16px;
+}
+
+.toggle-row-label {
+  font-family: -apple-system, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.toggle-row-label strong {
+  color: #ddd;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.toggle-track {
+  display: flex;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.toggle-opt {
+  flex: 1;
+  padding: 9px 8px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: #444;
+  font-family: -apple-system, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.toggle-opt.on {
+  background: #2c2c2e;
+  color: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+.modal-divider {
+  height: 1px;
+  background: #2a2a2a;
+  margin: 4px 0 16px;
+}
+
+/* Axis accent colours on active option */
+#track-world .toggle-opt.on { color: #c8a840; }
+#track-tone  .toggle-opt.on { color: #00c8ff; }
+
+/* ═══════════════════════════════════════════════════════
+   5. BATTLE MODE — TRACKER BAR
+   ═══════════════════════════════════════════════════════ */
+
+/*
+ * The tracker bar sits at the top of #page-battle when a game is active.
+ * It shows turn number, phase name, and the player toggle.
+ * JS adds .battle-active to #page-battle when a game starts.
+ */
+
+#battle-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-bottom: 1px solid var(--tab-border, #352b1c);
+  background: var(--tab-bg, #0f0d0a);
+  flex-shrink: 0;
+}
+
+/* Top row: turn counter + player toggle */
+.tracker-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 8px;
+}
+
+#battle-turn-display {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ash, #8a7f72);
+  letter-spacing: 0.08em;
+}
+
+#battle-turn-display strong {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--gold-light, #f0c94a);
+  letter-spacing: 0.04em;
+}
+
+/* Turn navigation arrows */
+.turn-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.turn-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: none;
+  border: 1px solid var(--tab-border, #352b1c);
+  color: var(--ash, #8a7f72);
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.15s, color 0.15s;
+  line-height: 1;
+}
+
+.turn-nav-btn:hover {
+  border-color: var(--gold-dim, #8a6e2e);
+  color: var(--gold-light, #f0c94a);
+}
+
+.turn-nav-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* Player toggle — YOU / OPPONENT */
+#player-toggle {
+  display: flex;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.player-opt {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--ash, #8a7f72);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.player-opt.active-you {
+  background: var(--blood, #9b1f1f);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+.player-opt.active-opponent {
+  background: var(--sapphire, #2563a8);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Bottom row: phase display + phase navigation */
+.tracker-bottom {
+  display: flex;
+  align-items: center;
+  padding: 6px 16px 10px;
+  gap: 10px;
+}
+
+.phase-nav-btn {
+  background: none;
+  border: none;
+  color: var(--ash, #8a7f72);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.phase-nav-btn:hover { color: var(--gold-light, #f0c94a); }
+.phase-nav-btn:disabled { opacity: 0.25; cursor: default; }
+
+#battle-phase-display {
+  flex: 1;
+  text-align: center;
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-light, #f0c94a);
+}
+
+/* Phase indicator: "your turn" vs "opponent's turn" tint */
+.tracker-bottom.phase-opponent {
+  background: rgba(37, 99, 168, 0.08);
+}
+
+.tracker-bottom.phase-opponent #battle-phase-display {
+  color: #6a99cc;
+}
+
+/* ═══════════════════════════════════════════════════════
+   6. BATTLE MODE — PHASE PROMPTS
+   ═══════════════════════════════════════════════════════ */
+
+#prompts-section {
+  flex-shrink: 0;
+}
+
+.prompts-heading {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--ash, #8a7f72);
+  text-transform: uppercase;
+  padding: 12px 16px 6px;
+  opacity: 0.7;
+}
+
+#prompts-list {
+  list-style: none;
+  padding: 0 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+ * Signature element: prompt items use a left-border colour system
+ * to encode priority without relying solely on text.
+ *
+ * high     = blood-red strip  — "don't forget this or you'll lose"
+ * medium   = gold-dim strip   — "good to check"
+ * dismissed = collapsed, greyed — still scannable, out of the way
+ */
+
+.prompt-item {
+  background: var(--stone, #211b13);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  padding: 10px 12px 10px 16px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s, max-height 0.25s ease, padding 0.2s;
+  max-height: 200px; /* tall enough for any content */
+}
+
+/* Left priority strip */
+.prompt-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 5px 0 0 5px;
+}
+
+.prompt-item.high::before {
+  background: var(--blood, #9b1f1f);
+  box-shadow: 0 0 6px rgba(155, 31, 31, 0.4);
+}
+
+.prompt-item.medium::before {
+  background: var(--gold-dim, #8a6e2e);
+}
+
+.prompt-text {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ash-light, #d4c9b8);
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  padding-right: 20px; /* space for dismiss chevron */
+}
+
+.prompt-detail {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--ash, #8a7f72);
+  line-height: 1.5;
+  margin-top: 6px;
+}
+
+/* Dismiss chevron — top-right of card */
+.prompt-dismiss {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--ash, #8a7f72);
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+
+.prompt-dismiss:hover { opacity: 1; }
+
+/* Dismissed state: collapsed, muted — still present but out of the way */
+.prompt-item.dismissed {
+  max-height: 34px;
+  padding-top: 7px;
+  padding-bottom: 7px;
+  opacity: 0.4;
+  overflow: hidden;
+}
+
+.prompt-item.dismissed .prompt-detail {
+  display: none;
+}
+
+.prompt-item.dismissed .prompt-text {
+  color: var(--ash, #8a7f72);
+  font-size: 11px;
+}
+
+.prompt-item.dismissed::before {
+  opacity: 0.4;
+}
+
+/* Empty prompts state */
+#prompts-list:empty::after {
+  content: 'No prompts for this phase.';
+  display: block;
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--ash, #8a7f72);
+  font-style: italic;
+  padding: 4px 4px 4px 4px;
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════════════════
+   7. BATTLE MODE — UNIT ROSTER
+   ═══════════════════════════════════════════════════════ */
+
+#roster-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* allows scroll within flex parent */
+}
+
+.roster-heading {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--ash, #8a7f72);
+  text-transform: uppercase;
+  padding: 10px 16px 6px;
+  opacity: 0.7;
+  flex-shrink: 0;
+}
+
+#units-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  /* Scroll indicator fade at bottom */
+  -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+}
+
+/* Custom scrollbar — minimal, fits dark theme */
+#units-list::-webkit-scrollbar {
+  width: 2px;
+}
+#units-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+#units-list::-webkit-scrollbar-thumb {
+  background: var(--tab-border, #352b1c);
+  border-radius: 2px;
+}
+
+.unit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--stone, #211b13);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  padding: 9px 10px 9px 14px;
+  position: relative;
+  overflow: hidden;
+  transition: opacity 0.2s, border-color 0.2s;
+  min-height: 44px; /* large enough tap target on table */
+}
+
+/* Left accent stripe — colour coded by unit type (set by JS via inline style) */
+.unit-row::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--gold-dim, #8a6e2e);
+  border-radius: 5px 0 0 5px;
+}
+
+.unit-name {
+  flex: 1;
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ash-light, #d4c9b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s, text-decoration 0.2s;
+}
+
+.unit-type-badge {
+  font-family: 'Crimson Text', serif;
+  font-size: 11px;
+  color: var(--ash, #8a7f72);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-style: italic;
+}
+
+.unit-rout-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: none;
+  border: 1px solid var(--tab-border, #352b1c);
+  color: var(--ash, #8a7f72);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.unit-rout-btn:hover {
+  border-color: var(--blood, #9b1f1f);
+  color: var(--blood-light, #e03030);
+}
+
+/* Routed state — visually struck through and dimmed */
+.unit-row.routed {
+  opacity: 0.45;
+  border-color: rgba(155, 31, 31, 0.3);
+}
+
+.unit-row.routed .unit-name {
+  text-decoration: line-through;
+  color: var(--ash, #8a7f72);
+}
+
+.unit-row.routed .unit-rout-btn {
+  border-color: var(--blood, #9b1f1f);
+  color: var(--blood, #9b1f1f);
+}
+
+.unit-row.routed::before {
+  background: var(--blood, #9b1f1f);
+  opacity: 0.5;
+}
+
+/* "Routed units" collapsed section header */
+.routed-section-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--blood, #9b1f1f);
+  text-transform: uppercase;
+  padding: 8px 4px 4px;
+  opacity: 0.6;
+}
+
+/* ═══════════════════════════════════════════════════════
+   8. BATTLE MODE — NOTES & END GAME
+   ═══════════════════════════════════════════════════════ */
+
+#battle-notes-section {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-top: 1px solid var(--tab-border, #352b1c);
+}
+
+#battle-notes {
+  width: 100%;
+  min-height: 52px;
+  max-height: 100px;
+  resize: none;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  color: var(--ash-light, #d4c9b8);
+  font-family: 'Crimson Text', serif;
+  font-size: max(15px, 1em); /* prevent iOS zoom on focus */
+  line-height: 1.5;
+  padding: 8px 10px;
+  transition: border-color 0.15s;
+}
+
+#battle-notes::placeholder {
+  color: var(--ash, #8a7f72);
+  opacity: 0.5;
+  font-style: italic;
+}
+
+#battle-notes:focus {
+  outline: none;
+  border-color: var(--gold-dim, #8a6e2e);
+}
+
+#end-game-btn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid var(--blood, #9b1f1f);
+  border-radius: 5px;
+  color: var(--blood-light, #e03030);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+#end-game-btn:hover {
+  background: rgba(155, 31, 31, 0.12);
+  border-color: var(--blood-light, #e03030);
+}
+
+/* ═══════════════════════════════════════════════════════
+   9. BATTLE MODE — QUICK REFERENCE PANEL
+   ═══════════════════════════════════════════════════════ */
+
+/*
+ * Slides up from the bottom of the screen, overlaying the roster.
+ * Triggered by #quick-ref-toggle button.
+ * JS adds/removes .open class.
+ */
+
+#quick-ref-panel {
+  position: absolute;
+  bottom: 64px; /* sits just above bottom nav */
+  left: 0;
+  right: 0;
+  max-height: 60vh;
+  background: var(--stone, #211b13);
+  border-top: 1px solid var(--tab-border, #352b1c);
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+  /* Top shadow to separate from content below */
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6);
+}
+
+#quick-ref-panel.open {
+  transform: translateY(0);
+}
+
+.qr-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px 10px;
+  border-bottom: 1px solid var(--tab-border, #352b1c);
+  flex-shrink: 0;
+}
+
+.qr-header-title {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--gold-light, #f0c94a);
+  text-transform: uppercase;
+}
+
+#quick-ref-toggle {
+  background: none;
+  border: none;
+  color: var(--ash, #8a7f72);
+  font-size: 18px;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+}
+
+#quick-ref-toggle:hover {
+  color: var(--ash-light, #d4c9b8);
+}
+
+.qr-scroll {
+  overflow-y: auto;
+  padding: 10px 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qr-card {
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  padding: 10px 12px;
+}
+
+.qr-title {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--gold-light, #f0c94a);
+  margin-bottom: 5px;
+}
+
+.qr-body {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--ash-light, #d4c9b8);
+  line-height: 1.55;
+}
+
+/* ═══════════════════════════════════════════════════════
+   10. SHARED FORM INPUTS
+   ═══════════════════════════════════════════════════════ */
+
+/*
+ * Used in Muster (army builder form) and Chronicle (post-game logging).
+ * Minimal; skins provide the surrounding page chrome.
+ */
+
+.wbc-input,
+.wbc-textarea,
+.wbc-select {
+  width: 100%;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  color: var(--ash-light, #d4c9b8);
+  font-family: 'Crimson Text', serif;
+  font-size: max(15px, 1em); /* prevent iOS zoom */
+  padding: 9px 12px;
+  transition: border-color 0.15s;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.wbc-input:focus,
+.wbc-textarea:focus,
+.wbc-select:focus {
+  outline: none;
+  border-color: var(--gold-dim, #8a6e2e);
+}
+
+.wbc-input::placeholder,
+.wbc-textarea::placeholder {
+  color: var(--ash, #8a7f72);
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.wbc-textarea {
+  resize: vertical;
+  min-height: 80px;
+  line-height: 1.5;
+}
+
+.wbc-select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7f72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.wbc-label {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.15em;
+  color: var(--ash, #8a7f72);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.form-field {
+  margin-bottom: 16px;
+}
+
+/* Primary action button — shared across modes */
+.wbc-btn-primary {
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: var(--gold-dim, #8a6e2e);
+  border: none;
+  border-radius: 5px;
+  color: var(--ink, #0d0b08);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.wbc-btn-primary:hover {
+  background: var(--gold, #d4a843);
+}
+
+/* Secondary / ghost button */
+.wbc-btn-secondary {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: transparent;
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  color: var(--ash, #8a7f72);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.wbc-btn-secondary:hover {
+  border-color: var(--gold-dim, #8a6e2e);
+  color: var(--ash-light, #d4c9b8);
+}
+
+/* Destructive / danger button */
+.wbc-btn-danger {
+  display: block;
+  width: 100%;
+  padding: 11px;
+  background: transparent;
+  border: 1px solid var(--blood, #9b1f1f);
+  border-radius: 5px;
+  color: var(--blood-light, #e03030);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.wbc-btn-danger:hover {
+  background: rgba(155, 31, 31, 0.12);
+  border-color: var(--blood-light, #e03030);
+}
+
+/* ═══════════════════════════════════════════════════════
+   11. CHRONICLE MODE — POST-GAME LOGGING FORM
+   ═══════════════════════════════════════════════════════ */
+
+/*
+ * The reflection form appears immediately after a game ends.
+ * The rotating prompt is shown above the first textarea.
+ */
+
+#reflection-form {
+  padding: 0 0 24px;
+}
+
+.reflection-catalyst {
+  background: var(--stone, #211b13);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-left: 3px solid var(--gold-dim, #8a6e2e);
+  border-radius: 5px;
+  padding: 12px 14px;
+  margin-bottom: 20px;
+}
+
+.reflection-catalyst-text {
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  color: var(--ash, #8a7f72);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Dispatch (Chronicle entry) detail card — shown in browse view */
+.dispatch-card {
+  background: var(--stone, #211b13);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+
+.dispatch-field-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  color: var(--ash, #8a7f72);
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  opacity: 0.7;
+}
+
+.dispatch-field-value {
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  color: var(--ash-light, #d4c9b8);
+  line-height: 1.5;
+}
+
+/* ═══════════════════════════════════════════════════════
+   12. UTILITY CLASSES
+   ═══════════════════════════════════════════════════════ */
+
+/* Visibility helpers (used by app.js, battle.js, etc.) */
+.hidden { display: none !important; }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+
+/* Empty-state placeholder text */
+.empty-state {
+  text-align: center;
+  padding: 32px 20px;
+}
+
+.empty-state-icon {
+  font-size: 32px;
+  opacity: 0.2;
+  margin-bottom: 12px;
+}
+
+.empty-state-text {
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  color: var(--ash, #8a7f72);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Loading spinner — minimal, inline */
+.loading-dots::after {
+  content: '';
+  animation: dots 1.2s steps(3, end) infinite;
+}
+
+@keyframes dots {
+  0%   { content: ''; }
+  33%  { content: '.'; }
+  66%  { content: '..'; }
+  100% { content: '...'; }
+}
+
+/* Inline result badges — used in Chronicle browse */
+.badge {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 3px;
+}
+
+.badge-win {
+  background: rgba(212, 168, 67, 0.15);
+  color: var(--gold-light, #f0c94a);
+  border: 1px solid var(--gold-dim, #8a6e2e);
+}
+
+.badge-loss {
+  background: rgba(155, 31, 31, 0.15);
+  color: var(--blood-light, #e03030);
+  border: 1px solid var(--blood, #9b1f1f);
+}
+
+.badge-draw {
+  background: rgba(138, 127, 114, 0.12);
+  color: var(--ash, #8a7f72);
+  border: 1px solid var(--tab-border, #352b1c);
+}
+
+/* ═══════════════════════════════════════════════════════
+   13. REDUCED MOTION
+   ═══════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   14. FOCUS STYLES (keyboard / switch access)
+   ═══════════════════════════════════════════════════════ */
+
+:focus-visible {
+  outline: 2px solid var(--gold, #d4a843);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--gold, #d4a843);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
