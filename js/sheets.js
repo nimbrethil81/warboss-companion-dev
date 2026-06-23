@@ -27,7 +27,7 @@ const Sheets = (() => {
   // ─── CONFIGURATION ───────────────────────────────────────────────────────────
   // Replace with your deployed Apps Script Web App URL.
   // Never hardcode a raw Sheets API key here — use the Apps Script proxy.
-  const SHEET_URL = 'YOUR_APPS_SCRIPT_WEB_APP_URL';
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyxCPep5DsZ8nhZ9J_1gbv67Ym9uiDAH2phZHj2we19d8keUii7bS4-m2B9Ccu3tmSq/exec';
 
   // Tab names must match the actual sheet tab names in the Google Sheet.
   const TABS = Object.freeze({
