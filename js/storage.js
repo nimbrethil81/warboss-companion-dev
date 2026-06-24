@@ -1,5 +1,5 @@
 /**
- * storage.js — localStorage wrapper
+ * storage.js — localStorage wrapper 
  *
  * Single source of truth for ALL localStorage reads and writes.
  * No other module touches localStorage directly.
