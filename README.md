@@ -42,7 +42,7 @@ See SPEC.md for full detail.
 
 ## Roadmap
 - Battle mode 
-- Chromnicle (defrief)
+- Chronicle (defrief)
 - Muster (army list)
 - Full roadmap lives in SPEC.md.
 
