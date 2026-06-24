@@ -22,7 +22,7 @@
  *   file changes. All callers use the function signatures below.
  */
 
-const WBCSheets = (() => {
+window.WBCSheets = (() => {
 
   // ─── CONFIGURATION ───────────────────────────────────────────────────────────
   // Replace with your deployed Apps Script Web App URL.
