@@ -208,7 +208,12 @@ window.WBCStorage = (() => {
   return {
     // Key constants — exposed so other modules can reference them without
     // hardcoding strings, but cannot mutate them.
-    KEYS: Object.freeze({ ...KEYS }),
+    KEYS: Object.freeze(Object.assign({}, KEYS)),
+
+    // Primitive key-value access — used by app.js for skin and config keys
+    get,
+    set,
+    remove,
 
     // Active game
     saveActiveGame,
