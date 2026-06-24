@@ -30,7 +30,7 @@
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION  = 'wbc-v1';
+const CACHE_VERSION  = 'wbc-v2';
 const CACHE_SHELL    = CACHE_VERSION + '-shell';   // app shell + data
 const CACHE_FONTS    = CACHE_VERSION + '-fonts';   // Google Fonts responses
 
