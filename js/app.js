@@ -48,8 +48,10 @@
   window.WBC = {
     currentMode  : null,   // 'muster' | 'battle' | 'chronicle'
     currentSystem: null,   // 'kow' (or future system id)
-    config       : null,   // parsed kow.json (phases, prompts, quick_reference)
+    config       : null,   // parsed kow.json — alias: systemConfig (both kept in sync)
+    systemConfig : null,   // same object — battle.js and chronicle.js read this name
     armyIndex    : null,   // parsed armies/kow/index.json
+    armyData     : null,   // parsed goblins.json (the active army file)
     isOffline    : false,
 
     /* Called by mode modules after they initialise */
@@ -257,7 +259,22 @@
 
     WBC.currentMode = mode;
 
-    /* Notify mode module if it has registered a ready handler */
+    /* Call the mode module's onTabActivated handler if it exists */
+    var moduleMap = {
+      muster:    window.WBCMuster,
+      battle:    window.WBCBattle,
+      chronicle: window.WBCChronicle,
+    };
+    var activeModule = moduleMap[mode];
+    if (activeModule && typeof activeModule.onTabActivated === 'function') {
+      try {
+        activeModule.onTabActivated();
+      } catch (err) {
+        console.error('WBC: onTabActivated threw for mode "' + mode + '":', err);
+      }
+    }
+
+    /* Legacy: notify via onModeReady if set by a mode module */
     if (typeof WBC.onModeReady === 'function') {
       try {
         WBC.onModeReady(mode);
@@ -292,6 +309,7 @@
           throw new Error('System config is malformed');
         }
         WBC.config = config;
+        WBC.systemConfig = config;   // alias — battle.js reads this name
         WBCStorage.set(STORAGE_KEY_CONFIG, JSON.stringify(config));
         _onConfigReady();
         return _loadArmyIndex(WBC.currentSystem);
@@ -307,6 +325,7 @@
       var raw = WBCStorage.get(STORAGE_KEY_CONFIG);
       if (raw) {
         WBC.config = JSON.parse(raw);
+        WBC.systemConfig = WBC.config;   // alias — battle.js reads this name
         WBC.currentSystem = WBC.config.system_id || DEFAULT_SYSTEM;
         _onConfigReady();
         _loadArmyIndex(WBC.currentSystem);
@@ -344,6 +363,17 @@
         }
         WBC.armyIndex = index;
         WBCStorage.set(STORAGE_KEY_ARMY_INDEX, JSON.stringify(index));
+        /* Load the first army data file automatically (MVP: single army) */
+        if (index.armies.length > 0) {
+          var firstArmy = index.armies[0];
+          return _fetchJSON(ARMY_INDEX_BASE + systemId + '/' + firstArmy.file)
+            .then(function (armyData) {
+              WBC.armyData = armyData;
+            })
+            .catch(function (err) {
+              console.warn('WBC: army data fetch failed:', err);
+            });
+        }
       })
       .catch(function (err) {
         console.warn('WBC: army index fetch failed, attempting cache:', err);
