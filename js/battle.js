@@ -35,9 +35,15 @@ var WBCBattle = (function () {
 
   var STORAGE_KEY = 'wbc_active_game';
 
-  /* Phase order for a normal turn (your turn first).
+  /* Your phases within your half of a turn, in order.
      Must match phase_id values in kow.json. */
-  var PHASE_ORDER = ['movement', 'ranged', 'combat', 'opponent_turn'];
+  var YOUR_PHASES = ['movement', 'ranged', 'combat'];
+
+  /* The opponent's phase id — a single phase representing their full turn. */
+  var OPP_PHASE = 'opponent_turn';
+
+  /* Full sequence for reference (used by _findPhase lookups only). */
+  var PHASE_ORDER = YOUR_PHASES.concat([OPP_PHASE]);
 
   /* Which stats to show on unit cards per phase.
      Values are keys on the unit object from goblins.json.
@@ -682,25 +688,76 @@ var WBCBattle = (function () {
 
   /* ─── Phase / Turn navigation ────────────────────────────────────── */
 
-  function _currentPhaseIndex() {
-    return PHASE_ORDER.indexOf(_game.current_phase);
+  /*
+   * Turn structure:
+   *   Your block  : movement → ranged → combat   (YOUR_PHASES)
+   *   Their block : opponent_turn                 (OPP_PHASE)
+   *
+   * Next Phase steps within the current player's block, then crosses to
+   * the other player's block:
+   *   movement → ranged → combat → opponent_turn → (next turn) movement …
+   *
+   * Next Turn jumps to the START of the next player's block:
+   *   If in your phases → jump to opponent_turn (skip rest of your turn)
+   *   If in opponent_turn → increment turn, jump to movement
+   *
+   * Prev Turn jumps to the START of the previous player's block:
+   *   If in your phases → jump to opponent_turn of the previous turn
+   *   If in opponent_turn → jump to movement of the same turn (restart yours)
+   */
+
+  function _isYourPhase() {
+    return YOUR_PHASES.indexOf(_game.current_phase) !== -1;
+  }
+
+  function _yourPhaseIndex() {
+    return YOUR_PHASES.indexOf(_game.current_phase);
   }
 
   function _advancePhase() {
     if (!_game) return;
-    var idx      = _currentPhaseIndex();
     var maxTurns = (_config && _config.max_turns) ? _config.max_turns : 7;
 
-    if (idx < PHASE_ORDER.length - 1) {
-      _game.current_phase = PHASE_ORDER[idx + 1];
+    if (_isYourPhase()) {
+      var idx = _yourPhaseIndex();
+      if (idx < YOUR_PHASES.length - 1) {
+        /* Step within your phases: movement→ranged, ranged→combat */
+        _game.current_phase = YOUR_PHASES[idx + 1];
+      } else {
+        /* End of combat — cross to opponent's block */
+        _game.current_phase = OPP_PHASE;
+      }
     } else {
-      /* End of opponent_turn — advance the turn counter */
+      /* In opponent_turn — cross to your block, advance turn */
       if (_game.current_turn >= maxTurns) {
         _promptGameEnd();
         return;
       }
       _game.current_turn += 1;
-      _game.current_phase = PHASE_ORDER[0];
+      _game.current_phase = YOUR_PHASES[0];
+    }
+
+    _saveGame();
+    _refreshGameUI();
+  }
+
+  function _retreatPhase() {
+    if (!_game) return;
+
+    if (_isYourPhase()) {
+      var idx = _yourPhaseIndex();
+      if (idx > 0) {
+        /* Step back within your phases: ranged→movement, combat→ranged */
+        _game.current_phase = YOUR_PHASES[idx - 1];
+      } else {
+        /* At movement — cross back to opponent_turn of the previous turn */
+        if (_game.current_turn <= 1) return; /* Turn 1 movement: no further back */
+        _game.current_turn -= 1;
+        _game.current_phase = OPP_PHASE;
+      }
+    } else {
+      /* In opponent_turn — cross back to combat (last of your phases) */
+      _game.current_phase = YOUR_PHASES[YOUR_PHASES.length - 1];
     }
 
     _saveGame();
@@ -711,27 +768,18 @@ var WBCBattle = (function () {
     if (!_game) return;
     var maxTurns = (_config && _config.max_turns) ? _config.max_turns : 7;
 
-    if (_game.current_turn >= maxTurns) {
-      _promptGameEnd();
-      return;
+    if (_isYourPhase()) {
+      /* Skip rest of your phases — jump to opponent's turn */
+      _game.current_phase = OPP_PHASE;
+    } else {
+      /* In opponent_turn — start the next full turn */
+      if (_game.current_turn >= maxTurns) {
+        _promptGameEnd();
+        return;
+      }
+      _game.current_turn += 1;
+      _game.current_phase = YOUR_PHASES[0];
     }
-    _game.current_turn += 1;
-    _game.current_phase = PHASE_ORDER[0];
-    _saveGame();
-    _refreshGameUI();
-  }
-
-  function _retreatPhase() {
-    if (!_game) return;
-    var idx = _currentPhaseIndex();
-
-    if (idx > 0) {
-      _game.current_phase = PHASE_ORDER[idx - 1];
-    } else if (_game.current_turn > 1) {
-      _game.current_turn -= 1;
-      _game.current_phase = PHASE_ORDER[PHASE_ORDER.length - 1];
-    }
-    /* Turn 1, phase 0 — do nothing */
 
     _saveGame();
     _refreshGameUI();
@@ -739,9 +787,17 @@ var WBCBattle = (function () {
 
   function _retreatTurn() {
     if (!_game) return;
-    if (_game.current_turn <= 1) return;
-    _game.current_turn -= 1;
-    _game.current_phase = PHASE_ORDER[0];
+
+    if (_isYourPhase()) {
+      /* In your phases — go back to opponent_turn of the previous turn */
+      if (_game.current_turn <= 1) return;
+      _game.current_turn -= 1;
+      _game.current_phase = OPP_PHASE;
+    } else {
+      /* In opponent_turn — restart your phases for this same turn */
+      _game.current_phase = YOUR_PHASES[0];
+    }
+
     _saveGame();
     _refreshGameUI();
   }
