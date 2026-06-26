@@ -1,5 +1,5 @@
 /**
- * storage.js — localStorage wrapper 
+ * storage.js — localStorage wrapper
  *
  * Single source of truth for ALL localStorage reads and writes.
  * No other module touches localStorage directly.
@@ -11,6 +11,9 @@
  *   wbc_armies_cache   — cache of armies fetched from Sheets
  *   wbc_games_cache    — cache of past games fetched from Sheets
  *   wbc_system_config  — cached kow.json content
+ *   wbc_selected_army  — the Muster army chosen on the Battle setup screen
+ *                        Shape: { army_id, army_name, game_system, unit_ids: [] }
+ *                        Cleared when Battle setup is cancelled or game begins.
  */
 
 window.WBCStorage = (() => {
@@ -18,10 +21,11 @@ window.WBCStorage = (() => {
   // ─── KEYS ────────────────────────────────────────────────────────────────────
   // All key strings live here. No magic strings anywhere else in this module.
   const KEYS = {
-    ACTIVE_GAME:   'wbc_active_game',
-    ARMIES_CACHE:  'wbc_armies_cache',
-    GAMES_CACHE:   'wbc_games_cache',
-    SYSTEM_CONFIG: 'wbc_system_config',
+    ACTIVE_GAME:     'wbc_active_game',
+    ARMIES_CACHE:    'wbc_armies_cache',
+    GAMES_CACHE:     'wbc_games_cache',
+    SYSTEM_CONFIG:   'wbc_system_config',
+    SELECTED_ARMY:   'wbc_selected_army',
   };
 
   // ─── PRIMITIVES ──────────────────────────────────────────────────────────────
@@ -89,8 +93,9 @@ window.WBCStorage = (() => {
    * Expected shape (from SPEC.md §3):
    * {
    *   game_id, started_at, army_id, opponent_army,
-   *   current_turn, current_phase, active_player,
-   *   units: [{ unit_id, name, routed }],
+   *   current_turn, current_phase, first_player,
+   *   units: [{ unit_id, name, size, type, sp, me, sh, de, att, ne,
+   *              special_rules, routed, damage }],
    *   turn_log: []
    * }
    *
@@ -138,6 +143,48 @@ window.WBCStorage = (() => {
     }
     game[field] = value;
     return saveActiveGame(game);
+  }
+
+  // ─── SELECTED ARMY ───────────────────────────────────────────────────────────
+
+  /**
+   * Persist the army selected on the Battle setup screen.
+   * This is the handoff point between Muster and Battle.
+   *
+   * Shape:
+   * {
+   *   army_id:     string,   — UUID from the armies Sheets tab
+   *   army_name:   string,   — display name e.g. "Green Tide"
+   *   game_system: string,   — e.g. "kow"
+   *   unit_ids:    string[]  — ordered array of unit_id strings from goblins.json
+   *                            IMMUTABLE KEYS — never rename a unit_id once created
+   * }
+   *
+   * @param {Object} army
+   * @returns {boolean}
+   */
+  function saveSelectedArmy(army) {
+    return set(KEYS.SELECTED_ARMY, army);
+  }
+
+  /**
+   * Retrieve the selected army, or null if none has been chosen.
+   *
+   * @returns {Object|null}
+   */
+  function loadSelectedArmy() {
+    return get(KEYS.SELECTED_ARMY);
+  }
+
+  /**
+   * Clear the selected army.
+   * Called after battle.js has built the roster from it, or if
+   * the user cancels Battle setup.
+   *
+   * @returns {boolean}
+   */
+  function clearSelectedArmy() {
+    return remove(KEYS.SELECTED_ARMY);
   }
 
   // ─── ARMIES CACHE ────────────────────────────────────────────────────────────
@@ -220,6 +267,11 @@ window.WBCStorage = (() => {
     loadActiveGame,
     clearActiveGame,
     updateActiveGameField,
+
+    // Selected army (Muster → Battle handoff)
+    saveSelectedArmy,
+    loadSelectedArmy,
+    clearSelectedArmy,
 
     // Armies cache
     saveArmiesCache,
