@@ -124,7 +124,7 @@
         '.nav-btn.active .nav-label { color: var(--gold-light); }',
 
         '.nav-battle-btn { background: radial-gradient(circle at 35% 35%,#2a1a10,var(--ink));',
-        '  border: 2px solid var(--gold-dim);',
+        '  border: 2px solid #5a6a7e;',
         '  box-shadow: 0 0 0 4px var(--tab-bg), inset 0 1px 0 rgba(201,168,76,0.1);',
         '  color: #5a6a7e; }',
         '.nav-battle-btn.active { border-color: var(--gold-light); box-shadow: 0 0 0 4px var(--tab-bg), 0 -4px 16px rgba(201,168,76,0.25), inset 0 1px 0 rgba(201,168,76,0.2); color: var(--gold-light); }',
