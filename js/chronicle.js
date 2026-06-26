@@ -1,17 +1,15 @@
 /**
- * chronicle.js — Chronicle mode logic for Warboss Companion
+ * chronicle.js — Chronicle mode logic for Warboss Companion (v0.2)
  *
- * Responsibilities at v0.1:
+ * Responsibilities:
  *   - Post-game logging screen (triggered from battle.js on game end)
  *   - Three reflection fields: what worked, what didn't, one thing to try next time
  *   - Rotating reflection prompt as a catalyst (not a data label)
- *   - Write completed reflection to Sheets via sheets.js
- *   - Past games browser (reverse-chronological list from Sheets cache)
- *
- * Deferred to v0.2:
- *   - Filtering and search of past games
- *   - Unit tagging within reflections
- *   - Win/loss statistics
+ *   - Write completed reflection to Sheets via WBCSheets
+ *   - Past games browser (reverse-chronological):
+ *       · Most recent entry auto-expanded (shows all three reflection fields)
+ *       · All other entries compact (date, result, opponent) — tap to expand
+ *       · Expanding a compact entry fetches its reflection from Sheets on demand
  *
  * Dependencies (must be loaded before this file):
  *   - storage.js  (WBCStorage)
@@ -28,27 +26,50 @@ var WBCChronicle = (function () {
   'use strict';
 
   /* ─── Reflection prompts ─────────────────────────────────────────── */
-  /* These are catalyst prompts shown to spark reflection.
-     All three text fields map to the same three data keys regardless
-     of which prompt is displayed. */
+  /*
+   * Catalyst prompts shown to spark reflection after a game.
+   * All three text fields map to the same three data keys regardless
+   * of which prompt is displayed. One is chosen at random per session.
+   * Prompts are never repeated within a session but no cross-session
+   * deduplication is applied at v0.2 — simplest correct behaviour.
+   */
 
   var REFLECTION_PROMPTS = [
+    /* Tactical reflection */
     'Was there a moment you felt you had the upper hand? What caused it?',
-    'Which unit surprised you — for better or worse?',
     'If you could replay one turn, which would it be and why?',
-    'What did your opponent do that you didn\'t expect?',
-    'Was there a rule you were unsure about mid-game?',
-    'Did your deployment plan survive contact with the enemy?',
-    'Which phase felt most comfortable? Which felt most uncertain?',
-    'Did any unit underperform for their points cost?',
     'Was there a charge or movement you wish you\'d handled differently?',
-    'What would you tell yourself before the battle started?'
+    'Which phase felt most comfortable? Which felt most uncertain?',
+    'Did your deployment plan survive contact with the enemy?',
+
+    /* Unit reflection */
+    'Which unit surprised you — for better or worse?',
+    'Did any unit underperform for their points cost?',
+    'Was there a unit you expected to struggle that held on longer than anticipated?',
+    'Which unit would you swap out if you ran this list again?',
+    'Did you use all of your units\' special rules — or forget any mid-battle?',
+
+    /* Opponent reflection */
+    'What did your opponent do that you didn\'t expect?',
+    'Was there a moment your opponent\'s positioning really frustrated you?',
+    'What would you do differently if you faced the same opponent again?',
+
+    /* Rules & knowledge */
+    'Was there a rule you were unsure about mid-game?',
+    'Did a rule come up that changed the outcome of a phase?',
+    'Was there a rule interaction you want to look up before next time?',
+
+    /* Mindset & growth */
+    'What would you tell yourself before the battle started?',
+    'What\'s the one thing that made the biggest difference to the result?',
+    'What will you focus on improving before your next game?',
+    'Did you feel in control of the game, or were you reacting throughout?',
   ];
 
   /* ─── Module state ───────────────────────────────────────────────── */
 
-  var _pendingGame  = null;   // Game payload handed over from battle.js
-  var _currentPrompt = '';    // The prompt shown on the current log screen
+  var _pendingGame   = null;   // Game payload handed over from battle.js
+  var _currentPrompt = '';     // The prompt shown on the current log screen
 
   /* ─── Utility ────────────────────────────────────────────────────── */
 
@@ -68,137 +89,122 @@ var WBCChronicle = (function () {
     });
   }
 
-  function _isoNow() {
-    return new Date().toISOString();
+  function _isoNow() { return new Date().toISOString(); }
+
+  function _escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
-  function _formatDate(isoString) {
-    if (!isoString) return '—';
+  function _randomPrompt(exclude) {
+    var pool = REFLECTION_PROMPTS.filter(function (p) { return p !== exclude; });
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+
+  function _formatDate(iso) {
+    if (!iso) return '—';
     try {
-      var d = new Date(isoString);
+      var d = new Date(iso);
       return d.toLocaleDateString('en-GB', {
-        day:   'numeric',
-        month: 'short',
-        year:  'numeric'
+        day: 'numeric', month: 'short', year: 'numeric'
       });
-    } catch (e) {
-      return isoString.slice(0, 10);
-    }
-  }
-
-  function _randomPrompt() {
-    var idx = Math.floor(Math.random() * REFLECTION_PROMPTS.length);
-    return REFLECTION_PROMPTS[idx];
+    } catch (e) { return iso; }
   }
 
   function _resultClass(result) {
-    if (result === 'win')  return 'victory';
-    if (result === 'loss') return 'defeat';
-    return '';
+    if (result === 'win')  return 'chronicle-win';
+    if (result === 'loss') return 'chronicle-loss';
+    return 'chronicle-draw';
   }
 
   function _resultLabel(result) {
     if (result === 'win')  return 'Victory';
     if (result === 'loss') return 'Defeat';
-    return 'Draw';
+    if (result === 'draw') return 'Draw';
+    return result || '—';
   }
 
   /* ─── Post-game logging screen ───────────────────────────────────── */
 
   /**
-   * startLog(gamePayload)
-   * Called by battle.js immediately after a game ends and Sheets write succeeds.
-   * gamePayload matches the games tab schema:
-   *   { game_id, date, army_id, opponent_army, result, turns_played, notes }
+   * startLog() — called by battle.js after a game ends.
+   * Stores the pending game and renders the log form.
    */
   function startLog(gamePayload) {
     _pendingGame   = gamePayload;
     _currentPrompt = _randomPrompt();
-    _renderLogScreen();
+    _renderLogForm();
   }
 
-  function _renderLogScreen() {
+  function _renderLogForm() {
     var page = _el('page-chronicle');
     if (!page) return;
 
-    var resultLabel   = _pendingGame ? _resultLabel(_pendingGame.result) : '—';
-    var resultClass   = _pendingGame ? _resultClass(_pendingGame.result) : '';
-    var opponentLabel = (_pendingGame && _pendingGame.opponent_army)
-      ? ' vs. ' + _pendingGame.opponent_army
-      : '';
-    var turnsLabel    = _pendingGame
-      ? 'Turn ' + _pendingGame.turns_played
-      : '';
-
     page.innerHTML = [
       '<div class="page-header">',
-      '  <div>',
-      '    <div class="page-title">Chronicle</div>',
-      '  </div>',
-      '  <div class="page-subtitle">Record the deeds</div>',
+      '  <div class="page-title">Chronicle</div>',
+      '  <div class="page-subtitle">Record your dispatch</div>',
       '</div>',
 
-      '<div class="chronicle-game-banner chronicle-game-banner--' + resultClass + '">',
-      '  <span class="chronicle-banner-result ' + resultClass + '">' + resultLabel + '</span>',
-      '  <span class="chronicle-banner-meta">' + turnsLabel + opponentLabel + '</span>',
-      '</div>',
-
-      '<div class="section-label">Reflection</div>',
-
-      '<div class="chronicle-prompt-card" id="chronicle-prompt-card">',
-      '  <p class="chronicle-prompt-text" id="chronicle-prompt-text">' + _currentPrompt + '</p>',
-      '  <button class="chronicle-prompt-refresh" id="chronicle-prompt-refresh" title="New prompt">↺</button>',
+      '<div class="chronicle-prompt-block">',
+      '  <p id="chronicle-prompt-text" class="chronicle-prompt-text">',
+      _escapeHtml(_currentPrompt),
+      '  </p>',
+      '  <button id="chronicle-prompt-refresh" class="chronicle-prompt-refresh"',
+      '          aria-label="New prompt">↻</button>',
       '</div>',
 
       '<div class="chronicle-field">',
-      '  <label class="chronicle-label" for="chronicle-worked">What worked?</label>',
-      '  <textarea id="chronicle-worked" class="chronicle-textarea" rows="3"',
-      '            placeholder="Units, tactics, decisions that went well…" maxlength="600"></textarea>',
+      '  <label class="setup-label" for="chronicle-worked">What worked?</label>',
+      '  <textarea id="chronicle-worked" class="chronicle-textarea"',
+      '            rows="3" placeholder="Units, tactics, decisions that paid off…"',
+      '            maxlength="1000"></textarea>',
       '</div>',
 
       '<div class="chronicle-field">',
-      '  <label class="chronicle-label" for="chronicle-didnt">What didn\'t?</label>',
-      '  <textarea id="chronicle-didnt" class="chronicle-textarea" rows="3"',
-      '            placeholder="What went wrong, or not as planned…" maxlength="600"></textarea>',
+      '  <label class="setup-label" for="chronicle-didnt">What didn\'t?</label>',
+      '  <textarea id="chronicle-didnt" class="chronicle-textarea"',
+      '            rows="3" placeholder="Mistakes, bad luck, things to avoid…"',
+      '            maxlength="1000"></textarea>',
       '</div>',
 
       '<div class="chronicle-field">',
-      '  <label class="chronicle-label" for="chronicle-next">One thing to try next time</label>',
-      '  <textarea id="chronicle-next" class="chronicle-textarea" rows="2"',
-      '            placeholder="One concrete change or experiment…" maxlength="300"></textarea>',
+      '  <label class="setup-label" for="chronicle-next">One thing to try next time</label>',
+      '  <textarea id="chronicle-next" class="chronicle-textarea"',
+      '            rows="2" placeholder="Keep it specific and actionable…"',
+      '            maxlength="500"></textarea>',
       '</div>',
 
-      '<div class="chronicle-actions">',
+      '<div class="chronicle-log-actions">',
       '  <button id="chronicle-save-btn" class="battle-primary-btn">Save Dispatch</button>',
-      '  <button id="chronicle-skip-btn" class="battle-secondary-btn">Skip for now</button>',
+      '  <button id="chronicle-skip-btn" class="battle-secondary-btn">Skip</button>',
       '</div>',
 
-      '<div id="chronicle-saving-status" class="battle-saving-status" style="display:none;">',
+      '<div id="chronicle-saving-status" class="muster-status" style="display:none;">',
       '  Saving dispatch…',
       '</div>',
       '<div id="chronicle-save-error" class="battle-error" style="display:none;"></div>',
-      '<button id="chronicle-retry-btn" class="battle-secondary-btn" style="display:none;">Retry</button>',
+      '<button id="chronicle-retry-btn" class="battle-secondary-btn"',
+      '        style="display:none;">Retry</button>',
     ].join('');
 
-    _bindLogEvents();
+    _bindLogFormEvents();
   }
 
-  function _bindLogEvents() {
+  function _bindLogFormEvents() {
     var promptRefresh = _el('chronicle-prompt-refresh');
     if (promptRefresh) {
       promptRefresh.addEventListener('click', function () {
-        _currentPrompt = _randomPrompt();
+        _currentPrompt = _randomPrompt(_currentPrompt);
         var textEl = _el('chronicle-prompt-text');
         if (textEl) textEl.textContent = _currentPrompt;
       });
     }
 
     var saveBtn = _el('chronicle-save-btn');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', function () {
-        _saveReflection();
-      });
-    }
+    if (saveBtn) saveBtn.addEventListener('click', _saveReflection);
 
     var skipBtn = _el('chronicle-skip-btn');
     if (skipBtn) {
@@ -232,7 +238,6 @@ var WBCChronicle = (function () {
     var whatDidnt  = didntEl  ? didntEl.value.trim()  : '';
     var nextTime   = nextEl   ? nextEl.value.trim()   : '';
 
-    /* Allow save with at least one field filled, or completely blank (skip path) */
     var payload = {
       reflection_id: _uuid(),
       game_id:       _pendingGame ? _pendingGame.game_id : '',
@@ -251,10 +256,7 @@ var WBCChronicle = (function () {
 
       if (ok) {
         _pendingGame = null;
-
-        /* Update local games cache with new reflection snippet */
         _appendReflectionToCache(payload);
-
         _renderBrowser();
       } else {
         if (errEl) {
@@ -275,11 +277,9 @@ var WBCChronicle = (function () {
     });
   }
 
-  /* Attach reflection snippet to the matching cached game so the browser
-     can show the "next time" preview without a fresh Sheets fetch */
   function _appendReflectionToCache(reflection) {
     try {
-      var cache = WBCStorage.get('wbc_games_cache') || [];
+      var cache = WBCStorage.loadGamesCache() || [];
       cache = cache.map(function (g) {
         if (g.game_id === reflection.game_id) {
           return Object.assign({}, g, {
@@ -290,9 +290,9 @@ var WBCChronicle = (function () {
         }
         return g;
       });
-      WBCStorage.set('wbc_games_cache', cache);
+      WBCStorage.saveGamesCache(cache);
     } catch (e) {
-      /* Non-critical — browser will just show without the snippet */
+      /* Non-critical */
     }
   }
 
@@ -304,9 +304,7 @@ var WBCChronicle = (function () {
 
     page.innerHTML = [
       '<div class="page-header">',
-      '  <div>',
-      '    <div class="page-title">Chronicle</div>',
-      '  </div>',
+      '  <div class="page-title">Chronicle</div>',
       '  <div class="page-subtitle">Deeds recorded</div>',
       '</div>',
 
@@ -323,14 +321,12 @@ var WBCChronicle = (function () {
   }
 
   function _loadGames() {
-    /* Try Sheets first; fall back to local cache */
-    WBCSheets.fetchGames().then(function (games) {
-      if (Array.isArray(games) && games.length > 0) {
-        /* Update cache */
-        try { WBCStorage.set('wbc_games_cache', games); } catch (e) {}
-        _renderGameList(games);
+    WBCSheets.fetchGames().then(function (result) {
+      var games = Array.isArray(result.data) ? result.data : [];
+      if (games.length > 0) {
+        try { WBCStorage.saveGamesCache(games); } catch (e) {}
+        _renderGameList(games, result.fromCache);
       } else {
-        /* Empty result — try cache */
         var cached = _getCachedGames();
         if (cached.length > 0) {
           _renderGameList(cached, true);
@@ -338,8 +334,11 @@ var WBCChronicle = (function () {
           _renderEmptyBrowser();
         }
       }
+      if (result.error) {
+        var errEl = _el('chronicle-browser-error');
+        if (errEl) { errEl.textContent = result.error; errEl.style.display = 'block'; }
+      }
     }).catch(function () {
-      /* Sheets unreachable — use cache */
       var cached = _getCachedGames();
       if (cached.length > 0) {
         _renderGameList(cached, true);
@@ -350,18 +349,18 @@ var WBCChronicle = (function () {
   }
 
   function _getCachedGames() {
-    try {
-      return WBCStorage.get('wbc_games_cache') || [];
-    } catch (e) {
-      return [];
-    }
+    try { return WBCStorage.loadGamesCache() || []; } catch (e) { return []; }
   }
 
+  /**
+   * Render the list of games.
+   * Most recent entry (index 0 after sort) is auto-expanded.
+   * All others are compact with tap-to-expand.
+   */
   function _renderGameList(games, fromCache) {
     var listEl = _el('chronicle-list');
     if (!listEl) return;
 
-    /* Sort newest first */
     var sorted = games.slice().sort(function (a, b) {
       return new Date(b.date || 0) - new Date(a.date || 0);
     });
@@ -371,32 +370,48 @@ var WBCChronicle = (function () {
       return;
     }
 
-    var html = '';
-
-    if (fromCache) {
-      html += '<div class="chronicle-cache-notice">Showing saved records — connect to sync latest.</div>';
-    }
+    var html = fromCache
+      ? '<div class="chronicle-cache-notice">Showing saved records — connect to sync latest.</div>'
+      : '';
 
     sorted.forEach(function (g, idx) {
-      var rc    = _resultClass(g.result);
-      var rl    = _resultLabel(g.result);
-      var date  = _formatDate(g.date);
-      var opp   = g.opponent_army ? ' vs. ' + g.opponent_army : '';
-      var turns = g.turns_played  ? 'Turn ' + g.turns_played  : '';
-      var next  = g.next_time     ? g.next_time                : '';
+      var isFirst   = (idx === 0);
+      var rc        = _resultClass(g.result);
+      var rl        = _resultLabel(g.result);
+      var date      = _formatDate(g.date);
+      var opp       = g.opponent_army ? ' vs. ' + _escapeHtml(g.opponent_army) : '';
+      var turns     = g.turns_played  ? 'Turn ' + g.turns_played              : '';
+      var detail    = [opp, turns].filter(Boolean).join(' · ') || '—';
 
       html += [
-        '<div class="chronicle-entry ' + rc + '" id="chronicle-entry-' + idx + '" data-open="false">',
+        '<div class="chronicle-entry ' + rc + (isFirst ? ' chronicle-entry--expanded' : '') + '"',
+        '     id="chronicle-entry-' + idx + '"',
+        '     data-game-id="' + _escapeHtml(g.game_id || '') + '"',
+        '     data-open="' + (isFirst ? 'true' : 'false') + '">',
 
         '  <div class="chronicle-dot ' + rc + '">',
         '    <div class="chronicle-dot-inner"></div>',
         '  </div>',
 
         '  <div class="chronicle-body">',
-        '    <div class="chronicle-date">' + date + '</div>',
-        '    <div class="chronicle-result ' + rc + '">' + rl + '</div>',
-        '    <div class="chronicle-detail">' + (opp || turns ? [opp, turns].filter(Boolean).join(' · ') : '—') + '</div>',
-        next ? '<div class="chronicle-next-tip">Next time: ' + _escapeHtml(next) + '</div>' : '',
+        /* Always-visible compact header */
+        '    <div class="chronicle-compact-row"',
+        '         data-entry-idx="' + idx + '">',
+        '      <div class="chronicle-compact-left">',
+        '        <div class="chronicle-date">' + date + '</div>',
+        '        <div class="chronicle-result ' + rc + '">' + rl + '</div>',
+        '      </div>',
+        '      <div class="chronicle-detail">' + detail + '</div>',
+        '      <span class="chronicle-expand-arrow" id="chronicle-arrow-' + idx + '">',
+        isFirst ? '∨' : '›',
+        '      </span>',
+        '    </div>',
+
+        /* Expandable reflection block */
+        '    <div class="chronicle-reflection" id="chronicle-reflection-' + idx + '"',
+        '         style="display:' + (isFirst ? 'block' : 'none') + ';">',
+        _reflectionBlockHTML(g, idx),
+        '    </div>',
         '  </div>',
 
         '</div>',
@@ -404,6 +419,130 @@ var WBCChronicle = (function () {
     });
 
     listEl.innerHTML = html;
+
+    /* Bind tap-to-expand on compact rows */
+    _qsa('.chronicle-compact-row', listEl).forEach(function (row) {
+      row.addEventListener('click', function () {
+        var entryIdx = this.getAttribute('data-entry-idx');
+        _toggleEntry(entryIdx, sorted);
+      });
+    });
+  }
+
+  /**
+   * Build the inner HTML for the expandable reflection block.
+   * Uses cached data if available; otherwise shows a "load" state
+   * that populates on first expand.
+   */
+  function _reflectionBlockHTML(game, idx) {
+    var hasWorked  = game.what_worked && game.what_worked.trim();
+    var hasDidnt   = game.what_didnt  && game.what_didnt.trim();
+    var hasNext    = game.next_time   && game.next_time.trim();
+    var hasAny     = hasWorked || hasDidnt || hasNext;
+
+    var html = '';
+
+    if (hasAny) {
+      if (hasWorked) {
+        html += '<div class="chronicle-ref-section">'
+          + '<div class="chronicle-ref-label">What worked</div>'
+          + '<div class="chronicle-ref-text">' + _escapeHtml(game.what_worked) + '</div>'
+          + '</div>';
+      }
+      if (hasDidnt) {
+        html += '<div class="chronicle-ref-section">'
+          + '<div class="chronicle-ref-label">What didn\'t</div>'
+          + '<div class="chronicle-ref-text">' + _escapeHtml(game.what_didnt) + '</div>'
+          + '</div>';
+      }
+      if (hasNext) {
+        html += '<div class="chronicle-ref-section">'
+          + '<div class="chronicle-ref-label">Next time</div>'
+          + '<div class="chronicle-ref-text chronicle-ref-text--next">'
+          + _escapeHtml(game.next_time) + '</div>'
+          + '</div>';
+      }
+    } else {
+      /* No reflection cached — show placeholder; fetched on expand */
+      html += '<div class="chronicle-ref-loading" id="chronicle-ref-load-' + idx + '">'
+        + 'No dispatch recorded for this battle.'
+        + '</div>';
+    }
+
+    return html;
+  }
+
+  /**
+   * Toggle a chronicle entry open/closed.
+   * On first open of a non-expanded entry, attempt to fetch the reflection
+   * from Sheets if it's not already in the rendered block.
+   */
+  function _toggleEntry(idx, games) {
+    var entryEl   = _el('chronicle-entry-' + idx);
+    var reflEl    = _el('chronicle-reflection-' + idx);
+    var arrowEl   = _el('chronicle-arrow-' + idx);
+    if (!entryEl || !reflEl) return;
+
+    var isOpen = entryEl.getAttribute('data-open') === 'true';
+
+    if (isOpen) {
+      /* Collapse */
+      entryEl.setAttribute('data-open', 'false');
+      entryEl.classList.remove('chronicle-entry--expanded');
+      reflEl.style.display = 'none';
+      if (arrowEl) arrowEl.textContent = '›';
+    } else {
+      /* Expand — and fetch reflection from Sheets if not cached */
+      entryEl.setAttribute('data-open', 'true');
+      entryEl.classList.add('chronicle-entry--expanded');
+      reflEl.style.display = 'block';
+      if (arrowEl) arrowEl.textContent = '∨';
+
+      var loadEl = _el('chronicle-ref-load-' + idx);
+      if (loadEl && games && games[idx]) {
+        /* Show loading state then fetch */
+        loadEl.textContent = 'Loading dispatch…';
+        _fetchAndInjectReflection(games[idx].game_id, reflEl);
+      }
+    }
+  }
+
+  /**
+   * Fetch a reflection from Sheets and inject it into the given container.
+   * Only called when the cached block showed the "no dispatch" placeholder.
+   */
+  function _fetchAndInjectReflection(gameId, containerEl) {
+    WBCSheets.fetchReflection(gameId).then(function (result) {
+      if (!result.data) {
+        containerEl.innerHTML = '<div class="chronicle-ref-loading">'
+          + 'No dispatch recorded for this battle.</div>';
+        return;
+      }
+
+      var r = result.data;
+      /* Inject the full reflection block */
+      containerEl.innerHTML = _reflectionBlockHTML(Object.assign({ game_id: gameId }, r), -1);
+
+      /* Update games cache with this reflection so future renders use it */
+      try {
+        var cached = WBCStorage.loadGamesCache() || [];
+        WBCStorage.saveGamesCache(cached.map(function (g) {
+          if (g.game_id === gameId) {
+            return Object.assign({}, g, {
+              what_worked: r.what_worked,
+              what_didnt:  r.what_didnt,
+              next_time:   r.next_time,
+            });
+          }
+          return g;
+        }));
+      } catch (e) { /* non-critical */ }
+
+    }).catch(function (err) {
+      console.error('[chronicle] fetchReflection error:', err);
+      containerEl.innerHTML = '<div class="chronicle-ref-loading">'
+        + 'Could not load dispatch — check your connection.</div>';
+    });
   }
 
   function _renderEmptyBrowser() {
@@ -413,52 +552,25 @@ var WBCChronicle = (function () {
     }
   }
 
-  function _escapeHtml(str) {
-    return String(str)
-      .replace(/&/g,  '&amp;')
-      .replace(/</g,  '&lt;')
-      .replace(/>/g,  '&gt;')
-      .replace(/"/g,  '&quot;')
-      .replace(/'/g,  '&#39;');
-  }
-
   /* ─── Public API ─────────────────────────────────────────────────── */
 
-  /**
-   * init() — called by app.js on boot.
-   */
   function init() {
-    /* No-op at v0.1 */
+    /* No-op on boot */
   }
 
-  /**
-   * onTabActivated() — called by app.js / skins.js when Chronicle tab becomes active.
-   * If a pending game is waiting for a log entry, show the log screen.
-   * Otherwise show the browser.
-   */
   function onTabActivated() {
     if (_pendingGame) {
-      _renderLogScreen();
+      _currentPrompt = _randomPrompt();
+      _renderLogForm();
     } else {
       _renderBrowser();
     }
   }
 
-  /**
-   * startLog(gamePayload) — entry point called by battle.js after a game ends.
-   * Switches to Chronicle tab and shows the post-game logging screen.
-   */
-  function startLog(gamePayload) {
-    _pendingGame   = gamePayload;
-    _currentPrompt = _randomPrompt();
-    /* Tab switch is handled by battle.js calling WBC.switchTab('chronicle')
-       which triggers onTabActivated(); we just need _pendingGame to be set. */
-  }
-
   return {
-    init:           init,
-    onTabActivated: onTabActivated,
-    startLog:       startLog
+    init,
+    onTabActivated,
+    startLog,
   };
 
-}());
+})();
