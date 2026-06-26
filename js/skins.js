@@ -417,7 +417,7 @@
     '  overflow: hidden; position: relative; }',
 
     '.page { display: none; flex: 1; flex-direction: column;',
-    '  padding: 24px 20px 0; position: relative; z-index: 1;',
+    '  padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 0; position: relative; z-index: 1;',
     '  overflow-y: auto; padding-bottom: 100px; }',
     '.page.active { display: flex; }',
 
