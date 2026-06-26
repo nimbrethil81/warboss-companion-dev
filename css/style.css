@@ -1201,7 +1201,7 @@ button:focus-visible,
  * #page-battle must be a flex column so the three regions
  * stack correctly and only .battle-scroll grows to fill space.
  */
-#page-battle {
+#page-battle.active {
   display: flex;
   flex-direction: column;
   overflow: hidden; /* children handle their own overflow */
@@ -2198,4 +2198,470 @@ select.setup-input {
   font-style: italic;
   text-align: center;
   padding: 12px 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   MUSTER MODE v0.2 — ARMY LIST, BUILDER, PICKER
+   Appended block. Matches the Grimdark Fantasy skin language:
+   Cinzel headings, Crimson Text body, gold/blood/ash palette.
+   All colours use var(--token, fallback) so skins override cleanly.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Primary button (Save Army, New Army) ──────────────── */
+/* Mirrors .battle-primary-btn so Muster matches Battle. */
+.muster-primary-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  margin-top: 12px;
+  border-radius: 5px;
+  border: 1px solid var(--gold-dim, #8a6e2e);
+  background: transparent;
+  color: var(--gold-light, #f0c94a);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 48px;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.muster-primary-btn:hover {
+  border-color: var(--gold-light, #f0c94a);
+  background: rgba(212, 168, 67, 0.08);
+}
+
+.muster-primary-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  border-color: var(--tab-border, #352b1c);
+  color: var(--ash, #8a7f72);
+  background: transparent;
+}
+
+/* ── Army list: saved-army cards ───────────────────────── */
+.muster-army-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--tab-bg, #0f0d0a);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 8px;
+  padding: 14px 14px;
+  margin-bottom: 10px;
+  transition: border-color 0.15s;
+}
+
+.muster-army-card:hover {
+  border-color: var(--gold-dim, #8a6e2e);
+}
+
+.muster-army-card-info {
+  min-width: 0; /* allow text truncation */
+  flex: 1;
+}
+
+.muster-army-card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ash-light, #d4c9b8);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.muster-army-card-meta {
+  font-family: 'Crimson Text', serif;
+  font-size: 13px;
+  color: var(--ash, #8a7f72);
+  margin-top: 3px;
+}
+
+.muster-army-card-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+/* Card action buttons (Edit / Delete) */
+.muster-card-btn {
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: 1px solid var(--tab-border, #352b1c);
+  background: transparent;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 38px;
+  transition: all 0.15s;
+}
+
+.muster-card-btn--edit {
+  color: var(--ash-light, #d4c9b8);
+}
+
+.muster-card-btn--edit:hover {
+  border-color: var(--gold-dim, #8a6e2e);
+  color: var(--gold-light, #f0c94a);
+}
+
+.muster-card-btn--delete {
+  color: var(--ash, #8a7f72);
+}
+
+.muster-card-btn--delete:hover {
+  border-color: var(--blood, #9b1f1f);
+  color: var(--blood-light, #e03030);
+}
+
+/* ── Builder: header with back button ──────────────────── */
+.muster-builder-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.muster-back-btn {
+  background: transparent;
+  border: none;
+  color: var(--ash, #8a7f72);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  padding: 4px 2px;
+  transition: color 0.15s;
+}
+
+.muster-back-btn:hover {
+  color: var(--gold-light, #f0c94a);
+}
+
+/* ── Builder: form fields ──────────────────────────────── */
+.muster-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+/* ── Builder: points bar ───────────────────────────────── */
+.muster-pts-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+}
+
+.muster-pts-total {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--gold-light, #f0c94a);
+  letter-spacing: 0.02em;
+}
+
+.muster-pts-sep {
+  color: var(--ash, #8a7f72);
+  font-size: 16px;
+}
+
+.muster-pts-limit-input {
+  width: 64px;
+  background: var(--tab-bg, #0f0d0a);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 4px;
+  color: var(--ash-light, #d4c9b8);
+  font-family: 'Crimson Text', serif;
+  font-size: max(16px, 1em);
+  padding: 5px 8px;
+  outline: none;
+  text-align: center;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.muster-pts-limit-input:focus {
+  border-color: var(--gold-dim, #8a6e2e);
+}
+
+.muster-pts-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash, #8a7f72);
+}
+
+/* Over-limit state — points total turns blood red */
+.muster-pts-bar--over {
+  border-color: rgba(155, 31, 31, 0.5);
+}
+
+.muster-pts-bar--over .muster-pts-total {
+  color: var(--blood-light, #e03030);
+}
+
+/* ── Builder: selected units list ──────────────────────── */
+.muster-selected-list {
+  margin-bottom: 8px;
+}
+
+.muster-sel-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--tab-bg, #0f0d0a);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 6px;
+  padding: 9px 12px;
+  margin-bottom: 6px;
+}
+
+.muster-sel-name {
+  flex: 1;
+  min-width: 0;
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  color: var(--ash-light, #d4c9b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.muster-sel-size {
+  color: var(--ash, #8a7f72);
+  font-size: 13px;
+}
+
+.muster-sel-pts {
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  color: var(--gold-dim, #8a6e2e);
+  flex-shrink: 0;
+}
+
+/* Remove (✕) button on a selected unit */
+.muster-remove-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  border: 1px solid var(--tab-border, #352b1c);
+  background: transparent;
+  color: var(--ash, #8a7f72);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.muster-remove-btn:hover {
+  border-color: var(--blood, #9b1f1f);
+  color: var(--blood-light, #e03030);
+}
+
+/* Missing unit (retired / unknown unit_id) — degraded gracefully */
+.muster-sel-row--missing {
+  opacity: 0.6;
+  border-style: dashed;
+}
+
+.muster-sel-row--missing .muster-sel-name em {
+  color: var(--blood, #9b1f1f);
+  font-size: 12px;
+}
+
+/* ── Builder: available-unit picker cards ──────────────── */
+.muster-picker {
+  margin-bottom: 8px;
+}
+
+.muster-picker-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: var(--tab-bg, #0f0d0a);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  transition: border-color 0.15s;
+}
+
+.muster-picker-row:hover {
+  border-color: var(--gold-dim, #8a6e2e);
+}
+
+.muster-picker-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.muster-picker-name {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ash-light, #d4c9b8);
+  letter-spacing: 0.03em;
+  margin-bottom: 8px;
+}
+
+/* Stat grid inside a picker card */
+.muster-picker-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.muster-picker-stats .usg-cell {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-family: 'Crimson Text', serif;
+  font-size: 13px;
+  color: var(--ash-light, #d4c9b8);
+}
+
+.muster-picker-stats .usg-label {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ash, #8a7f72);
+}
+
+.muster-picker-rules {
+  display: block;
+  font-family: 'Crimson Text', serif;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--ash, #8a7f72);
+  line-height: 1.4;
+}
+
+.muster-picker-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.muster-picker-pts {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold-dim, #8a6e2e);
+}
+
+/* Add (+) button on a picker card */
+.muster-add-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid var(--gold-dim, #8a6e2e);
+  background: transparent;
+  color: var(--gold-light, #f0c94a);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.muster-add-btn:hover {
+  background: rgba(212, 168, 67, 0.12);
+  border-color: var(--gold-light, #f0c94a);
+}
+
+/* ── Builder: actions + status ─────────────────────────── */
+.muster-builder-actions {
+  margin-top: 16px;
+}
+
+.muster-status {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--gold-dim, #8a6e2e);
+  text-align: center;
+  padding: 10px 0;
+}
+
+/* ── Sub-heading inside picker (group by type) ─────────── */
+.section-label--sub {
+  margin-top: 14px;
+  opacity: 0.75;
+}
+
+/* ── Battle setup: "go to Muster" inline hint + link ───── */
+.setup-hint-inline {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--ash, #8a7f72);
+  font-style: italic;
+  padding: 6px 0;
+}
+
+.setup-link-btn {
+  background: transparent;
+  border: none;
+  color: var(--gold-light, #f0c94a);
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  font-style: italic;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.setup-link-btn:hover {
+  color: var(--gold-dim, #8a6e2e);
+}
+
+/* ── Loading placeholder (army list fetch) ─────────────── */
+.muster-loading {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--ash, #8a7f72);
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* ── Cache notice (stale data shown) ───────────────────── */
+.chronicle-cache-notice {
+  font-family: 'Crimson Text', serif;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--gold-dim, #8a6e2e);
+  text-align: center;
+  padding: 6px 0 10px;
+  opacity: 0.85;
 }
