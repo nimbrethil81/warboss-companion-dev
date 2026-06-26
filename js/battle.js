@@ -1,9 +1,9 @@
 /**
- * battle.js — Battle mode logic for Warboss Companion
+ * battle.js — Battle mode logic for Warboss Companion (v0.2)
  *
  * Responsibilities:
- *   - Render the battle setup screen (army select, opponent name,
- *     "who goes first?" selection, start)
+ *   - Render the battle setup screen (army picker from Muster saves,
+ *     opponent name, "who goes first?" selection, start)
  *   - Drive the in-game turn/phase loop
  *   - Display phase prompts sourced from kow.json (never hardcoded here)
  *   - Render contextual unit stat cards per phase
@@ -11,6 +11,13 @@
  *   - Accept quick notes per turn
  *   - Handle game end: write summary to Sheets via sheets.js,
  *     then hand off to chronicle.js
+ *
+ * Army loading (v0.2):
+ *   Battle now requires a saved Muster army. On setup, armies are fetched
+ *   from Sheets (with cache fallback). The chosen army's unit_ids are
+ *   resolved against WBC.armyData (goblins.json) to build the in-game roster.
+ *   The selected army is held in WBCStorage.KEYS.SELECTED_ARMY for the
+ *   duration of setup; it is cleared once the game object is built.
  *
  * Dependencies (must be loaded before this file):
  *   - storage.js  (WBCStorage)
@@ -47,7 +54,7 @@ var WBCBattle = (function () {
 
   /* Which stats to show on unit cards per phase.
      Values are keys on the unit object from goblins.json.
-     'special_rules' is always appended — handled separately. */
+     'special_rules' is always rendered separately below the stat row. */
   var PHASE_STATS = {
     'movement':      [{ key: 'sp',  label: 'Sp'  }],
     'ranged':        [{ key: 'att', label: 'Att' },
@@ -63,6 +70,7 @@ var WBCBattle = (function () {
   var _game     = null;   // Active game object (mirrors wbc_active_game)
   var _config   = null;   // Cached reference to WBC.systemConfig
   var _rendered = false;  // True once the in-game UI has been built
+  var _armies   = [];     // Armies fetched for the setup screen
 
   /* ─── Utility ────────────────────────────────────────────────────── */
 
@@ -118,7 +126,6 @@ var WBCBattle = (function () {
     if (val === null || val === undefined || val === '-') return '—';
     var s = String(val);
     if (key === 'me' || key === 'sh' || key === 'de') {
-      /* Only append '+' if not already present and not '—' */
       return (s.indexOf('+') === -1 && s !== '—') ? s + '+' : s;
     }
     return s;
@@ -154,15 +161,14 @@ var WBCBattle = (function () {
 
   /* ─── Setup screen ───────────────────────────────────────────────── */
 
+  /**
+   * Render the setup shell immediately, then asynchronously load armies
+   * into the picker. This keeps the UI responsive — the player sees
+   * the form immediately while the fetch happens in the background.
+   */
   function _renderSetup() {
     var page = _el('page-battle');
     if (!page) return;
-
-    var armyData    = (window.WBC && window.WBC.armyData) ? window.WBC.armyData : null;
-    var armyOptions = armyData && armyData.army_name
-      ? '<option value="' + _escapeHtml(armyData.army_id) + '">'
-        + _escapeHtml(armyData.army_name) + '</option>'
-      : '<option value="">Loading army…</option>';
 
     page.innerHTML = [
       '<div class="page-header">',
@@ -172,13 +178,19 @@ var WBCBattle = (function () {
 
       '<div class="battle-setup-form">',
 
+      /* Army picker — populated by _populateArmyPicker() */
       '  <div class="setup-field">',
       '    <label class="setup-label" for="battle-army-select">Your Army</label>',
       '    <select id="battle-army-select" class="setup-input">',
-      armyOptions,
+      '      <option value="">Loading armies…</option>',
       '    </select>',
+      '    <div id="battle-army-hint" class="setup-hint-inline" style="display:none;">',
+      '      No saved armies. <button id="battle-go-muster" class="setup-link-btn">',
+      '      Go to Muster</button> to build one first.',
+      '    </div>',
       '  </div>',
 
+      /* Opponent field */
       '  <div class="setup-field">',
       '    <label class="setup-label" for="battle-opponent-input">',
       '      Opponent\'s Army <span class="setup-optional">(optional)</span>',
@@ -187,6 +199,7 @@ var WBCBattle = (function () {
       '           placeholder="e.g. Undead, Northern Alliance…" maxlength="80" />',
       '  </div>',
 
+      /* Who goes first */
       '  <div class="setup-field">',
       '    <div class="setup-label">Who goes first?</div>',
       '    <div class="setup-toggle" id="setup-first-player">',
@@ -210,6 +223,78 @@ var WBCBattle = (function () {
 
     _bindSetupEvents();
     _renderResumeCard();
+    _loadArmiesForSetup();
+  }
+
+  /**
+   * Fetch armies from Sheets (with cache fallback) and populate the
+   * army <select> element. Shows a "Go to Muster" prompt if none exist.
+   */
+  function _loadArmiesForSetup() {
+    WBCSheets.fetchArmies().then(function (result) {
+      _armies = result.data || [];
+      _populateArmyPicker(result.fromCache);
+      if (result.error && _armies.length === 0) {
+        _showError(result.error);
+      }
+    }).catch(function (err) {
+      console.error('[battle] fetchArmies error:', err);
+      _armies = WBCStorage.loadArmiesCache() || [];
+      _populateArmyPicker(true);
+      if (_armies.length === 0) {
+        _showError('Could not load armies. Check your connection and try again.');
+      }
+    });
+  }
+
+  function _populateArmyPicker(fromCache) {
+    var select  = _el('battle-army-select');
+    var hintEl  = _el('battle-army-hint');
+    if (!select) return;
+
+    if (_armies.length === 0) {
+      select.style.display = 'none';
+      if (hintEl) hintEl.style.display = 'block';
+      return;
+    }
+
+    var options = _armies.map(function (a) {
+      var unitIds;
+      try {
+        unitIds = typeof a.units === 'string' ? JSON.parse(a.units) : (a.units || []);
+      } catch (e) { unitIds = []; }
+
+      var pts = unitIds.reduce(function (sum, uid) {
+        var u = _findUnitInArmyData(uid);
+        return sum + (u && typeof u.pts === 'number' ? u.pts : 0);
+      }, 0);
+
+      var label = _escapeHtml(a.army_name || 'Unnamed')
+        + ' (' + unitIds.length + ' units, ' + pts + ' pts)';
+
+      return '<option value="' + _escapeHtml(a.army_id) + '">' + label + '</option>';
+    });
+
+    select.innerHTML = '<option value="">— choose an army —</option>' + options.join('');
+    select.style.display = '';
+    if (hintEl) hintEl.style.display = 'none';
+
+    if (fromCache) {
+      _showError('Showing cached armies — changes made in Muster may not appear here.');
+    }
+  }
+
+  /**
+   * Look up a unit in WBC.armyData by unit_id.
+   * Returns null if not found (handles retired/unknown units gracefully).
+   */
+  function _findUnitInArmyData(unitId) {
+    var armyData = window.WBC && window.WBC.armyData;
+    if (!armyData || !Array.isArray(armyData.units)) return null;
+    for (var i = 0; i < armyData.units.length; i++) {
+      if (armyData.units[i].unit_id === unitId) return armyData.units[i];
+    }
+    return null;
   }
 
   function _renderResumeCard() {
@@ -266,8 +351,19 @@ var WBCBattle = (function () {
       });
     }
 
+    /* Start button */
     var startBtn = _el('battle-start-btn');
     if (startBtn) startBtn.addEventListener('click', _startNewGame);
+
+    /* Go to Muster link (shown when no armies exist) */
+    var musterBtn = _el('battle-go-muster');
+    if (musterBtn) {
+      musterBtn.addEventListener('click', function () {
+        if (window.WBC && typeof window.WBC.switchTab === 'function') {
+          window.WBC.switchTab('muster');
+        }
+      });
+    }
   }
 
   /* ─── Game lifecycle ─────────────────────────────────────────────── */
@@ -277,23 +373,42 @@ var WBCBattle = (function () {
     var opponentInput  = _el('battle-opponent-input');
     var firstPlayerBtn = _qs('.setup-toggle-btn--active', _el('setup-first-player'));
 
-    var armyId     = armySelect    ? armySelect.value.trim()    : '';
-    var opponent   = opponentInput ? opponentInput.value.trim() : '';
+    var armyId      = armySelect    ? armySelect.value.trim()    : '';
+    var opponent    = opponentInput ? opponentInput.value.trim() : '';
     var firstPlayer = firstPlayerBtn
       ? firstPlayerBtn.getAttribute('data-value')
       : 'you';
 
     if (!armyId) {
-      _showError('Please select an army before starting.');
+      _showError('Please select an army before starting. Build one in Muster first.');
       return;
     }
 
-    /* Build unit roster from army data */
+    /* Find the chosen army record */
+    var armyRecord = null;
+    for (var i = 0; i < _armies.length; i++) {
+      if (_armies[i].army_id === armyId) { armyRecord = _armies[i]; break; }
+    }
+
+    if (!armyRecord) {
+      _showError('Could not find the selected army. Please try again.');
+      return;
+    }
+
+    /* Resolve unit_ids → full unit objects from WBC.armyData (goblins.json) */
+    var unitIds;
+    try {
+      unitIds = typeof armyRecord.units === 'string'
+        ? JSON.parse(armyRecord.units)
+        : (armyRecord.units || []);
+    } catch (e) { unitIds = []; }
+
     var units = [];
-    var armyData = (window.WBC && window.WBC.armyData) ? window.WBC.armyData : null;
-    if (armyData && Array.isArray(armyData.units)) {
-      units = armyData.units.map(function (u) {
-        return {
+    var missing = [];
+    unitIds.forEach(function (uid) {
+      var u = _findUnitInArmyData(uid);
+      if (u) {
+        units.push({
           unit_id:       u.unit_id,
           name:          u.name,
           size:          u.size,
@@ -307,20 +422,35 @@ var WBCBattle = (function () {
           special_rules: u.special_rules || [],
           routed:        false,
           damage:        0
-        };
-      });
+        });
+      } else {
+        missing.push(uid);
+        console.warn('[battle] unit_id not found in armyData:', uid);
+      }
+    });
+
+    if (missing.length > 0) {
+      /* Non-fatal: warn but continue with the units that did resolve */
+      console.warn('[battle] ' + missing.length + ' unit(s) could not be resolved. '
+        + 'They may have been retired from goblins.json.');
     }
 
-    /* If opponent goes first, Turn 1 starts at opponent_turn phase.
-       Otherwise it starts at movement (index 0). */
+    if (units.length === 0) {
+      _showError('This army has no units that could be loaded. '
+        + 'Please edit it in Muster and add units.');
+      return;
+    }
+
+    /* If opponent goes first, Turn 1 starts at opponent_turn phase */
     var startPhase = (firstPlayer === 'opponent')
-      ? 'opponent_turn'
-      : PHASE_ORDER[0];
+      ? OPP_PHASE
+      : YOUR_PHASES[0];
 
     _game = {
       game_id:       _uuid(),
       started_at:    _isoNow(),
       army_id:       armyId,
+      army_name:     armyRecord.army_name || '',
       opponent_army: opponent,
       first_player:  firstPlayer,
       current_turn:  1,
@@ -455,7 +585,7 @@ var WBCBattle = (function () {
 
     var phase      = _findPhase(_game.current_phase);
     var phaseName  = phase ? phase.phase_name : _game.current_phase;
-    var isOpponent = (_game.current_phase === 'opponent_turn');
+    var isOpponent = (_game.current_phase === OPP_PHASE);
 
     row.className = 'battle-phase-row'
       + (isOpponent ? ' battle-phase-row--opp' : '');
@@ -473,7 +603,7 @@ var WBCBattle = (function () {
     var oppBtn = _el('player-btn-opp');
     if (!youBtn || !oppBtn || !_game) return;
 
-    var isOpp = (_game.current_phase === 'opponent_turn');
+    var isOpp = (_game.current_phase === OPP_PHASE);
     youBtn.className = 'battle-player-btn' + (isOpp ? '' : ' battle-player-btn--you');
     oppBtn.className = 'battle-player-btn' + (isOpp ? ' battle-player-btn--opp' : '');
   }
@@ -498,7 +628,6 @@ var WBCBattle = (function () {
     });
     var total = phase.prompts.length;
 
-    /* Show first high-priority prompt text in collapsed bar */
     var previewText = highPrompts.length > 0
       ? highPrompts[0].text
       : phase.prompts[0].text;
@@ -518,7 +647,6 @@ var WBCBattle = (function () {
       '</div>',
     ].join('');
 
-    /* Toggle expand on tap of collapsed row */
     var collapsed = _el('prompts-collapsed');
     if (collapsed) {
       collapsed.addEventListener('click', function () {
@@ -531,7 +659,6 @@ var WBCBattle = (function () {
   }
 
   function _buildPromptsExpandedHTML(prompts) {
-    /* Sort high priority first */
     var sorted = prompts.slice().sort(function (a, b) {
       var ord = { high: 0, medium: 1, low: 2 };
       return (ord[a.priority] || 1) - (ord[b.priority] || 1);
@@ -638,7 +765,7 @@ var WBCBattle = (function () {
       ].join('');
     }).join('');
 
-    /* Special rules */
+    /* Special rules — truncated by CSS, expands on tap */
     var rules     = (u.special_rules || []).join(', ') || '—';
     var rulesHTML = [
       '<div class="unit-rules-row" data-unit-id="' + uid + '" data-expanded="false">',
@@ -721,14 +848,11 @@ var WBCBattle = (function () {
     if (_isYourPhase()) {
       var idx = _yourPhaseIndex();
       if (idx < YOUR_PHASES.length - 1) {
-        /* Step within your phases: movement→ranged, ranged→combat */
         _game.current_phase = YOUR_PHASES[idx + 1];
       } else {
-        /* End of combat — cross to opponent's block */
         _game.current_phase = OPP_PHASE;
       }
     } else {
-      /* In opponent_turn — cross to your block, advance turn */
       if (_game.current_turn >= maxTurns) {
         _promptGameEnd();
         return;
@@ -747,16 +871,13 @@ var WBCBattle = (function () {
     if (_isYourPhase()) {
       var idx = _yourPhaseIndex();
       if (idx > 0) {
-        /* Step back within your phases: ranged→movement, combat→ranged */
         _game.current_phase = YOUR_PHASES[idx - 1];
       } else {
-        /* At movement — cross back to opponent_turn of the previous turn */
-        if (_game.current_turn <= 1) return; /* Turn 1 movement: no further back */
+        if (_game.current_turn <= 1) return;
         _game.current_turn -= 1;
         _game.current_phase = OPP_PHASE;
       }
     } else {
-      /* In opponent_turn — cross back to combat (last of your phases) */
       _game.current_phase = YOUR_PHASES[YOUR_PHASES.length - 1];
     }
 
@@ -769,10 +890,8 @@ var WBCBattle = (function () {
     var maxTurns = (_config && _config.max_turns) ? _config.max_turns : 7;
 
     if (_isYourPhase()) {
-      /* Skip rest of your phases — jump to opponent's turn */
       _game.current_phase = OPP_PHASE;
     } else {
-      /* In opponent_turn — start the next full turn */
       if (_game.current_turn >= maxTurns) {
         _promptGameEnd();
         return;
@@ -789,12 +908,10 @@ var WBCBattle = (function () {
     if (!_game) return;
 
     if (_isYourPhase()) {
-      /* In your phases — go back to opponent_turn of the previous turn */
       if (_game.current_turn <= 1) return;
       _game.current_turn -= 1;
       _game.current_phase = OPP_PHASE;
     } else {
-      /* In opponent_turn — restart your phases for this same turn */
       _game.current_phase = YOUR_PHASES[0];
     }
 
@@ -987,7 +1104,6 @@ var WBCBattle = (function () {
   /* ─── Event binding ──────────────────────────────────────────────── */
 
   function _bindGameEvents() {
-    /* Nav bar */
     var nextPhase = _el('nav-next-phase');
     if (nextPhase) {
       nextPhase.addEventListener('click', function () {
@@ -1010,11 +1126,9 @@ var WBCBattle = (function () {
     var prevTurn = _el('nav-prev-turn');
     if (prevTurn) prevTurn.addEventListener('click', _retreatTurn);
 
-    /* Notes */
     var saveNote = _el('battle-save-note-btn');
     if (saveNote) saveNote.addEventListener('click', _saveNoteFromField);
 
-    /* End game */
     var endBtn = _el('battle-end-game-btn');
     if (endBtn) {
       endBtn.addEventListener('click', function () {
@@ -1029,7 +1143,7 @@ var WBCBattle = (function () {
   /* ─── Error display ──────────────────────────────────────────────── */
 
   function _showError(msg) {
-    var errEl = _el('battle-error');
+    var errEl = _el('battle-error') || _el('battle-game-error');
     if (errEl) {
       errEl.textContent = msg;
       errEl.style.display = 'block';
@@ -1047,6 +1161,7 @@ var WBCBattle = (function () {
   function onTabActivated() {
     _config = (window.WBC && window.WBC.systemConfig)
       ? window.WBC.systemConfig : null;
+    _armies = [];
     _loadGame();
 
     if (_game && !_game.result) {
@@ -1058,7 +1173,7 @@ var WBCBattle = (function () {
 
   return {
     init:           init,
-    onTabActivated: onTabActivated
+    onTabActivated: onTabActivated,
   };
 
 }());
