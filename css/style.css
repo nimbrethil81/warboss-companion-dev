@@ -1902,3 +1902,300 @@ button:focus-visible,
   font-style: italic;
   letter-spacing: 0;
 }
+
+/* ═══════════════════════════════════════════════════════
+   23. BATTLE SETUP SCREEN — FORM ELEMENTS
+   Setup field, label, input, and the primary/secondary
+   action buttons used across setup, resume, and end screens.
+   ═══════════════════════════════════════════════════════ */
+
+.battle-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 0 0 8px;
+}
+
+.setup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setup-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ash, #8a7f72);
+}
+
+.setup-input {
+  width: 100%;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  color: var(--ash-light, #d4c9b8);
+  font-family: 'Crimson Text', serif;
+  font-size: max(16px, 1em); /* prevent iOS zoom */
+  padding: 11px 12px;
+  outline: none;
+  min-height: 44px;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.setup-input:focus {
+  border-color: var(--gold-dim, #8a6e2e);
+}
+
+.setup-input::placeholder {
+  color: var(--ash, #8a7f72);
+  opacity: 0.5;
+  font-style: italic;
+}
+
+/* Select arrow override — browsers strip styling on select */
+select.setup-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238a7f72' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+.setup-hint {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--ash, #8a7f72);
+  font-style: italic;
+  text-align: center;
+  padding: 8px 0;
+}
+
+/* ── Shared action buttons ────────────────────────────── */
+
+/* Primary — gold outline, used for Begin Battle etc. */
+.battle-primary-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  margin-top: 8px;
+  border-radius: 5px;
+  border: 1px solid var(--gold-dim, #8a6e2e);
+  background: transparent;
+  color: var(--gold-light, #f0c94a);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 48px;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.battle-primary-btn:hover {
+  border-color: var(--gold-light, #f0c94a);
+  background: rgba(212, 168, 67, 0.08);
+}
+
+/* Secondary — ash outline, used for Continue, Retry etc. */
+.battle-secondary-btn {
+  display: block;
+  width: 100%;
+  padding: 12px 20px;
+  margin-top: 8px;
+  border-radius: 5px;
+  border: 1px solid var(--tab-border, #352b1c);
+  background: transparent;
+  color: var(--ash-light, #d4c9b8);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.battle-secondary-btn:hover {
+  border-color: var(--ash, #8a7f72);
+}
+
+/* Abandon — blood outline, destructive */
+.battle-abandon-btn {
+  display: block;
+  width: 100%;
+  padding: 10px 20px;
+  margin-top: 6px;
+  border-radius: 5px;
+  border: 1px solid rgba(155, 31, 31, 0.4);
+  background: transparent;
+  color: var(--blood, #9b1f1f);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 40px;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.battle-abandon-btn:hover {
+  border-color: var(--blood, #9b1f1f);
+  color: var(--blood-light, #e03030);
+}
+
+/* ── Inline error message ─────────────────────────────── */
+
+.battle-error {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--blood-light, #e03030);
+  line-height: 1.5;
+  padding: 10px 0 4px;
+  text-align: center;
+}
+
+/* ── Section label (used above "Resume" etc.) ─────────── */
+
+.section-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ash, #8a7f72);
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   24. BATTLE RESUME CARD
+   ═══════════════════════════════════════════════════════ */
+
+.battle-resume-card {
+  background: var(--stone, #211b13);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 6px;
+  padding: 14px 14px 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.battle-resume-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--gold-dim, #8a6e2e);
+  border-radius: 6px 0 0 6px;
+}
+
+.resume-meta {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--ash-light, #d4c9b8);
+  letter-spacing: 0.06em;
+  margin-bottom: 12px;
+  margin-left: 4px;
+}
+
+.resume-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ═══════════════════════════════════════════════════════
+   25. GAME END / RESULT SCREEN
+   ═══════════════════════════════════════════════════════ */
+
+.battle-end-summary {
+  background: var(--stone, #211b13);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.battle-end-label {
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  color: var(--ash, #8a7f72);
+  font-style: italic;
+}
+
+/* Result row — three buttons side by side */
+.battle-result-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.battle-result-btn {
+  padding: 14px 8px;
+  border-radius: 5px;
+  border: 1px solid var(--tab-border, #352b1c);
+  background: transparent;
+  color: var(--ash, #8a7f72);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 52px;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.battle-result-btn--win {
+  border-color: var(--gold-dim, #8a6e2e);
+  color: var(--gold-light, #f0c94a);
+}
+
+.battle-result-btn--win:hover {
+  background: rgba(212, 168, 67, 0.1);
+  border-color: var(--gold-light, #f0c94a);
+}
+
+.battle-result-btn--draw {
+  border-color: var(--sapphire, #2563a8);
+  color: #6a99cc;
+}
+
+.battle-result-btn--draw:hover {
+  background: rgba(37, 99, 168, 0.1);
+}
+
+.battle-result-btn--loss {
+  border-color: rgba(155, 31, 31, 0.5);
+  color: var(--blood, #9b1f1f);
+}
+
+.battle-result-btn--loss:hover {
+  background: rgba(155, 31, 31, 0.1);
+  border-color: var(--blood, #9b1f1f);
+}
+
+/* Saving status message */
+.battle-saving-status {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--ash, #8a7f72);
+  font-style: italic;
+  text-align: center;
+  padding: 12px 0;
+}
