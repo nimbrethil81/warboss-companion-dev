@@ -118,7 +118,7 @@ window.WBCSheets = (() => {
 
   /**
    * Fetch all armies belonging to the current user from the `armies` tab.
-   * On success, updates the local cache via Storage.
+   * On success, updates the local cache via WBCStorage.
    * On failure, returns the stale cache (may be null if cache is cold).
    *
    * @returns {Promise<{ data: Array, fromCache: boolean, error: string|null }>}
@@ -126,11 +126,11 @@ window.WBCSheets = (() => {
   async function fetchArmies() {
     try {
       const data = await get(TABS.ARMIES);
-      Storage.saveArmiesCache(data);
+      WBCStorage.saveArmiesCache(data);
       return { data, fromCache: false, error: null };
     } catch (err) {
       console.warn('[Sheets] fetchArmies failed, falling back to cache:', err);
-      const cached = Storage.loadArmiesCache();
+      const cached = WBCStorage.loadArmiesCache();
       return {
         data: cached || [],
         fromCache: true,
@@ -141,13 +141,17 @@ window.WBCSheets = (() => {
 
   /**
    * Write a new or updated army record to the `armies` tab.
-   * Does not update the local cache — the caller should re-fetch or
-   * optimistically update the cache themselves.
+   * The caller should optimistically update the armies cache themselves
+   * after a successful save.
    *
-   * army object shape (SPEC.md §3):
+   * army object shape:
    * {
-   *   army_id, army_name, game_system, units (JSON string),
-   *   created_at, updated_at
+   *   army_id:     string,   — UUID
+   *   army_name:   string,   — display name
+   *   game_system: string,   — e.g. "kow"
+   *   units:       string,   — JSON.stringify(unit_ids[]) — array of unit_id strings only
+   *   created_at:  string,   — ISO 8601
+   *   updated_at:  string,   — ISO 8601
    * }
    *
    * @param {Object} army
@@ -166,11 +170,31 @@ window.WBCSheets = (() => {
     }
   }
 
+  /**
+   * Delete an army record from the `armies` tab by army_id.
+   * The caller should remove the entry from the local cache after success.
+   *
+   * @param {string} armyId
+   * @returns {Promise<{ success: boolean, error: string|null }>}
+   */
+  async function deleteArmy(armyId) {
+    try {
+      await post({ action: 'delete', tab: TABS.ARMIES, id: armyId, idField: 'army_id' });
+      return { success: true, error: null };
+    } catch (err) {
+      console.error('[Sheets] deleteArmy failed:', err);
+      return {
+        success: false,
+        error: 'Your army could not be deleted. Please try again.',
+      };
+    }
+  }
+
   // ─── GAMES ───────────────────────────────────────────────────────────────────
 
   /**
    * Fetch all past games from the `games` tab.
-   * On success, updates the local cache via Storage.
+   * On success, updates the local cache via WBCStorage.
    * On failure, returns the stale cache.
    *
    * @returns {Promise<{ data: Array, fromCache: boolean, error: string|null }>}
@@ -178,11 +202,11 @@ window.WBCSheets = (() => {
   async function fetchGames() {
     try {
       const data = await get(TABS.GAMES);
-      Storage.saveGamesCache(data);
+      WBCStorage.saveGamesCache(data);
       return { data, fromCache: false, error: null };
     } catch (err) {
       console.warn('[Sheets] fetchGames failed, falling back to cache:', err);
-      const cached = Storage.loadGamesCache();
+      const cached = WBCStorage.loadGamesCache();
       return {
         data: cached || [],
         fromCache: true,
@@ -197,7 +221,7 @@ window.WBCSheets = (() => {
    * the result. Local game state (wbc_active_game) should be cleared by
    * the caller only after this resolves with success: true.
    *
-   * game object shape (SPEC.md §3):
+   * game object shape:
    * {
    *   game_id, date, army_id, opponent_army,
    *   result, turns_played, notes
@@ -226,7 +250,7 @@ window.WBCSheets = (() => {
    * Called alongside saveGame() at game end — the full turn_log array
    * from wbc_active_game is written in one call.
    *
-   * Each entry shape (SPEC.md §3):
+   * Each entry shape:
    * { log_id, game_id, turn_number, phase, note }
    *
    * @param {Array} logEntries
@@ -268,10 +292,10 @@ window.WBCSheets = (() => {
 
   /**
    * Write a post-game reflection to the `reflections` tab.
-   * One reflection per game_id — the Apps Script endpoint should upsert
-   * on (reflection_id or game_id) to avoid duplicates.
+   * One reflection per game_id — the Apps Script endpoint upserts
+   * on game_id to avoid duplicates.
    *
-   * reflection object shape (SPEC.md §3):
+   * reflection object shape:
    * {
    *   reflection_id, game_id,
    *   what_worked, what_didnt, next_time,
@@ -353,6 +377,7 @@ window.WBCSheets = (() => {
     // Armies
     fetchArmies,
     saveArmy,
+    deleteArmy,
 
     // Games
     fetchGames,
