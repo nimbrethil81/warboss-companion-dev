@@ -1189,3 +1189,716 @@ button:focus-visible,
   outline-offset: 3px;
   border-radius: 4px;
 }
+
+
+/* ═══════════════════════════════════════════════════════
+   15. BATTLE MODE v0.2 — LAYOUT REGIONS
+   Three-region layout: fixed header / scrollable roster /
+   fixed notes bar. Replaces the old single-scroll approach.
+   ═══════════════════════════════════════════════════════ */
+
+/*
+ * #page-battle must be a flex column so the three regions
+ * stack correctly and only .battle-scroll grows to fill space.
+ */
+#page-battle {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* children handle their own overflow */
+}
+
+/* Fixed header — turn row + phase row + nav bar + prompts bar */
+.battle-fixed {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Scrollable roster region */
+.battle-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 10px 12px 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.battle-scroll::-webkit-scrollbar { width: 2px; }
+.battle-scroll::-webkit-scrollbar-track { background: transparent; }
+.battle-scroll::-webkit-scrollbar-thumb {
+  background: var(--tab-border, #352b1c);
+  border-radius: 2px;
+}
+
+/* Fixed notes bar at very bottom */
+.battle-notes-bar {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  padding: 8px 12px;
+  border-top: 1px solid var(--tab-border, #352b1c);
+  background: var(--tab-bg, #0f0d0a);
+}
+
+.battle-notes-field {
+  flex: 1;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  color: var(--ash-light, #d4c9b8);
+  font-family: 'Crimson Text', serif;
+  font-size: max(15px, 1em);
+  padding: 7px 10px;
+  resize: none;
+  height: 52px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.battle-notes-field::placeholder {
+  color: var(--ash, #8a7f72);
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.battle-notes-field:focus {
+  border-color: var(--gold-dim, #8a6e2e);
+}
+
+.battle-save-note-btn {
+  flex-shrink: 0;
+  height: 52px;
+  min-width: 60px;
+  padding: 0 12px;
+  border-radius: 5px;
+  border: 1px solid var(--gold-dim, #8a6e2e);
+  background: transparent;
+  color: var(--gold-dim, #8a6e2e);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: center;
+  line-height: 1.4;
+  transition: all 0.15s;
+}
+
+.battle-save-note-btn:hover {
+  border-color: var(--gold-light, #f0c94a);
+  color: var(--gold-light, #f0c94a);
+}
+
+/* ═══════════════════════════════════════════════════════
+   16. BATTLE MODE v0.2 — TURN HEADER
+   ═══════════════════════════════════════════════════════ */
+
+.battle-turn-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px 8px;
+  background: var(--tab-bg, #0f0d0a);
+  border-bottom: 1px solid var(--tab-border, #352b1c);
+}
+
+.battle-turn-block {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.battle-turn-label {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ash, #8a7f72);
+  text-transform: uppercase;
+}
+
+.battle-turn-number {
+  font-family: 'Cinzel', serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--gold-light, #f0c94a);
+  line-height: 1;
+  text-shadow: 0 0 16px rgba(240,201,74,0.3);
+}
+
+.battle-turn-max {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  color: var(--ash, #8a7f72);
+}
+
+/* You / Opp toggle */
+.battle-player-toggle {
+  display: flex;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 8px;
+  padding: 2px;
+  gap: 2px;
+  margin-left: 6px;
+}
+
+.battle-player-btn {
+  padding: 5px 11px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ash, #8a7f72);
+  cursor: default; /* read-only indicator — reflects phase, not a manual toggle */
+  white-space: nowrap;
+  transition: all 0.15s;
+  min-height: 32px;
+  min-width: 44px;
+}
+
+.battle-player-btn--you {
+  background: var(--blood, #9b1f1f);
+  color: #fff;
+}
+
+.battle-player-btn--opp {
+  background: var(--sapphire, #2563a8);
+  color: #fff;
+}
+
+/* ═══════════════════════════════════════════════════════
+   17. BATTLE MODE v0.2 — PHASE DISPLAY ROW
+   ═══════════════════════════════════════════════════════ */
+
+.battle-phase-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: var(--stone, #211b13);
+  border-bottom: 1px solid var(--tab-border, #352b1c);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Gold left strip — your turn */
+.battle-phase-row::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--gold, #d4a843);
+}
+
+/* Blue left strip — opponent's turn */
+.battle-phase-row--opp::before {
+  background: var(--sapphire, #2563a8);
+}
+
+.battle-phase-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ash, #8a7f72);
+  flex-shrink: 0;
+}
+
+.battle-phase-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--gold-light, #f0c94a);
+}
+
+.battle-phase-row--opp .battle-phase-name {
+  color: #6a99cc;
+}
+
+/* ═══════════════════════════════════════════════════════
+   18. BATTLE MODE v0.2 — FOUR-BUTTON NAV BAR
+   ═══════════════════════════════════════════════════════ */
+
+.battle-nav-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  border-bottom: 1px solid var(--tab-border, #352b1c);
+  background: var(--tab-bg, #0f0d0a);
+}
+
+.battle-nav-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 9px 4px;
+  border: none;
+  border-right: 1px solid var(--tab-border, #352b1c);
+  background: transparent;
+  cursor: pointer;
+  min-height: 50px;
+  transition: background 0.12s;
+}
+
+.battle-nav-btn:last-child {
+  border-right: none;
+}
+
+.battle-nav-btn:hover {
+  background: rgba(212, 168, 67, 0.07);
+}
+
+.battle-nav-btn:active {
+  background: rgba(212, 168, 67, 0.14);
+}
+
+.bnb-icon {
+  font-size: 18px;
+  line-height: 1;
+  color: var(--ash, #8a7f72);
+  transition: color 0.12s;
+}
+
+.bnb-tag {
+  font-family: 'Cinzel', serif;
+  font-size: 7px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ash, #8a7f72);
+  opacity: 0.7;
+}
+
+/* Turn buttons — gold accent, slightly larger icon */
+.battle-nav-btn--turn .bnb-icon {
+  font-size: 20px;
+  color: var(--gold-light, #f0c94a);
+}
+
+.battle-nav-btn--turn .bnb-tag {
+  color: var(--gold-dim, #8a6e2e);
+  opacity: 1;
+}
+
+.battle-nav-btn--turn:hover .bnb-icon {
+  color: var(--gold, #d4a843);
+}
+
+/* Phase buttons — subtler */
+.battle-nav-btn--phase .bnb-icon {
+  color: var(--ash, #8a7f72);
+}
+
+.battle-nav-btn--phase:hover .bnb-icon {
+  color: var(--ash-light, #d4c9b8);
+}
+
+/* ═══════════════════════════════════════════════════════
+   19. BATTLE MODE v0.2 — PROMPTS BAR
+   Collapsed: single line + count badge.
+   Expanded: full prompt cards below.
+   ═══════════════════════════════════════════════════════ */
+
+.battle-prompts-bar {
+  border-bottom: 1px solid var(--tab-border, #352b1c);
+  background: var(--stone, #211b13);
+}
+
+.prompts-bar-collapsed {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  min-height: 40px;
+}
+
+.prompts-bar-icon {
+  font-size: 13px;
+  color: var(--blood, #9b1f1f);
+  flex-shrink: 0;
+}
+
+.prompts-bar-preview {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--ash-light, #d4c9b8);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.02em;
+}
+
+.prompts-bar-count {
+  background: var(--blood, #9b1f1f);
+  color: #fff;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 2px 8px;
+  flex-shrink: 0;
+}
+
+/* Expanded panel */
+.prompts-bar-expanded {
+  border-top: 1px solid var(--tab-border, #352b1c);
+  padding: 8px 12px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prompt-card {
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  overflow: hidden;
+  position: relative;
+}
+
+.prompt-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  border-radius: 5px 0 0 5px;
+}
+
+.prompt-card--high::before {
+  background: var(--blood, #9b1f1f);
+  box-shadow: 0 0 6px rgba(155,31,31,0.4);
+}
+
+.prompt-card--medium::before {
+  background: var(--gold-dim, #8a6e2e);
+}
+
+.prompt-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px 9px 14px;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.prompt-card-icon {
+  font-size: 12px;
+  color: var(--ash, #8a7f72);
+  flex-shrink: 0;
+}
+
+.prompt-card--high .prompt-card-icon {
+  color: var(--blood, #9b1f1f);
+}
+
+.prompt-card-text {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ash-light, #d4c9b8);
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  flex: 1;
+}
+
+.prompt-card-toggle {
+  font-size: 14px;
+  color: var(--ash, #8a7f72);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.prompt-card-detail {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--ash, #8a7f72);
+  line-height: 1.5;
+  padding: 0 14px 10px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   20. BATTLE MODE v0.2 — UNIT CARDS
+   ═══════════════════════════════════════════════════════ */
+
+.battle-roster-label {
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: var(--ash, #8a7f72);
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 8px;
+}
+
+.battle-roster-label--routed {
+  margin-top: 16px;
+  color: var(--blood, #9b1f1f);
+}
+
+.unit-card {
+  background: var(--stone, #211b13);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  margin-bottom: 7px;
+}
+
+/* Gold left accent strip */
+.unit-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--gold-dim, #8a6e2e);
+  border-radius: 6px 0 0 6px;
+}
+
+/* Routed state */
+.unit-card--routed {
+  opacity: 0.42;
+  border-color: rgba(155,31,31,0.3);
+}
+
+.unit-card--routed::before {
+  background: var(--blood, #9b1f1f);
+  opacity: 0.5;
+}
+
+/* Top row: name block + Routed button */
+.unit-card-top {
+  display: flex;
+  align-items: center;
+  padding: 10px 10px 8px 14px;
+  gap: 8px;
+  min-height: 52px;
+}
+
+.unit-card-names {
+  flex: 1;
+  min-width: 0;
+}
+
+.unit-card-name {
+  font-family: 'Cinzel', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ash-light, #d4c9b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unit-card--routed .unit-card-name {
+  text-decoration: line-through;
+  color: var(--ash, #8a7f72);
+}
+
+.unit-card-size {
+  font-size: 11px;
+  color: var(--ash, #8a7f72);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+/* Routed / Restore button — minimum 44×44px tap target */
+.unit-routed-btn {
+  flex-shrink: 0;
+  min-height: 40px;
+  min-width: 72px;
+  padding: 0 12px;
+  border-radius: 5px;
+  border: 1px solid var(--tab-border, #352b1c);
+  background: transparent;
+  color: var(--ash, #8a7f72);
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.unit-routed-btn:hover {
+  border-color: var(--blood, #9b1f1f);
+  color: var(--blood-light, #e03030);
+}
+
+.unit-card--routed .unit-routed-btn {
+  border-color: var(--blood, #9b1f1f);
+  color: var(--blood, #9b1f1f);
+}
+
+/* Contextual stats row */
+.unit-card-stats {
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid rgba(53,43,28,0.6);
+  padding: 7px 14px 8px;
+  gap: 0;
+}
+
+.unit-stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 44px;
+  padding: 0 6px;
+}
+
+.unit-stat-cell + .unit-stat-cell {
+  border-left: 1px solid rgba(53,43,28,0.5);
+}
+
+.unit-stat-label {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 0.15em;
+  color: var(--gold-dim, #8a6e2e);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+.unit-stat-value {
+  font-family: 'Cinzel', serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ash-light, #d4c9b8);
+  line-height: 1;
+}
+
+/* Special rules row — truncated, tap to expand */
+.unit-rules-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 8px 14px;
+  border-top: 1px solid rgba(53,43,28,0.4);
+  cursor: pointer;
+  min-height: 36px;
+}
+
+.unit-rules-label {
+  font-family: 'Cinzel', serif;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--gold-dim, #8a6e2e);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.unit-rules-text {
+  font-family: 'Crimson Text', serif;
+  font-size: 13px;
+  color: var(--ash, #8a7f72);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+/* Expanded state — allow wrap */
+.unit-rules-text--expanded {
+  white-space: normal;
+  overflow: visible;
+}
+
+.unit-rules-arrow {
+  font-size: 13px;
+  color: var(--ash, #8a7f72);
+  opacity: 0.5;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+/* ═══════════════════════════════════════════════════════
+   21. BATTLE MODE v0.2 — END GAME FOOTER
+   Lives at the bottom of the scrollable roster area so
+   it costs a deliberate scroll to reach.
+   ═══════════════════════════════════════════════════════ */
+
+.battle-end-footer {
+  padding: 20px 0 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.battle-end-btn {
+  padding: 12px 32px;
+  border-radius: 5px;
+  border: 1px solid var(--blood, #9b1f1f);
+  background: transparent;
+  color: var(--blood-light, #e03030);
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 44px;
+  transition: all 0.15s;
+}
+
+.battle-end-btn:hover {
+  background: rgba(155, 31, 31, 0.12);
+  border-color: var(--blood-light, #e03030);
+}
+
+/* ═══════════════════════════════════════════════════════
+   22. BATTLE SETUP v0.2 — WHO GOES FIRST TOGGLE
+   ═══════════════════════════════════════════════════════ */
+
+.setup-toggle {
+  display: flex;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 3px;
+}
+
+.setup-toggle-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--ash, #8a7f72);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  text-align: center;
+  min-height: 44px;
+  transition: all 0.15s;
+}
+
+.setup-toggle-btn--active {
+  background: var(--blood, #9b1f1f);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.setup-optional {
+  font-family: 'Crimson Text', serif;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--ash, #8a7f72);
+  font-style: italic;
+  letter-spacing: 0;
+}
