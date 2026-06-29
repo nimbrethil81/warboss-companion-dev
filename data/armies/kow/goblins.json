@@ -16,9 +16,10 @@
       "ne": "12/14",
       "pts": 65,
       "special_rules": ["Green Horde"],
-      "traits": ["Utterly Spineless"]
+      "traits": ["Utterly Spineless"],
+      "retired": true
     },
-    {
+        {
       "unit_id": "goblin-rabble-regiment",
       "name": "Goblin Rabble",
       "size": "Regiment",
@@ -27,11 +28,13 @@
       "me": 5,
       "sh": "-",
       "de": 4,
-      "att": 20,
-      "ne": "14/16",
-      "pts": 105,
-      "special_rules": ["Green Horde"],
-      "traits": ["Utterly Spineless"]
+      "att": 12,
+      "ne": "12/14",
+      "pts": 80,
+      "special_rules": [],
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "goblin-rabble-horde",
@@ -42,11 +45,13 @@
       "me": 5,
       "sh": "-",
       "de": 4,
-      "att": 30,
-      "ne": "18/20",
-      "pts": 145,
-      "special_rules": ["Green Horde"],
-      "traits": ["Utterly Spineless"]
+      "att": 25,
+      "ne": "19/21",
+      "pts": 130,
+      "special_rules": [],
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "goblin-sharpsticks-troop",
@@ -62,6 +67,7 @@
       "pts": 75,
       "special_rules": ["Phalanx", "Green Horde"],
       "traits": []
+      "retired": true
     },
     {
       "unit_id": "goblin-sharpsticks-regiment",
@@ -132,11 +138,18 @@
       "me": 4,
       "sh": "-",
       "de": 4,
-      "att": 12,
-      "ne": "13/15",
+      "att": 15,
+      "ne": "9/11",
       "pts": 115,
-      "special_rules": ["Crushing Strength (1)", "Wild Charge (D3)", "Green Horde"],
-      "traits": []
+      "special_rules": [
+        "Brutal (1)",
+        "Crushing Strength (1)",
+        "Headstrong",
+        "Wild Charge (D3)"
+      ],
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "luggit-gang-regiment",
@@ -147,11 +160,18 @@
       "me": 4,
       "sh": "-",
       "de": 4,
-      "att": 24,
-      "ne": "15/17",
-      "pts": 160,
-      "special_rules": ["Crushing Strength (1)", "Wild Charge (D3)", "Green Horde"],
-      "traits": []
+      "att": 20,
+      "ne": "13/15",
+      "pts": 150,
+      "special_rules": [
+        "Brutal (1)",
+        "Crushing Strength (1)",
+        "Headstrong",
+        "Wild Charge (D3)"
+      ],
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "fleabag-riders-troop",
@@ -173,15 +193,21 @@
       "name": "Fleabag Riders",
       "size": "Regiment",
       "type": "Cavalry",
-      "sp": 9,
+      "sp": 10,
       "me": 4,
-      "sh": 5,
+      "sh": "-",
       "de": 4,
       "att": 16,
-      "ne": "12/14",
-      "pts": 150,
-      "special_rules": ["Nimble"],
-      "traits": []
+      "ne": "13/15",
+      "pts": 160,
+      "special_rules": [
+        "Nimble",
+        "Thunderous Charge (1)",
+        "Vicious (Combat)"
+      ],
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "trolls-troop",
@@ -192,10 +218,14 @@
       "me": 4,
       "sh": "-",
       "de": 5,
-      "att": 12,
-      "ne": "13/15",
-      "pts": 135,
-      "special_rules": ["Regeneration (5+)"],
+      "att": 8,
+      "ne": "11/13",
+      "pts": 140,
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Inspiring (Self)",
+        "Regeneration (5+)"
+      ],
       "traits": []
     },
     {
@@ -210,8 +240,13 @@
       "att": 24,
       "ne": "17/19",
       "pts": 225,
-      "special_rules": ["Regeneration (5+)"],
-      "traits": []
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Inspiring (Self)",
+        "Regeneration (5+)"
+      ],
+      "traits": [],
+      "retired": true
     },
     {
       "unit_id": "mincer-individual",
@@ -282,11 +317,18 @@
       "me": 4,
       "sh": "-",
       "de": 5,
-      "att": 12,
-      "ne": "-/18",
-      "pts": 225,
-      "special_rules": ["Crushing Strength (2)", "Green Horde"],
-      "traits": ["Height (6)"]
+      "att": "D6+8",
+      "ne": "18/20",
+      "pts": 235,
+      "special_rules": [
+        "Brutal (1)",
+        "Crushing Strength (4)",
+        "Height (6)",
+        "Rallying (Green Horde Trait only)",
+        "Strider",
+        "Rampage (D6 - Combat)"
+      ],
+      "traits": []
     },
     {
       "unit_id": "big-rocks-thrower-war-engine",
@@ -317,6 +359,144 @@
       "pts": 75,
       "special_rules": ["Piercing (1)"],
       "traits": []
+    }
+        {
+      "unit_id": "trolls-regiment",
+      "name": "Trolls",
+      "size": "Regiment",
+      "type": "Large Infantry",
+      "sp": 6,
+      "me": 4,
+      "sh": "-",
+      "de": 5,
+      "att": 16,
+      "ne": "14/16",
+      "pts": 190,
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Headstrong",
+        "Inspiring (Self)",
+        "Regeneration (5+)"
+      ],
+      "traits": []
+    },
+    {
+      "unit_id": "king-on-chariot-hero",
+      "name": "King on Chariot",
+      "size": "Individual",
+      "type": "Hero (Cht)",
+      "sp": 9,
+      "me": 4,
+      "sh": "-",
+      "de": 4,
+      "att": 7,
+      "ne": "-/15",
+      "pts": 145,
+      "special_rules": [
+        "Crushing Strength (1)",
+        "Elite",
+        "Inspiring",
+        "Individual",
+        "Thunderous Charge (1)"
+      ],
+      "traits": []
+    },
+    {
+      "unit_id": "flaggit-hero",
+      "name": "Flaggit",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 5,
+      "me": 5,
+      "sh": "-",
+      "de": 4,
+      "att": 1,
+      "ne": "-/10",
+      "pts": 60,
+      "special_rules": [
+        "Individual",
+        "Very Inspiring",
+        "Yielding"
+      ],
+      "traits": []
+    },
+    {
+      "unit_id": "wiz-hero",
+      "name": "Wiz",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 5,
+      "me": 5,
+      "sh": "-",
+      "de": 4,
+      "att": 1,
+      "ne": "-/11",
+      "pts": 55,
+      "special_rules": [
+        "Individual",
+        "Inspiring",
+        "Yielding"
+      ],
+      "traits": [
+        "Spellcaster"
+      ]
+    },
+    {
+      "unit_id": "goblin-slasher-titan",
+      "name": "Goblin Slasher",
+      "size": "Titan",
+      "type": "Monster",
+      "sp": 7,
+      "me": 3,
+      "sh": 5,
+      "de": 5,
+      "att": 10,
+      "ne": "16/18",
+      "pts": 205,
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Sharpstick Thrower (36\", Att: 2, Blast(D3), Piercing(2))",
+        "Strider"
+      ],
+      "traits": []
+    },
+    {
+      "unit_id": "war-trombone-war-engine",
+      "name": "War-Trombone",
+      "size": "War Engine",
+      "type": "War Engine",
+      "sp": 5,
+      "me": "-",
+      "sh": 4,
+      "de": 4,
+      "att": 12,
+      "ne": "-/10",
+      "pts": 75,
+      "special_rules": [
+        "War-Trombone (12\", Piercing(1))",
+        "Yielding"
+      ],
+      "traits": []
+    },
+    {
+      "unit_id": "mawpup-launcher-war-engine",
+      "name": "Mawpup Launcher",
+      "size": "War Engine",
+      "type": "War Engine",
+      "sp": 5,
+      "me": "-",
+      "sh": 5,
+      "de": 4,
+      "att": 3,
+      "ne": "-/11",
+      "pts": 90,
+      "special_rules": [
+        "Mawpup Launcher (36\", Blast(D3), Indirect, Reload, Shattering(D3))",
+        "They look so cute"
+      ],
+      "traits": [
+        "Lobber"
+      ]
     }
   ]
 }
