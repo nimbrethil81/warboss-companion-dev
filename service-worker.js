@@ -30,7 +30,7 @@
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION  = 'wbc-v14';
+const CACHE_VERSION  = 'wbc-v15';
 const CACHE_SHELL    = CACHE_VERSION + '-shell';   // app shell + data
 const CACHE_FONTS    = CACHE_VERSION + '-fonts';   // Google Fonts responses
 
@@ -57,6 +57,9 @@ const SHELL_FILES = [
   './data/armies/kow/goblins.json',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
+  './assets/icons/apple-touch-icon.png',
+  './assets/icons/favicon-32.png',
+  './assets/icons/favicon.ico',
 ];
 
 /**
