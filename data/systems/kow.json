@@ -181,7 +181,7 @@
     {
       "rule_id": "nerve_test",
       "title": "Nerve Tests",
-      "body": "Roll 2D6, add current damage on the unit. Compare to the unit's Ne value (written as 'Waver/Rout', e.g. 14/16). If total is lower than Waver value: Steady. If total is equal to or higher than Waver value but lower than Rout: Wavering (from ranged) or Rout (from combat). If total equals or exceeds Rout value: Rout. Double 1 always passes. Double 6: from ranged = Waver even if passed; from combat or Withdraw = D6 extra damage, no further test."
+      "body": "Roll 2D6, add current damage on the unit. Compare to the unit's Ne value. If total is lower than Ne: Steady. If total is equal to or higher than Ne: the test is failed — Wavering (from ranged) or Rout (from combat). Double 1 always passes. Double 6: from ranged = Waver even if passed; from combat or Withdraw = D6 extra damage, no further test."
     },
     {
       "rule_id": "withdraw",
@@ -191,7 +191,7 @@
     {
       "rule_id": "devastated",
       "title": "Devastated Units",
-      "body": "When a unit's damage total exceeds its Nerve value (not the Rout threshold — any excess), the unit is immediately Devastated. Halve Attacks stat (round down) — this applies to all attacks including ranged and Magical Missiles. Any failed Nerve test from this point causes Rout. There are no more Wavering results. If damage is subsequently reduced below the Nerve value (e.g. by Heal), the Devastated status is removed."
+      "body": "When a unit's damage total exceeds its Nerve value, the unit is immediately Devastated. Halve Attacks stat (round down) — this applies to all attacks including ranged and Magical Missiles. Any failed Nerve test from this point causes Rout. There are no more Wavering results. If damage is subsequently reduced below the Nerve value (e.g. by Heal), the Devastated status is removed."
     },
     {
       "rule_id": "flank_rear",
