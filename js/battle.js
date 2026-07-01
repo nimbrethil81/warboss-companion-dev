@@ -52,6 +52,26 @@ var WBCBattle = (function () {
   /* Full sequence for reference (used by _findPhase lookups only). */
   var PHASE_ORDER = YOUR_PHASES.concat([OPP_PHASE]);
 
+  /*
+   * Round sequence — the four phases in the order they actually occur
+   * for THIS game, based on who went first. A "round" is one full
+   * cycle of both players; the turn counter should only increment
+   * once per round, at the wrap point, wherever that falls.
+   *
+   *   You first     : movement → ranged → combat → opponent_turn → (wrap)
+   *   Opponent first : opponent_turn → movement → ranged → combat → (wrap)
+   */
+  function _roundSequence() {
+    if (_game && _game.first_player === 'opponent') {
+      return [OPP_PHASE].concat(YOUR_PHASES);
+    }
+    return YOUR_PHASES.concat([OPP_PHASE]);
+  }
+
+  function _roundIndex() {
+    return _roundSequence().indexOf(_game.current_phase);
+  }
+
   /* Which stats to show on unit cards per phase.
      Values are keys on the unit object from goblins.json.
      'special_rules' is always rendered separately below the stat row. */
@@ -816,49 +836,40 @@ var WBCBattle = (function () {
   /* ─── Phase / Turn navigation ────────────────────────────────────── */
 
   /*
-   * Turn structure:
-   *   Your block  : movement → ranged → combat   (YOUR_PHASES)
-   *   Their block : opponent_turn                 (OPP_PHASE)
+   * Turn structure — order depends on who went first (_roundSequence()):
+   *   You first     : movement → ranged → combat → opponent_turn
+   *   Opponent first : opponent_turn → movement → ranged → combat
    *
-   * Next Phase steps within the current player's block, then crosses to
-   * the other player's block:
-   *   movement → ranged → combat → opponent_turn → (next turn) movement …
+   * A "round" is one pass through that 4-phase sequence. The turn
+   * counter increments only when wrapping past the LAST phase in the
+   * sequence, whichever phase that is for this game.
    *
-   * Next Turn jumps to the START of the next player's block:
-   *   If in your phases → jump to opponent_turn (skip rest of your turn)
-   *   If in opponent_turn → increment turn, jump to movement
+   * Next Phase steps one phase at a time through the sequence, wrapping
+   * (and incrementing the turn) at the end.
    *
-   * Prev Turn jumps to the START of the previous player's block:
-   *   If in your phases → jump to opponent_turn of the previous turn
-   *   If in opponent_turn → jump to movement of the same turn (restart yours)
+   * Next Turn jumps to the START of the other player's block within the
+   * round (see _roundBlockBoundary), or to the start of the next round
+   * if already in the second block.
+   *
+   * Prev Turn is the mirror of Next Turn, stepping backward.
    */
-
-  function _isYourPhase() {
-    return YOUR_PHASES.indexOf(_game.current_phase) !== -1;
-  }
-
-  function _yourPhaseIndex() {
-    return YOUR_PHASES.indexOf(_game.current_phase);
-  }
 
   function _advancePhase() {
     if (!_game) return;
     var maxTurns = (_config && _config.max_turns) ? _config.max_turns : 7;
 
-    if (_isYourPhase()) {
-      var idx = _yourPhaseIndex();
-      if (idx < YOUR_PHASES.length - 1) {
-        _game.current_phase = YOUR_PHASES[idx + 1];
-      } else {
-        _game.current_phase = OPP_PHASE;
-      }
+    var seq = _roundSequence();
+    var idx = _roundIndex();
+
+    if (idx < seq.length - 1) {
+      _game.current_phase = seq[idx + 1];
     } else {
       if (_game.current_turn >= maxTurns) {
         _promptGameEnd();
         return;
       }
       _game.current_turn += 1;
-      _game.current_phase = YOUR_PHASES[0];
+      _game.current_phase = seq[0];
     }
 
     _saveGame();
@@ -868,36 +879,49 @@ var WBCBattle = (function () {
   function _retreatPhase() {
     if (!_game) return;
 
-    if (_isYourPhase()) {
-      var idx = _yourPhaseIndex();
-      if (idx > 0) {
-        _game.current_phase = YOUR_PHASES[idx - 1];
-      } else {
-        if (_game.current_turn <= 1) return;
-        _game.current_turn -= 1;
-        _game.current_phase = OPP_PHASE;
-      }
+    var seq = _roundSequence();
+    var idx = _roundIndex();
+
+    if (idx > 0) {
+      _game.current_phase = seq[idx - 1];
     } else {
-      _game.current_phase = YOUR_PHASES[YOUR_PHASES.length - 1];
+      if (_game.current_turn <= 1) return;
+      _game.current_turn -= 1;
+      _game.current_phase = seq[seq.length - 1];
     }
 
     _saveGame();
     _refreshGameUI();
   }
 
+  /*
+   * Index in the round sequence where the "other" player's block begins.
+   * The round always has two blocks: OPP_PHASE (1 phase) and YOUR_PHASES
+   * (3 phases) — in one order or the other depending on first_player.
+   */
+  function _roundBlockBoundary(seq) {
+    return (seq[0] === OPP_PHASE) ? 1 : seq.indexOf(OPP_PHASE);
+  }
+
   function _advanceTurn() {
     if (!_game) return;
     var maxTurns = (_config && _config.max_turns) ? _config.max_turns : 7;
 
-    if (_isYourPhase()) {
-      _game.current_phase = OPP_PHASE;
+    var seq = _roundSequence();
+    var idx = _roundIndex();
+    var k   = _roundBlockBoundary(seq);
+
+    if (idx < k) {
+      /* Still in the first block of the round — jump to the start
+         of the other player's block, same turn. */
+      _game.current_phase = seq[k];
     } else {
       if (_game.current_turn >= maxTurns) {
         _promptGameEnd();
         return;
       }
       _game.current_turn += 1;
-      _game.current_phase = YOUR_PHASES[0];
+      _game.current_phase = seq[0];
     }
 
     _saveGame();
@@ -907,12 +931,20 @@ var WBCBattle = (function () {
   function _retreatTurn() {
     if (!_game) return;
 
-    if (_isYourPhase()) {
+    var seq = _roundSequence();
+    var idx = _roundIndex();
+    var k   = _roundBlockBoundary(seq);
+
+    if (idx < k) {
+      /* In the first block of the round — jump back to the start of
+         the other player's block in the PREVIOUS round. */
       if (_game.current_turn <= 1) return;
       _game.current_turn -= 1;
-      _game.current_phase = OPP_PHASE;
+      _game.current_phase = seq[k];
     } else {
-      _game.current_phase = YOUR_PHASES[0];
+      /* In the second block — jump back to the start of the first
+         block, same turn (that block already happened this turn). */
+      _game.current_phase = seq[0];
     }
 
     _saveGame();
