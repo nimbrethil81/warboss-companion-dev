@@ -1250,6 +1250,7 @@ button:focus-visible,
 
 .battle-notes-field {
   flex: 1;
+  width: 100%;
   background: var(--ink, #0d0b08);
   border: 1px solid var(--tab-border, #352b1c);
   border-radius: 5px;
@@ -1273,29 +1274,10 @@ button:focus-visible,
   border-color: var(--gold-dim, #8a6e2e);
 }
 
-.battle-save-note-btn {
-  flex-shrink: 0;
-  height: 52px;
-  min-width: 60px;
-  padding: 0 12px;
-  border-radius: 5px;
-  border: 1px solid var(--gold-dim, #8a6e2e);
-  background: transparent;
-  color: var(--gold-dim, #8a6e2e);
-  font-family: 'Cinzel', serif;
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-  text-align: center;
-  line-height: 1.4;
-  transition: all 0.15s;
-}
-
-.battle-save-note-btn:hover {
+/* Brief confirmation flash after an auto-save (input debounce, blur,
+   or tab-hide) — replaces the old Save Note button's "Saved ✓" state. */
+.battle-notes-field--saved {
   border-color: var(--gold-light, #f0c94a);
-  color: var(--gold-light, #f0c94a);
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1840,7 +1822,9 @@ button:focus-visible,
 .battle-end-footer {
   padding: 20px 0 16px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .battle-end-btn {
@@ -1862,6 +1846,30 @@ button:focus-visible,
 .battle-end-btn:hover {
   background: rgba(155, 31, 31, 0.12);
   border-color: var(--blood-light, #e03030);
+}
+
+/* Abandon (in-game) — deliberately small and quiet, sitting above
+   End Game so the two can't be confused or fat-fingered. No border
+   or fill at rest; only reveals itself as "dangerous" on interaction. */
+.battle-abandon-inline-btn {
+  padding: 6px 14px;
+  border: none;
+  background: transparent;
+  color: var(--ash, #8a7f72);
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  min-height: 32px;
+  opacity: 0.6;
+  transition: all 0.15s;
+}
+
+.battle-abandon-inline-btn:hover {
+  color: var(--blood-light, #e03030);
+  opacity: 1;
 }
 
 /* ═══════════════════════════════════════════════════════
