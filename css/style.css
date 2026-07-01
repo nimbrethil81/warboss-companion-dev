@@ -1198,13 +1198,19 @@ button:focus-visible,
    ═══════════════════════════════════════════════════════ */
 
 /*
- * #page-battle must be a flex column so the three regions
+ * #page-battle must be a flex column so the fixed header and
+ * scrollable roster (which now also contains notes + end game)
  * stack correctly and only .battle-scroll grows to fill space.
+ *
+ * The base .page rule sets padding-bottom:100px for normal scrolling
+ * pages; battle's fixed-region layout doesn't need it and it was
+ * eating into available screen height, so it's zeroed here.
  */
 #page-battle.active {
   display: flex;
   flex-direction: column;
   overflow: hidden; /* children handle their own overflow */
+  padding-bottom: 0;
 }
 
 /* Fixed header — turn row + phase row + nav bar + prompts bar */
