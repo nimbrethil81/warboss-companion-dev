@@ -92,6 +92,9 @@ var WBCBattle = (function () {
   var _rendered = false;  // True once the in-game UI has been built
   var _armies   = [];     // Armies fetched for the setup screen
 
+  var _noteDebounce    = null;   // setTimeout handle for debounced note auto-save
+  var _lifecycleBound  = false;  // True once document-level save-on-hide listeners are bound
+
   /* ─── Utility ────────────────────────────────────────────────────── */
 
   function _uuid() {
@@ -347,13 +350,17 @@ var WBCBattle = (function () {
     if (cont) cont.addEventListener('click', _renderGame);
 
     var aband = _el('battle-abandon-btn');
-    if (aband) {
-      aband.addEventListener('click', function () {
-        if (window.confirm('Abandon this battle? All unsaved progress will be lost.')) {
-          _clearGame();
-          _renderSetup();
-        }
-      });
+    if (aband) aband.addEventListener('click', _abandonGame);
+  }
+
+  /*
+   * Shared by the resume-card Abandon button and the in-game Abandon
+   * control — one confirm/clear/re-render path (Single Source of Truth).
+   */
+  function _abandonGame() {
+    if (window.confirm('Abandon this battle? All unsaved progress will be lost.')) {
+      _clearGame();
+      _renderSetup();
     }
   }
 
@@ -571,17 +578,21 @@ var WBCBattle = (function () {
 
       /* Notes now live at the bottom of the scroll area, under the
          roster — only visible once scrolled down, reclaiming the
-         fixed screen real estate they used to occupy. */
+         fixed screen real estate they used to occupy.
+         Auto-saved (see _bindGameEvents / _bindLifecycleEvents) —
+         no explicit Save button; the field takes the full bar width. */
       '  <div class="battle-notes-bar">',
       '    <textarea id="battle-notes" class="battle-notes-field" rows="2"',
       '              placeholder="Quick note for this turn…" maxlength="500"></textarea>',
-      '    <button id="battle-save-note-btn" class="battle-save-note-btn">',
-      '      Save<br>Note',
-      '    </button>',
       '  </div>',
 
-      /* End game lives at the very bottom of the scroll area */
+      /* End game lives at the very bottom of the scroll area.
+         Abandon sits above it, deliberately small and muted so it
+         can't be fat-fingered in place of End Game. */
       '  <div class="battle-end-footer">',
+      '    <button id="battle-abandon-ingame-btn" class="battle-abandon-inline-btn">',
+      '      Abandon Battle',
+      '    </button>',
       '    <button id="battle-end-game-btn" class="battle-end-btn">',
       '      End Game',
       '    </button>',
@@ -1007,10 +1018,11 @@ var WBCBattle = (function () {
 
     _saveGame();
 
-    var btn = _el('battle-save-note-btn');
-    if (btn) {
-      btn.innerHTML = 'Saved ✓';
-      setTimeout(function () { btn.innerHTML = 'Save<br>Note'; }, 1500);
+    if (field) {
+      field.classList.add('battle-notes-field--saved');
+      setTimeout(function () {
+        field.classList.remove('battle-notes-field--saved');
+      }, 900);
     }
   }
 
@@ -1178,8 +1190,25 @@ var WBCBattle = (function () {
       });
     }
 
-    var saveNote = _el('battle-save-note-btn');
-    if (saveNote) saveNote.addEventListener('click', _saveNoteFromField);
+    /* Notes: auto-saved, no explicit button (see _saveNoteFromField).
+       - input:  debounced, covers "typed and just sat there"
+       - blur:   immediate, covers "tapped away without navigating"
+       Page-hide / visibility coverage is bound once in init(), not here —
+       see _bindLifecycleEvents(). */
+    var notesField = _el('battle-notes');
+    if (notesField) {
+      notesField.addEventListener('input', function () {
+        if (_noteDebounce) clearTimeout(_noteDebounce);
+        _noteDebounce = setTimeout(_saveNoteFromField, 800);
+      });
+      notesField.addEventListener('blur', function () {
+        if (_noteDebounce) clearTimeout(_noteDebounce);
+        _saveNoteFromField();
+      });
+    }
+
+    var abandonInGame = _el('battle-abandon-ingame-btn');
+    if (abandonInGame) abandonInGame.addEventListener('click', _abandonGame);
 
     var endBtn = _el('battle-end-game-btn');
     if (endBtn) {
@@ -1208,6 +1237,33 @@ var WBCBattle = (function () {
     _config = (window.WBC && window.WBC.systemConfig)
       ? window.WBC.systemConfig : null;
     _loadGame();
+    _bindLifecycleEvents();
+  }
+
+  /*
+   * Bound once, ever — NOT inside _bindGameEvents(), which reruns on
+   * every _renderGame() call and would stack duplicate document-level
+   * listeners. Covers the case _saveNoteFromField()'s input/blur
+   * handlers can't: a mobile browser backgrounding/freezing/discarding
+   * the tab (app-switch, iOS suspend, Android freeze) before the user
+   * blurs the field or navigates. visibilitychange→hidden is the
+   * reliable cross-platform signal for this; pagehide is a secondary.
+   * Both trigger a synchronous localStorage write only — no network
+   * call here, since the page may be frozen mid-task.
+   */
+  function _bindLifecycleEvents() {
+    if (_lifecycleBound) return;
+    _lifecycleBound = true;
+
+    function flushNote() {
+      if (_noteDebounce) clearTimeout(_noteDebounce);
+      if (_el('battle-notes')) _saveNoteFromField();
+    }
+
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) flushNote();
+    });
+    window.addEventListener('pagehide', flushNote);
   }
 
   function onTabActivated() {
