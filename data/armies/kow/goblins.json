@@ -13,10 +13,14 @@
       "sh": "-",
       "de": 4,
       "att": 10,
-      "ne": "12/14",
+      "ne": "14",
       "pts": 65,
-      "special_rules": ["Green Horde"],
-      "traits": ["Utterly Spineless"],
+      "special_rules": [
+        "Green Horde"
+      ],
+      "traits": [
+        "Utterly Spineless"
+      ],
       "retired": true
     },
     {
@@ -29,10 +33,12 @@
       "sh": "-",
       "de": 4,
       "att": 12,
-      "ne": "12/14",
+      "ne": "14",
       "pts": 80,
       "special_rules": [],
-      "traits": ["Green Horde"]
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "goblin-rabble-horde",
@@ -44,10 +50,12 @@
       "sh": "-",
       "de": 4,
       "att": 25,
-      "ne": "19/21",
+      "ne": "21",
       "pts": 130,
       "special_rules": [],
-      "traits": ["Green Horde"]
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "goblin-sharpsticks-troop",
@@ -59,9 +67,12 @@
       "sh": "-",
       "de": 4,
       "att": 10,
-      "ne": "12/14",
+      "ne": "14",
       "pts": 75,
-      "special_rules": ["Phalanx", "Green Horde"],
+      "special_rules": [
+        "Phalanx",
+        "Green Horde"
+      ],
       "traits": [],
       "retired": true
     },
@@ -75,9 +86,12 @@
       "sh": "-",
       "de": 4,
       "att": 20,
-      "ne": "14/16",
+      "ne": "16",
       "pts": 120,
-      "special_rules": ["Phalanx", "Green Horde"],
+      "special_rules": [
+        "Phalanx",
+        "Green Horde"
+      ],
       "traits": []
     },
     {
@@ -90,9 +104,12 @@
       "sh": "-",
       "de": 4,
       "att": 30,
-      "ne": "18/20",
+      "ne": "20",
       "pts": 165,
-      "special_rules": ["Phalanx", "Green Horde"],
+      "special_rules": [
+        "Phalanx",
+        "Green Horde"
+      ],
       "traits": []
     },
     {
@@ -105,9 +122,11 @@
       "sh": 5,
       "de": 3,
       "att": 8,
-      "ne": "11/13",
+      "ne": "13",
       "pts": 80,
-      "special_rules": ["Green Horde"],
+      "special_rules": [
+        "Green Horde"
+      ],
       "traits": []
     },
     {
@@ -120,9 +139,11 @@
       "sh": 5,
       "de": 3,
       "att": 16,
-      "ne": "13/15",
+      "ne": "15",
       "pts": 130,
-      "special_rules": ["Green Horde"],
+      "special_rules": [
+        "Green Horde"
+      ],
       "traits": []
     },
     {
@@ -135,10 +156,17 @@
       "sh": "-",
       "de": 4,
       "att": 15,
-      "ne": "9/11",
+      "ne": "11",
       "pts": 115,
-      "special_rules": ["Brutal (1)", "Crushing Strength (1)", "Headstrong", "Wild Charge (D3)"],
-      "traits": ["Green Horde"]
+      "special_rules": [
+        "Brutal (1)",
+        "Crushing Strength (1)",
+        "Headstrong",
+        "Wild Charge (D3)"
+      ],
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "luggit-gang-regiment",
@@ -150,10 +178,17 @@
       "sh": "-",
       "de": 4,
       "att": 20,
-      "ne": "13/15",
+      "ne": "15",
       "pts": 150,
-      "special_rules": ["Brutal (1)", "Crushing Strength (1)", "Headstrong", "Wild Charge (D3)"],
-      "traits": ["Green Horde"]
+      "special_rules": [
+        "Brutal (1)",
+        "Crushing Strength (1)",
+        "Headstrong",
+        "Wild Charge (D3)"
+      ],
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "fleabag-riders-troop",
@@ -165,10 +200,16 @@
       "sh": "-",
       "de": 4,
       "att": 8,
-      "ne": "10/12",
+      "ne": "12",
       "pts": 105,
-      "special_rules": ["Nimble", "Thunderous Charge (1)", "Vicious (Combat)"],
-      "traits": ["Green Horde"]
+      "special_rules": [
+        "Nimble",
+        "Thunderous Charge (1)",
+        "Vicious (Combat)"
+      ],
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "fleabag-riders-regiment",
@@ -180,10 +221,16 @@
       "sh": "-",
       "de": 4,
       "att": 16,
-      "ne": "13/15",
+      "ne": "15",
       "pts": 160,
-      "special_rules": ["Nimble", "Thunderous Charge (1)", "Vicious (Combat)"],
-      "traits": ["Green Horde"]
+      "special_rules": [
+        "Nimble",
+        "Thunderous Charge (1)",
+        "Vicious (Combat)"
+      ],
+      "traits": [
+        "Green Horde"
+      ]
     },
     {
       "unit_id": "trolls-troop",
@@ -195,9 +242,13 @@
       "sh": "-",
       "de": 5,
       "att": 8,
-      "ne": "11/13",
+      "ne": "13",
       "pts": 140,
-      "special_rules": ["Crushing Strength (2)", "Inspiring (Self)", "Regeneration (5+)"],
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Inspiring (Self)",
+        "Regeneration (5+)"
+      ],
       "traits": []
     },
     {
@@ -210,9 +261,14 @@
       "sh": "-",
       "de": 5,
       "att": 16,
-      "ne": "14/16",
+      "ne": "16",
       "pts": 190,
-      "special_rules": ["Crushing Strength (2)", "Headstrong", "Inspiring (Self)", "Regeneration (5+)"],
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Headstrong",
+        "Inspiring (Self)",
+        "Regeneration (5+)"
+      ],
       "traits": []
     },
     {
@@ -225,9 +281,13 @@
       "sh": "-",
       "de": 5,
       "att": 24,
-      "ne": "17/19",
+      "ne": "19",
       "pts": 225,
-      "special_rules": ["Crushing Strength (2)", "Inspiring (Self)", "Regeneration (5+)"],
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Inspiring (Self)",
+        "Regeneration (5+)"
+      ],
       "traits": [],
       "retired": true
     },
@@ -241,9 +301,13 @@
       "sh": "-",
       "de": 5,
       "att": "D6+6",
-      "ne": "-/14",
+      "ne": "14",
       "pts": 100,
-      "special_rules": ["Brutal", "Crushing Strength (1)", "Thunderous Charge (1)"],
+      "special_rules": [
+        "Brutal",
+        "Crushing Strength (1)",
+        "Thunderous Charge (1)"
+      ],
       "traits": []
     },
     {
@@ -256,9 +320,13 @@
       "sh": "-",
       "de": 5,
       "att": "D6+14",
-      "ne": "-/16",
+      "ne": "16",
       "pts": 170,
-      "special_rules": ["Brutal", "Crushing Strength (1)", "Thunderous Charge (1)"],
+      "special_rules": [
+        "Brutal",
+        "Crushing Strength (1)",
+        "Thunderous Charge (1)"
+      ],
       "traits": []
     },
     {
@@ -271,9 +339,13 @@
       "sh": "-",
       "de": 5,
       "att": "D6+21",
-      "ne": "-/18",
+      "ne": "18",
       "pts": 215,
-      "special_rules": ["Brutal", "Crushing Strength (1)", "Thunderous Charge (1)"],
+      "special_rules": [
+        "Brutal",
+        "Crushing Strength (1)",
+        "Thunderous Charge (1)"
+      ],
       "traits": []
     },
     {
@@ -286,9 +358,12 @@
       "sh": "-",
       "de": 4,
       "att": 6,
-      "ne": "-/12",
+      "ne": "12",
       "pts": 85,
-      "special_rules": ["Fly", "Nimble"],
+      "special_rules": [
+        "Fly",
+        "Nimble"
+      ],
       "traits": []
     },
     {
@@ -301,9 +376,16 @@
       "sh": "-",
       "de": 5,
       "att": "D6+8",
-      "ne": "18/20",
+      "ne": "20",
       "pts": 235,
-      "special_rules": ["Brutal (1)", "Crushing Strength (4)", "Height (6)", "Rallying (Green Horde Trait only)", "Strider", "Rampage (D6 - Combat)"],
+      "special_rules": [
+        "Brutal (1)",
+        "Crushing Strength (4)",
+        "Height (6)",
+        "Rallying (Green Horde Trait only)",
+        "Strider",
+        "Rampage (D6 - Combat)"
+      ],
       "traits": []
     },
     {
@@ -316,9 +398,13 @@
       "sh": 5,
       "de": 5,
       "att": 10,
-      "ne": "16/18",
+      "ne": "18",
       "pts": 205,
-      "special_rules": ["Crushing Strength (2)", "Sharpstick Thrower (36\", Att: 2, Blast(D3), Piercing(2))", "Strider"],
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Sharpstick Thrower (36\", Att: 2, Blast(D3), Piercing(2))",
+        "Strider"
+      ],
       "traits": []
     },
     {
@@ -331,9 +417,12 @@
       "sh": 5,
       "de": 4,
       "att": 3,
-      "ne": "-/12",
+      "ne": "12",
       "pts": 95,
-      "special_rules": ["Blast (D3)", "Indirect"],
+      "special_rules": [
+        "Blast (D3)",
+        "Indirect"
+      ],
       "traits": []
     },
     {
@@ -346,9 +435,11 @@
       "sh": 4,
       "de": 4,
       "att": 4,
-      "ne": "-/11",
+      "ne": "11",
       "pts": 75,
-      "special_rules": ["Piercing (1)"],
+      "special_rules": [
+        "Piercing (1)"
+      ],
       "traits": []
     },
     {
@@ -361,9 +452,12 @@
       "sh": 4,
       "de": 4,
       "att": 12,
-      "ne": "-/10",
+      "ne": "10",
       "pts": 75,
-      "special_rules": ["War-Trombone (12\", Piercing(1))", "Yielding"],
+      "special_rules": [
+        "War-Trombone (12\", Piercing(1))",
+        "Yielding"
+      ],
       "traits": []
     },
     {
@@ -376,10 +470,15 @@
       "sh": 5,
       "de": 4,
       "att": 3,
-      "ne": "-/11",
+      "ne": "11",
       "pts": 90,
-      "special_rules": ["Mawpup Launcher (36\", Blast(D3), Indirect, Reload, Shattering(D3))", "They look so cute"],
-      "traits": ["Lobber"]
+      "special_rules": [
+        "Mawpup Launcher (36\", Blast(D3), Indirect, Reload, Shattering(D3))",
+        "They look so cute"
+      ],
+      "traits": [
+        "Lobber"
+      ]
     },
     {
       "unit_id": "king-on-chariot-hero",
@@ -391,9 +490,15 @@
       "sh": "-",
       "de": 4,
       "att": 7,
-      "ne": "-/15",
+      "ne": "15",
       "pts": 145,
-      "special_rules": ["Crushing Strength (1)", "Elite", "Inspiring", "Individual", "Thunderous Charge (1)"],
+      "special_rules": [
+        "Crushing Strength (1)",
+        "Elite",
+        "Inspiring",
+        "Individual",
+        "Thunderous Charge (1)"
+      ],
       "traits": []
     },
     {
@@ -406,9 +511,13 @@
       "sh": "-",
       "de": 4,
       "att": 1,
-      "ne": "-/10",
+      "ne": "10",
       "pts": 60,
-      "special_rules": ["Individual", "Very Inspiring", "Yielding"],
+      "special_rules": [
+        "Individual",
+        "Very Inspiring",
+        "Yielding"
+      ],
       "traits": []
     },
     {
@@ -421,10 +530,16 @@
       "sh": "-",
       "de": 4,
       "att": 1,
-      "ne": "-/11",
+      "ne": "11",
       "pts": 55,
-      "special_rules": ["Individual", "Inspiring", "Yielding"],
-      "traits": ["Spellcaster"]
+      "special_rules": [
+        "Individual",
+        "Inspiring",
+        "Yielding"
+      ],
+      "traits": [
+        "Spellcaster"
+      ]
     }
   ]
 }
