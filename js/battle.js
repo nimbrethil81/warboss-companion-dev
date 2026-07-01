@@ -415,7 +415,11 @@ var WBCBattle = (function () {
       return;
     }
 
-    /* Resolve unit_ids → full unit objects from WBC.armyData (goblins.json) */
+    /* Resolve unit_ids → full unit objects from WBC.armyData (goblins.json).
+       unit_id identifies the UNIT TYPE (e.g. "goblin_rabble") and stays
+       untouched — Muster/Sheets still key off it. Duplicate entries in
+       the army (e.g. 6x Goblin Rabble) share that unit_id, so each gets
+       its own inst_id here to track routed/damage state per instance. */
     var unitIds;
     try {
       unitIds = typeof armyRecord.units === 'string'
@@ -429,6 +433,7 @@ var WBCBattle = (function () {
       var u = _findUnitInArmyData(uid);
       if (u) {
         units.push({
+          inst_id:       _uuid(),   /* unique per unit instance */
           unit_id:       u.unit_id,
           name:          u.name,
           size:          u.size,
@@ -499,8 +504,7 @@ var WBCBattle = (function () {
      * Layout (top to bottom):
      *   .battle-fixed   — never scrolls: turn header + phase display
      *                     + nav bar + prompts bar
-     *   .battle-scroll  — scrollable: roster cards + end game btn
-     *   .battle-notes   — never scrolls: notes textarea + save button
+     *   .battle-scroll  — scrollable: roster cards + notes + end game btn
      */
     page.innerHTML = [
 
@@ -565,6 +569,17 @@ var WBCBattle = (function () {
       '  <div class="battle-roster-label">Your Roster</div>',
       '  <div id="battle-roster"></div>',
 
+      /* Notes now live at the bottom of the scroll area, under the
+         roster — only visible once scrolled down, reclaiming the
+         fixed screen real estate they used to occupy. */
+      '  <div class="battle-notes-bar">',
+      '    <textarea id="battle-notes" class="battle-notes-field" rows="2"',
+      '              placeholder="Quick note for this turn…" maxlength="500"></textarea>',
+      '    <button id="battle-save-note-btn" class="battle-save-note-btn">',
+      '      Save<br>Note',
+      '    </button>',
+      '  </div>',
+
       /* End game lives at the very bottom of the scroll area */
       '  <div class="battle-end-footer">',
       '    <button id="battle-end-game-btn" class="battle-end-btn">',
@@ -573,16 +588,6 @@ var WBCBattle = (function () {
       '  </div>',
       '</div>',
       /* ── end .battle-scroll ────────────────────────────── */
-
-      /* ── Fixed notes bar ───────────────────────────────── */
-      '<div class="battle-notes-bar">',
-      '  <textarea id="battle-notes" class="battle-notes-field" rows="2"',
-      '            placeholder="Quick note for this turn…" maxlength="500"></textarea>',
-      '  <button id="battle-save-note-btn" class="battle-save-note-btn">',
-      '    Save<br>Note',
-      '  </button>',
-      '</div>',
-      /* ── end notes bar ─────────────────────────────────── */
 
       '<div id="battle-game-error" class="battle-error" style="display:none;"></div>',
 
@@ -735,16 +740,16 @@ var WBCBattle = (function () {
     /* Bind Routed / Restore buttons */
     _qsa('.unit-routed-btn', container).forEach(function (btn) {
       btn.addEventListener('click', function () {
-        _toggleRouted(this.getAttribute('data-unit-id'));
+        _toggleRouted(this.getAttribute('data-inst-id'));
       });
     });
 
     /* Bind special rules expand/collapse */
     _qsa('.unit-rules-row', container).forEach(function (row) {
       row.addEventListener('click', function () {
-        var uid   = this.getAttribute('data-unit-id');
-        var text  = _el('urules-text-' + uid);
-        var arrow = _el('urules-arrow-' + uid);
+        var instId = this.getAttribute('data-inst-id');
+        var text  = _el('urules-text-' + instId);
+        var arrow = _el('urules-arrow-' + instId);
         if (!text) return;
         var isExp = this.getAttribute('data-expanded') === 'true';
         this.setAttribute('data-expanded', isExp ? 'false' : 'true');
@@ -771,7 +776,7 @@ var WBCBattle = (function () {
     var isRouted  = u.routed;
     var label     = _escapeHtml(u.name);
     var sizeLine  = _escapeHtml((u.size || '') + (u.type ? ' · ' + u.type : ''));
-    var uid       = u.unit_id;
+    var instId    = u.inst_id;
 
     /* Contextual stats for the current phase */
     var statDefs  = PHASE_STATS[_game.current_phase] || [];
@@ -785,28 +790,30 @@ var WBCBattle = (function () {
       ].join('');
     }).join('');
 
-    /* Special rules — truncated by CSS, expands on tap */
+    /* Special rules — truncated by CSS, expands on tap.
+       Keyed by inst_id (not unit_id) so duplicate units in the roster
+       (e.g. 6x Goblin Rabble) each get their own expand state and DOM id. */
     var rules     = (u.special_rules || []).join(', ') || '—';
     var rulesHTML = [
-      '<div class="unit-rules-row" data-unit-id="' + uid + '" data-expanded="false">',
+      '<div class="unit-rules-row" data-inst-id="' + instId + '" data-expanded="false">',
       '  <span class="unit-rules-label">Rules</span>',
-      '  <span class="unit-rules-text" id="urules-text-' + uid + '">',
+      '  <span class="unit-rules-text" id="urules-text-' + instId + '">',
       _escapeHtml(rules),
       '  </span>',
-      '  <span class="unit-rules-arrow" id="urules-arrow-' + uid + '">›</span>',
+      '  <span class="unit-rules-arrow" id="urules-arrow-' + instId + '">›</span>',
       '</div>',
     ].join('');
 
     return [
       '<div class="unit-card' + (isRouted ? ' unit-card--routed' : '') + '"',
-      '     data-unit-id="' + uid + '">',
+      '     data-inst-id="' + instId + '">',
 
       '  <div class="unit-card-top">',
       '    <div class="unit-card-names">',
       '      <div class="unit-card-name">' + label + '</div>',
       '      <div class="unit-card-size">' + sizeLine + '</div>',
       '    </div>',
-      '    <button class="unit-routed-btn" data-unit-id="' + uid + '">',
+      '    <button class="unit-routed-btn" data-inst-id="' + instId + '">',
       isRouted ? 'Restore' : 'Routed',
       '    </button>',
       '  </div>',
@@ -821,10 +828,13 @@ var WBCBattle = (function () {
     ].join('');
   }
 
-  function _toggleRouted(unitId) {
+  /* Toggles the routed state of ONE unit instance (identified by inst_id).
+     Duplicate units sharing the same unit_id (e.g. 6x Goblin Rabble) are
+     tracked separately, so routing one does not affect the others. */
+  function _toggleRouted(instId) {
     if (!_game || !Array.isArray(_game.units)) return;
     _game.units = _game.units.map(function (u) {
-      if (u.unit_id === unitId) {
+      if (u.inst_id === instId) {
         return Object.assign({}, u, { routed: !u.routed });
       }
       return u;
@@ -1145,7 +1155,12 @@ var WBCBattle = (function () {
     }
 
     var prevPhase = _el('nav-prev-phase');
-    if (prevPhase) prevPhase.addEventListener('click', _retreatPhase);
+    if (prevPhase) {
+      prevPhase.addEventListener('click', function () {
+        _saveNoteFromField();
+        _retreatPhase();
+      });
+    }
 
     var nextTurn = _el('nav-next-turn');
     if (nextTurn) {
@@ -1156,7 +1171,12 @@ var WBCBattle = (function () {
     }
 
     var prevTurn = _el('nav-prev-turn');
-    if (prevTurn) prevTurn.addEventListener('click', _retreatTurn);
+    if (prevTurn) {
+      prevTurn.addEventListener('click', function () {
+        _saveNoteFromField();
+        _retreatTurn();
+      });
+    }
 
     var saveNote = _el('battle-save-note-btn');
     if (saveNote) saveNote.addEventListener('click', _saveNoteFromField);
