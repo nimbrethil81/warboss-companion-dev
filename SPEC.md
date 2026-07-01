@@ -551,13 +551,24 @@ Static reference for the Goblin army. Used in Muster to build rosters and in Bat
 
 *Quick notes*
 - A single free-text field per turn for quick observations
-- Stored in `wbc_active_game` in localStorage
+- Saved automatically as the player types — no manual save action
+- Stored in `wbc_active_game` in localStorage; flushed to Sheets on game
+  end as the game payload's `notes` field
 
 *Game end*
 - Triggered manually by the player or automatically at end of turn 7
 - Prompt to record result (Win / Loss / Draw)
 - Write game summary to Sheets
 - Offer to proceed directly to Chronicle
+
+*Abandon*
+- Available both mid-game (in the scroll footer, alongside End Game) and
+  when resuming a game left in progress (resume card)
+- Confirms before acting, then discards the active game with no Sheets
+  write and no Chronicle entry
+- Distinct from Game end: no result is recorded, nothing reaches Chronicle
+- Exists to recover from setup mistakes (e.g. wrong player selected to go
+  first) or to walk away from a game that isn't worth logging
 
 **Deferred to later versions:**
 - Per-unit damage tracking
@@ -607,6 +618,10 @@ Static reference for the Goblin army. Used in Muster to build rosters and in Bat
 - Rule-flagging that creates prompts in future games
 - Opponent tracking across games
 - Win/loss statistics and trends
+- Surface Battle mode quick notes (`turn_log`, saved as the game payload's
+  `notes` field) somewhere in Chronicle — currently written to Sheets but
+  never displayed. Candidates: prefill the reflection form as a
+  memory-jogger, or show alongside reflection fields in the expanded entry.
 
 ---
 
@@ -638,27 +653,28 @@ The app's JS reads the game system dynamically from the JSON manifests — there
 ### Now — v0.1 (MVP)
 Target: functional at the table within 3 weeks
 
-- [ ] Battle mode: turn tracker, phase display, unit roster with Routed toggle
-- [ ] Battle mode: phase prompts from `kow.json`
-- [ ] Battle mode: quick note per turn
-- [ ] Battle mode: game end flow → write to Sheets
-- [ ] Chronicle mode: post-game logging form
-- [ ] PWA setup: installable, works offline in Battle mode
-- [ ] `kow.json`: full turn sequence and prompts
-- [ ] `goblins.json`: Goblin unit roster
+- [x] Battle mode: turn tracker, phase display, unit roster with Routed toggle
+- [x] Battle mode: phase prompts from `kow.json`
+- [x] Battle mode: quick note per turn
+- [x] Battle mode: game end flow → write to Sheets
+- [x] Chronicle mode: post-game logging form
+- [x] PWA setup: installable, works offline in Battle mode
+- [x] `kow.json`: full turn sequence and prompts
+- [x] `goblins.json`: Goblin unit roster
 
 ### Next — v0.2
-- [ ] Chronicle mode: past games browser
-- [ ] Muster mode: army builder with save/load
-- [ ] Battle mode: load army from Muster into roster
+- [x] Chronicle mode: past games browser
+- [x] Muster mode: army builder with save/load
+- [x] Battle mode: load army from Muster into roster
 - [ ] Rotating Chronicle prompts (full set)
-- [ ] UI polish and mobile optimisation
+- [x] UI polish and mobile optimisation
 
 ### Later — v0.3+
 - [ ] Per-unit damage tracking in Battle mode
 - [ ] Quick reference rule cards accessible mid-game
 - [ ] Reflection tagging — link units and rules to Chronicle entries
 - [ ] Win/loss statistics in Chronicle
+- [ ] Surface Battle mode quick notes in Chronicle (see §5.3)
 
 ### Icebox — Maybe one day
 - [ ] Second game system support
@@ -679,7 +695,7 @@ Reviewed and updated each working session.
 | 1 | What is the Google Sheets authentication approach? | Sheets API requires OAuth or an API key. For single-user MVP, a published Sheet with Apps Script web app may be simpler than full OAuth. | Open |
 | 2 | How are armies shared between users? | Current approach: each user connects their own Sheet. A URL parameter carries the Sheet ID. Not elegant but functional for MVP. | Provisional |
 | 3 | What happens to Muster mode long-term? | If the Mantic Companion improves, does Warboss Companion need a full army builder, or does it focus on Battle and Chronicle? | Open |
-| 4 | Full Goblin unit roster | `goblins.json` needs to be populated with all units, stats, and special rules from the official army list. | In progress |
+| 4 | Full Goblin unit roster | `goblins.json` audited against the Mantic Companion PDF (source of truth) — 28 units, 3 flagged `"retired": true` rather than deleted to preserve saved-army compatibility. | Done |
 | 5 | Full Chronicle rotating prompt list | A full set of reflection prompts needs to be written. Target: 20–30 prompts. | In progress |
 | 6 | Will some players object to a helper app? | Concern that experienced players may consider rule-recall part of the skill of the game. Assessment: not our audience; app is a notepad, not an autopilot. | Low priority |
 | 7 | When/whether to pursue App Store distribution | PWA first. App Store only if user demand is clear and sustained. | Deferred |
