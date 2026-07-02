@@ -257,6 +257,13 @@
       battleBtn.classList.toggle('active', mode === 'battle');
     }
 
+    /* Training button lives outside the bottom nav (top-right, beside
+       gear) so it needs its own active-state toggle too. */
+    var trainingBtn = document.getElementById('training-btn');
+    if (trainingBtn) {
+      trainingBtn.classList.toggle('active', mode === 'training');
+    }
+
     WBC.currentMode = mode;
 
     /* Call the mode module's onTabActivated handler if it exists */
@@ -264,6 +271,7 @@
       muster:    window.WBCMuster,
       battle:    window.WBCBattle,
       chronicle: window.WBCChronicle,
+      training:  window.WBCTraining,
     };
     var activeModule = moduleMap[mode];
     if (activeModule && typeof activeModule.onTabActivated === 'function') {
