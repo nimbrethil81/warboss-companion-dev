@@ -42,7 +42,7 @@
   -->
   <style id="skin-style">/* populated by app.js on load */</style>
   
-  <link rel="stylesheet" href="css/style.css?v=4" />
+  <link rel="stylesheet" href="css/style.css?v=5" />
 
   
 
@@ -173,6 +173,25 @@
       align-items: center;
       justify-content: center;
       /* Skin CSS handles background, border, backdrop-filter */
+    }
+
+    /* ── Training Ground button ─────────────────────────── */
+    /*
+      Same structural treatment as the gear button, positioned
+      immediately to its left. Visual styling lives in css/style.css
+      alongside #gear-btn's, not in skin CSS (both are skin-neutral).
+    */
+    #training-btn {
+      position: absolute;
+      top: 14px;
+      right: 58px;
+      z-index: 50;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     /* ── Bottom navigation bar ───────────────────────────── */
@@ -367,6 +386,29 @@
       </svg>
     </button>
 
+    <!-- ── Training Ground button (v1/beta: signals experimental utility,
+         not a core mode — so it sits beside settings, not in the bottom nav) -->
+    <button
+      id="training-btn"
+      aria-label="Open Training Ground"
+      type="button"
+    >
+      <svg
+        width="16" height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="white"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="9"/>
+        <circle cx="12" cy="12" r="5.4"/>
+        <circle cx="12" cy="12" r="1.8"/>
+      </svg>
+    </button>
+
     <!--
       ── Status notices ────────────────────────────────────
       Both hidden by default. app.js shows them as needed.
@@ -474,6 +516,32 @@
 
       <!-- Past dispatches list: chronicle.js -->
       <div id="chronicle-dispatches"></div>
+    </div>
+
+    <!--
+      ============================================================
+      TRAINING GROUND PAGE
+      Multiple-choice rules-recall quiz. v1/beta: reached via the
+      training-btn beside settings, not the bottom nav. Not part of
+      the boot chain — its data loads lazily on first activation and
+      the mode fails gracefully if that data is missing or malformed.
+      Content injected by training.js into #training-root.
+      ============================================================
+    -->
+    <div
+      class="page"
+      id="page-training"
+      role="main"
+      aria-labelledby="training-title"
+    >
+      <div class="page-header">
+        <div>
+          <div class="page-title" id="training-title">Training Ground</div>
+        </div>
+        <div class="page-subtitle">Sharpen your recall</div>
+      </div>
+
+      <div id="training-root"></div>
     </div>
 
 
@@ -698,6 +766,7 @@
 <script src="js/muster.js?v=3"    defer></script>
 <script src="js/battle.js?v=7"    defer></script>
 <script src="js/chronicle.js?v=3" defer></script>
+<script src="js/training.js?v=1" defer></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
