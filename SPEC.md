@@ -570,6 +570,19 @@ The effect vocabulary is closed for this pass; new types are additive and requir
 
 Like `options.scope: "battalion"`, this is capture-only in v1: Muster stores the true rule but does not yet enforce per-Battalion or per-army counts — that lands with the future army-composition system. Recording it now means the roster never needs re-reading when that system is built.
 
+**Unit category (composition role).** Every unit carries a `category` — its composition role, used by the future composition system to validate Battalion structure. Values match the rulebook's unlock categories: `"Core"`, `"Auxiliary"`, `"Specialist"`, `"Support"`, `"Commander"`.
+
+Category is **per size**, not per family: the same unit at different sizes can sit in different categories (e.g. Fleabag Riders are `"Auxiliary"` as a Troop, `"Core"` as a Regiment), so it lives on each size-specific `unit_id`.
+
+Commander units additionally carry `commander_role` (`"champion"` or `"warlord"`), preserving the rulebook's two distinct constraints without a hardcoded grouping: the Commander unlock (1-4/Battalion) keys off `category == "Commander"`, the Warlord cap (1/Battalion) off `commander_role == "warlord"`. Absent on non-Commanders.
+
+| Field | Required | Notes |
+|---|---|---|
+| `category` | yes | One of `Core`, `Auxiliary`, `Specialist`, `Support`, `Commander`. Per size-specific `unit_id`. |
+| `commander_role` | Commanders only | `"champion"` or `"warlord"`. Absent otherwise. |
+
+Like `availability`, capture-only in v1 — stored now, not yet enforced.
+
 ### `data/systems/kow-training.json` — Training Ground Question Bank
 
 Hand-authored multiple-choice question bank for Training Ground, plus the category vocabulary the questions are tagged against. Co-located in one file (Single Source of Truth): the `categories` block is the only definition of the category ids, and each question references one of them.
