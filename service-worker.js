@@ -30,7 +30,7 @@
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION  = 'wbc-v19';
+const CACHE_VERSION  = 'wbc-v20';
 const CACHE_SHELL    = CACHE_VERSION + '-shell';   // app shell + data
 const CACHE_FONTS    = CACHE_VERSION + '-fonts';   // Google Fonts responses
 
@@ -51,8 +51,10 @@ const SHELL_FILES = [
   './js/muster.js',
   './js/battle.js',
   './js/chronicle.js',
+  './js/training.js',
   './data/systems/index.json',
   './data/systems/kow.json',
+  './data/systems/kow-training.json',
   './data/armies/kow/index.json',
   './data/armies/kow/goblins.json',
   './assets/icons/icon-192.png',
