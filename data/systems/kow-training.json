@@ -1,0 +1,538 @@
+{
+  "system_id": "kow",
+  "version": "v4",
+  "categories": [
+    {
+      "id": "movement",
+      "name": "Movement"
+    },
+    {
+      "id": "ranged",
+      "name": "Ranged"
+    },
+    {
+      "id": "melee",
+      "name": "Melee"
+    },
+    {
+      "id": "morale",
+      "name": "Nerve"
+    },
+    {
+      "id": "magic",
+      "name": "Magic"
+    },
+    {
+      "id": "command",
+      "name": "Command Orders"
+    },
+    {
+      "id": "special_rules",
+      "name": "Special Rules"
+    },
+    {
+      "id": "unit_stats",
+      "name": "Unit Stats"
+    },
+    {
+      "id": "terrain",
+      "name": "Terrain"
+    },
+    {
+      "id": "scenario",
+      "name": "Scenario"
+    }
+  ],
+  "questions": [
+    {
+      "id": "q_movement_001",
+      "category": "movement",
+      "question": "Your Goblin Rabble horde has Speed 5 and no rules that modify its charge range. What is the greatest distance to an enemy at which it can legally declare a Charge!?",
+      "options": [
+        "5\"",
+        "10\"",
+        "15\"",
+        "20\""
+      ],
+      "answer": 1,
+      "explanation": "A charge can be declared against a target up to double the unit's Speed away, so 5 x 2 = 10\". The tempting 5\" is the Advance! distance (single Speed); charging lets you reach twice as far.",
+      "source": "Rulebook p.16"
+    },
+    {
+      "id": "q_movement_002",
+      "category": "movement",
+      "question": "Your Big Rocks Thrower is a War Engine. Which one of these Movement orders can it NOT be given?",
+      "options": [
+        "Halt!",
+        "Change Facing!",
+        "At the Double!",
+        "Back!"
+      ],
+      "answer": 2,
+      "explanation": "War Engines cannot be ordered to move At the Double! (nor to Charge!). They can still Halt!, Change Facing!, Advance!, Back! and Sidestep! normally, which is why the other three are all legal.",
+      "source": "Rulebook p.35"
+    },
+    {
+      "id": "q_movement_003",
+      "category": "movement",
+      "question": "Your Goblins are Engaged and you order them to Withdraw! They pass the Nerve test. After turning to face the enemy, how far do they then move directly backwards?",
+      "options": [
+        "Half their Speed",
+        "Their full Speed",
+        "D6\"",
+        "2D6\""
+      ],
+      "answer": 3,
+      "explanation": "A successful Withdraw! moves the unit 2D6\" straight back (unaffected by Difficult Terrain and Obstacles). Half-Speed is the Back! order, not Withdraw!, which is a common mix-up.",
+      "source": "Rulebook p.22"
+    },
+    {
+      "id": "q_ranged_001",
+      "category": "ranged",
+      "question": "Your Goblin Spitters need 5+ to hit. This Turn they were given a Halt! order (so they Aim), and their target is in cover. What do they need to roll to hit?",
+      "options": [
+        "4+",
+        "6+",
+        "3+",
+        "5+"
+      ],
+      "answer": 3,
+      "explanation": "Aiming (from a Halt! order) is +1 and cover is -1; the two modifiers cancel, leaving the base 5+. The tempting 4+ only counts the Aim bonus and forgets the cover penalty.",
+      "source": "Rulebook p.26"
+    },
+    {
+      "id": "q_ranged_002",
+      "category": "ranged",
+      "question": "An enemy regiment is Engaged in Combat with one of your Goblin units. Can your Goblin Spitters shoot at that enemy regiment if it is in range and line of sight?",
+      "options": [
+        "No — units that are Engaged cannot be targeted by ranged attacks",
+        "Yes, if in range and LOS",
+        "Yes, but at -1 to hit",
+        "Only during your Combat Phase"
+      ],
+      "answer": 0,
+      "explanation": "Engaged units cannot be chosen as targets for ranged attacks at all, so range and LOS are irrelevant here. It is not simply a to-hit penalty — the shot is illegal.",
+      "source": "Rulebook p.26"
+    },
+    {
+      "id": "q_ranged_003",
+      "category": "ranged",
+      "question": "Your Goblin Spitters are standing inside a wood (agreed as Difficult Terrain that gives cover). They shoot an enemy unit out in the open, with clear line of sight and nothing between the two units. Does the enemy count as being in cover?",
+      "options": [
+        "No — cover depends on the target's position, not the shooter's",
+        "Yes, because a wood is involved",
+        "Yes, whenever you shoot out of cover",
+        "Only if you fail a 4+ roll"
+      ],
+      "answer": 0,
+      "explanation": "Cover is decided by terrain/units around or in front of the target, not the firer. A unit even ignores Difficult Terrain its own centre-point sits in when checking cover. The wood the shooters stand in gives the target nothing.",
+      "source": "Rulebook p.28"
+    },
+    {
+      "id": "q_ranged_004",
+      "category": "ranged",
+      "question": "Your Goblins have Sh 5+ and 10 ranged Attacks. After all modifiers they would need a 7+ to hit this target — impossible on a D6. What happens?",
+      "options": [
+        "They cannot shoot at all",
+        "They roll 5 dice (half, rounding down), hitting on 6s",
+        "They roll all 10 dice, hitting on 6s",
+        "They roll 10 dice, needing 7 (so nothing hits)"
+      ],
+      "answer": 1,
+      "explanation": "If modifiers make hitting impossible, the unit may still shoot, needs a 6 to hit, but rolls only half its Attacks (rounding down) — 5 dice here. A natural 1 is always a miss regardless.",
+      "source": "Rulebook p.26"
+    },
+    {
+      "id": "q_melee_001",
+      "category": "melee",
+      "question": "Your Goblin Rabble is Engaged with an enemy unit's flank and directs 20 Attacks at it. How many attack dice do you actually roll?",
+      "options": [
+        "20",
+        "30",
+        "60",
+        "40"
+      ],
+      "answer": 3,
+      "explanation": "Attacks against a flank are doubled before rolling to hit: 20 becomes 40. The tempting 60 is the rear multiplier (trebled), not the flank one.",
+      "source": "Rulebook p.30"
+    },
+    {
+      "id": "q_melee_002",
+      "category": "melee",
+      "question": "Your Goblins charge into combat and their move had to cross a low hedge (agreed as an Obstacle). What effect does crossing the Obstacle have on their attacks in the ensuing Combat?",
+      "options": [
+        "No effect",
+        "-1 to hit (Hindered)",
+        "-1 to damage",
+        "They cannot complete the charge"
+      ],
+      "answer": 1,
+      "explanation": "A charge that passes through or ends on Difficult Terrain or an Obstacle is Hindered: a single -1 to hit that Combat. Obstacles don't stop charges (that is the 'cannot charge' trap), and the penalty is to hit, not to damage. Strider/Reform! avoid it.",
+      "source": "Rulebook p.31"
+    },
+    {
+      "id": "q_melee_003",
+      "category": "melee",
+      "question": "During your Combat Phase, your Goblins are Engaged with an enemy regiment. Whose units actually roll attacks in this Combat?",
+      "options": [
+        "Both units strike simultaneously",
+        "Whichever unit charged",
+        "Only your units this Turn; the enemy strikes back on their own Turn",
+        "The unit with the higher Attacks value"
+      ],
+      "answer": 2,
+      "explanation": "In your Turn only your Engaged units strike; the enemy defends and will get to hit back in their own Combat Phase. Expecting the enemy to roll back immediately is one of the most common beginner misplays.",
+      "source": "Rulebook p.30"
+    },
+    {
+      "id": "q_morale_001",
+      "category": "morale",
+      "question": "You have damaged an enemy unit and now test its Nerve. What do you roll, and what do you add before comparing to its Nerve value?",
+      "options": [
+        "Roll 2D6 only",
+        "Roll D6 and add the damage",
+        "Roll 2D6 and add the damage currently on the unit",
+        "Roll 3D6"
+      ],
+      "answer": 2,
+      "explanation": "You roll 2D6 and add the unit's current total damage (plus any special-rule modifiers). If that total reaches or exceeds the Nerve value, the test is failed.",
+      "source": "Rulebook p.33"
+    },
+    {
+      "id": "q_morale_002",
+      "category": "morale",
+      "question": "One of your Goblin units is Wavering at the start of your Turn. Which Movement orders may it be given?",
+      "options": [
+        "Any order",
+        "Any order except Charge!",
+        "Only Halt!, Change Facing! or Back!",
+        "Halt! only"
+      ],
+      "answer": 2,
+      "explanation": "A Wavering unit may only be given Halt!, Change Facing! or Back!, and it cannot make ranged attacks that Turn. It's more restricted than 'anything but Charge!', but it isn't frozen to Halt! alone.",
+      "source": "Rulebook p.33"
+    },
+    {
+      "id": "q_morale_003",
+      "category": "morale",
+      "question": "You roll to test an enemy unit's Nerve and get double 1 (snake eyes). What happens?",
+      "options": [
+        "The enemy automatically Routs",
+        "You re-roll both dice",
+        "The enemy automatically passes, ignoring all modifiers",
+        "Nothing special happens"
+      ],
+      "answer": 2,
+      "explanation": "Double 1 is 'Hold Your Ground!' — the target passes the Nerve test automatically no matter how much damage or how many modifiers apply. A frequent source of frustration when trying to break a stubborn unit.",
+      "source": "Rulebook p.34"
+    },
+    {
+      "id": "q_morale_004",
+      "category": "morale",
+      "question": "Your Goblins are Engaged and you order Withdraw! They FAIL the Nerve test. What is the result?",
+      "options": [
+        "They move back D6\" but survive",
+        "They stay Engaged where they are",
+        "They are immediately Routed and removed",
+        "They Waver but remain on the table"
+      ],
+      "answer": 2,
+      "explanation": "Failing the Withdraw! Nerve test means the unit breaks in confusion and is immediately Routed and removed — there is no half-measure. Any enemies it was fighting simply stay put.",
+      "source": "Rulebook p.22"
+    },
+    {
+      "id": "q_morale_005",
+      "category": "morale",
+      "question": "Your Goblin regiment is Engaged ONLY by a single enemy Individual (a lone hero). You order it to Withdraw! What happens with the Nerve test?",
+      "options": [
+        "You take a normal 2D6 Nerve test",
+        "It passes automatically",
+        "It fails automatically",
+        "It cannot Withdraw! from an Individual"
+      ],
+      "answer": 1,
+      "explanation": "A non-Individual unit that is Engaged only by Individuals automatically passes the Nerve test when it Withdraws! — so it always escapes. This is handy against lone chaff-catchers.",
+      "source": "Rulebook p.35"
+    },
+    {
+      "id": "q_magic_001",
+      "category": "magic",
+      "question": "Your Goblin Wiz casts an ordinary (non-Magical-Missile) spell at an enemy in cover. What does the spell normally need to hit, and does the cover matter?",
+      "options": [
+        "It uses the caster's Sh stat, modified by cover",
+        "4+ to hit, but cover still applies",
+        "5+ to hit always",
+        "4+ to hit, ignoring all normal to-hit modifiers such as cover"
+      ],
+      "answer": 3,
+      "explanation": "Most spells hit on a flat 4+ and ignore the normal ranged to-hit modifiers, so cover does nothing to an ordinary spell. Spells marked 'Magical Missile' are the exception — see the Magical Missile question.",
+      "source": "Rulebook p.39"
+    },
+    {
+      "id": "q_magic_002",
+      "category": "magic",
+      "question": "Your Goblin Wiz moved At the Double! this Turn. Can it still cast a spell in the Ranged Phase?",
+      "options": [
+        "Yes, spells are exempt from movement rules",
+        "No — spells are ranged attacks, and moving At the Double! prevents ranged attacks",
+        "Only Magical Missiles can be cast",
+        "Yes, but at -1 to hit"
+      ],
+      "answer": 1,
+      "explanation": "Spells follow the ranged rules, so a unit that moved At the Double! (too busy marching) cannot cast. Remember a unit may make only one ranged attack per Turn anyway, so it can't cast two spells either.",
+      "source": "Rulebook p.39"
+    },
+    {
+      "id": "q_magic_003",
+      "category": "magic",
+      "question": "A spell in your list is marked 'Magical Missile' and its target is in cover. Does the -1 cover modifier apply to your to-hit roll?",
+      "options": [
+        "Yes — Magical Missiles hit on 4+ but normal to-hit modifiers still apply",
+        "No, all spells ignore to-hit modifiers",
+        "No, but the spell loses its Piercing",
+        "Only if the caster moved this Turn"
+      ],
+      "answer": 0,
+      "explanation": "Magical Missiles are the deliberate exception: they still hit on 4+, but unlike ordinary spells they DO suffer the usual to-hit modifiers like cover. Forgetting this is a common misplay in either direction.",
+      "source": "Rulebook p.39"
+    },
+    {
+      "id": "q_command_001",
+      "category": "command",
+      "question": "At what point during a unit's move can a Command Order be issued to or from it?",
+      "options": [
+        "Only before the unit starts moving",
+        "Only after the unit finishes its whole move",
+        "Only at the very start of the Movement Phase",
+        "At any point during the move, but never mid-pivot (finish the turn first)"
+      ],
+      "answer": 3,
+      "explanation": "A Command Order may be issued at any point during a unit's move — by the issuing or receiving unit — except in the middle of a pivot, which must be completed first.",
+      "source": "FAQ v1.0 (Command Orders)"
+    },
+    {
+      "id": "q_command_002",
+      "category": "command",
+      "question": "You have several commanders on the table. Must they all issue their Command Orders at the same moment?",
+      "options": [
+        "No — each commander issues independently, whenever they want during the phase",
+        "Yes, all at once",
+        "Only one commander may issue an order per Turn",
+        "Yes, in a fixed order"
+      ],
+      "answer": 0,
+      "explanation": "Each commander is free to issue a Command Order separately, at whatever point in the phase suits them; they don't all fire simultaneously.",
+      "source": "FAQ v1.0 (Command Orders)"
+    },
+    {
+      "id": "q_special_rules_001",
+      "category": "special_rules",
+      "question": "A unit has Speed 5 and the Wild Charge (2) special rule. What is its maximum charge range?",
+      "options": [
+        "12\"",
+        "7\"",
+        "10\"",
+        "14\""
+      ],
+      "answer": 0,
+      "explanation": "Wild Charge (n) is added AFTER Speed is doubled: (5 x 2) + 2 = 12\". The 14\" trap doubles the total after adding (i.e. (5+2) x 2), and 7\" forgets to double at all.",
+      "source": "Rulebook p.38"
+    },
+    {
+      "id": "q_special_rules_002",
+      "category": "special_rules",
+      "question": "The Vicious special rule lets a unit re-roll which dice?",
+      "options": [
+        "All dice that failed to hit",
+        "Every damage die, once",
+        "Dice that roll a 1 when rolling to hit",
+        "Dice that roll a natural 1 when rolling to damage"
+      ],
+      "answer": 3,
+      "explanation": "Vicious re-rolls natural, unmodified 1s when rolling to DAMAGE (and can be limited to a phase, e.g. Vicious (Combat), which the Mawpup Launcher grants your Green Horde). Re-rolling failed to-hit dice is a different rule (Elite).",
+      "source": "Rulebook p.38"
+    },
+    {
+      "id": "q_special_rules_003",
+      "category": "special_rules",
+      "question": "Your Goblin units carry the 'Green Horde' Trait. On its own, what does having a Trait like this do?",
+      "options": [
+        "Grants +1 Nerve",
+        "Nothing directly — it just marks the unit as a target for rules, spells or Command Orders that reference that Trait",
+        "Gives a free re-roll each Turn",
+        "Adds extra Attacks"
+      ],
+      "answer": 1,
+      "explanation": "Traits have no game effect by themselves; they only flag a unit so that other rules can single it out — e.g. the Mawpup Launcher can target friendly Green Horde units. That's why Green Horde lives in traits, not special_rules.",
+      "source": "Rulebook p.36"
+    },
+    {
+      "id": "q_special_rules_004",
+      "category": "special_rules",
+      "question": "A friendly unit within 6\" of your Inspiring Goblin hero fails a Nerve test (a Waver or Rout result). What does Inspiring do?",
+      "options": [
+        "The unit passes the test automatically",
+        "The Nerve test must be re-rolled, and the second result stands",
+        "The hero suffers the damage instead",
+        "Nothing — Inspiring only protects the hero itself"
+      ],
+      "answer": 1,
+      "explanation": "Inspiring forces a re-roll of a Waver/Rout result for itself and friendly units within 6\" (Very Inspiring reaches 9\"); the second roll stands. It doesn't guarantee a pass. Note a 'We Are Doomed!' from Combat can't be re-rolled this way.",
+      "source": "Rulebook p.37"
+    },
+    {
+      "id": "q_unit_stats_001",
+      "category": "unit_stats",
+      "question": "For Line of Sight and cover, what Height does a War Engine (such as a Sharpstick Thrower) have by default?",
+      "options": [
+        "3",
+        "2",
+        "5",
+        "8"
+      ],
+      "answer": 1,
+      "explanation": "War Engines are Height 2, the same as Infantry. Cavalry are 3 and Monsters are 5 — don't assume a big machine is tall.",
+      "source": "Rulebook p.10"
+    },
+    {
+      "id": "q_unit_stats_002",
+      "category": "unit_stats",
+      "question": "A Goblin unit's profile lists its Attacks as 'D6+8'. How many attack dice do you roll?",
+      "options": [
+        "Roll one D6 and add 8 to the result",
+        "Roll 8 dice",
+        "Roll 6 dice and add 8",
+        "Roll 14 dice"
+      ],
+      "answer": 0,
+      "explanation": "'D6+n' means roll a single D6 and add n, so D6+8 gives 9–14 attacks that Turn. It is not six dice plus eight, nor a flat 14.",
+      "source": "Rulebook p.5"
+    },
+    {
+      "id": "q_terrain_001",
+      "category": "terrain",
+      "question": "Can your Goblins move At the Double! straight through an area of Difficult Terrain, such as a wood?",
+      "options": [
+        "No — while moving At the Double!, Difficult Terrain counts as Blocking Terrain (go around it)",
+        "Yes, with no penalty",
+        "Yes, but only at half Speed",
+        "Yes, but the unit is Hindered"
+      ],
+      "answer": 0,
+      "explanation": "At the Double! treats Difficult Terrain as Blocking, so the unit must go around. A normal Advance! can move through it (and Pathfinder ignores the penalty entirely). The crux here is the terrain rule, not the order's base distance.",
+      "source": "Rulebook p.24"
+    },
+    {
+      "id": "q_terrain_002",
+      "category": "terrain",
+      "question": "A low hedge is agreed to be an Obstacle. Under a normal Advance! order, can your Goblin infantry move across it?",
+      "options": [
+        "Yes — units cross Obstacles normally on a normal move (and may even end on top)",
+        "No, Obstacles block all movement",
+        "Only War Engines may cross Obstacles",
+        "Only units with Fly may cross"
+      ],
+      "answer": 0,
+      "explanation": "Obstacles are crossed normally during ordinary moves and can be ended upon; only At the Double! treats them as Blocking. War Engines are the exception — THEY treat Obstacles as Blocking — which is the reverse of the trap answer.",
+      "source": "Rulebook p.24"
+    },
+    {
+      "id": "q_terrain_003",
+      "category": "terrain",
+      "question": "As it turns, can a unit pivot through a piece of Blocking Terrain (like a building), provided it ends clear of it?",
+      "options": [
+        "No, Blocking Terrain stops pivots as well",
+        "Only if the unit has Fly",
+        "Yes — a unit may pivot through Blocking Terrain, friends and enemies, but must END the pivot and its whole move clear of them",
+        "Only War Engines can do this"
+      ],
+      "answer": 2,
+      "explanation": "When pivoting on its centre, a unit can swing through Blocking Terrain and other units, as long as the finished position is clear. A straight move (forward/back/sideways), by contrast, cannot cross Blocking Terrain.",
+      "source": "Rulebook p.15"
+    },
+    {
+      "id": "q_scenario_001",
+      "category": "scenario",
+      "question": "In the basic game, at the end of Round 6, how is it decided whether a Round 7 is played?",
+      "options": [
+        "The player who went second rolls a die: 4-6 = a Round 7 is played, 1-3 = the game ends",
+        "The game always ends after Round 6",
+        "The game always continues to Round 7",
+        "The player who went first chooses"
+      ],
+      "answer": 0,
+      "explanation": "After Round 6 the second player rolls: on a 4-6 both players take one more Turn (Round 7), on a 1-3 the game ends. This dice roll, not a fixed length, is what determines the final Turn.",
+      "source": "Rulebook p.41"
+    },
+    {
+      "id": "q_scenario_002",
+      "category": "scenario",
+      "question": "Your Goblins have Speed 6 and pick up a Loot Counter. What is their Speed while carrying it?",
+      "options": [
+        "6 (unchanged)",
+        "3",
+        "5",
+        "4"
+      ],
+      "answer": 2,
+      "explanation": "Carrying a Loot Counter caps a unit's Speed at 5 (unless it was already below 5). The crux is the Loot Counter rule, not the printed Speed — which is why this is a scenario question even though the effect lands on movement.",
+      "source": "FAQ v1.0 Errata (Rulebook p.68)"
+    },
+    {
+      "id": "q_scenario_003",
+      "category": "scenario",
+      "question": "In the basic 'Playing a Game' scenario, how is the winner decided at the end?",
+      "options": [
+        "Whoever destroyed the most points of enemy units",
+        "The player with the most units still on the table wins",
+        "Whoever controls the centre of the board",
+        "The player with the most individual models left"
+      ],
+      "answer": 1,
+      "explanation": "Basic victory goes to whoever has the most surviving units; if tied, the player who still has their hero wins, otherwise it's a draw. It counts units, not models or points — which quietly favours a numerous Goblin list.",
+      "source": "Rulebook p.41"
+    },
+    {
+      "id": "q_morale_006",
+      "category": "morale",
+      "question": "Enemy shooting inflicts damage on your Goblin Sharpsticks regiment (Ne 16) and it fails the Nerve test. What is the result?",
+      "options": [
+        "It is Routed and removed",
+        "Nothing — shooting cannot break a unit",
+        "It becomes Wavering until the end of its next Turn",
+        "It falls back D6\" but survives"
+      ],
+      "answer": 2,
+      "explanation": "A Nerve test failed because of ranged damage causes Wavering, not a Rout. The unit stays on the table but next Turn can only be given Halt!, Change Facing! or Back! and cannot shoot. Only combat-caused fails Rout a unit outright.",
+      "source": "Rulebook p.33"
+    },
+    {
+      "id": "q_morale_007",
+      "category": "morale",
+      "question": "In your opponent's Combat Phase your Goblin Rabble regiment (Ne 14) takes damage and fails its Nerve test. What happens?",
+      "options": [
+        "It becomes Wavering but stays",
+        "It retreats 2D6\" and survives",
+        "It passes automatically because it is a horde",
+        "It is Routed and removed from the table"
+      ],
+      "answer": 3,
+      "explanation": "A Nerve test failed because of combat damage means the unit is Routed — destroyed and removed. The same die total that would only Waver a unit from shooting Routs it in combat; the difference is the source of the damage, since the Nerve value itself is single.",
+      "source": "Rulebook p.33"
+    },
+    {
+      "id": "q_morale_008",
+      "category": "morale",
+      "question": "Your Goblin Spitters regiment (Ne 15) has taken so much damage that its total now EXCEEDS its Nerve value, making it Devastated. Enemy shooting then makes it fail another Nerve test. Normally a shooting fail only Wavers a unit — what happens here?",
+      "options": [
+        "It Wavers as usual",
+        "It automatically passes while Devastated",
+        "It regains a point of damage and Wavers",
+        "It is Routed, because a Devastated unit treats Waver results as Routs"
+      ],
+      "answer": 3,
+      "explanation": "Once damage exceeds a unit's Nerve value it is Devastated: it halves its Attacks AND treats any Waver result as a Rout. So even a shooting-caused fail now removes it, including the very test taken on becoming Devastated. Goblins tip over this line quickly.",
+      "source": "Rulebook p.33"
+    }
+  ]
+}
