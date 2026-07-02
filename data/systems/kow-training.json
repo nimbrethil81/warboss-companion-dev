@@ -56,7 +56,7 @@
       ],
       "answer": 1,
       "explanation": "A charge can be declared against a target up to double the unit's Speed away, so 5 x 2 = 10\". The tempting 5\" is the Advance! distance (single Speed); charging lets you reach twice as far.",
-      "source": "Rulebook p.16"
+      "source": "Rulebook, The Movement Phase — Charge!"
     },
     {
       "id": "q_movement_002",
@@ -70,7 +70,7 @@
       ],
       "answer": 2,
       "explanation": "War Engines cannot be ordered to move At the Double! (nor to Charge!). They can still Halt!, Change Facing!, Advance!, Back! and Sidestep! normally, which is why the other three are all legal.",
-      "source": "Rulebook p.35"
+      "source": "Rulebook, Other Units — War Engines (Movement)"
     },
     {
       "id": "q_movement_003",
@@ -84,7 +84,7 @@
       ],
       "answer": 3,
       "explanation": "A successful Withdraw! moves the unit 2D6\" straight back (unaffected by Difficult Terrain and Obstacles). Half-Speed is the Back! order, not Withdraw!, which is a common mix-up.",
-      "source": "Rulebook p.22"
+      "source": "Rulebook, The Movement Phase — Withdraw!"
     },
     {
       "id": "q_ranged_001",
@@ -98,7 +98,7 @@
       ],
       "answer": 3,
       "explanation": "Aiming (from a Halt! order) is +1 and cover is -1; the two modifiers cancel, leaving the base 5+. The tempting 4+ only counts the Aim bonus and forgets the cover penalty.",
-      "source": "Rulebook p.26"
+      "source": "Rulebook, The Ranged Phase — Modifiers"
     },
     {
       "id": "q_ranged_002",
@@ -112,7 +112,7 @@
       ],
       "answer": 0,
       "explanation": "Engaged units cannot be chosen as targets for ranged attacks at all, so range and LOS are irrelevant here. It is not simply a to-hit penalty — the shot is illegal.",
-      "source": "Rulebook p.26"
+      "source": "Rulebook, The Ranged Phase — Combat and Ranged Attacks"
     },
     {
       "id": "q_ranged_003",
@@ -126,7 +126,7 @@
       ],
       "answer": 0,
       "explanation": "Cover is decided by terrain/units around or in front of the target, not the firer. A unit even ignores Difficult Terrain its own centre-point sits in when checking cover. The wood the shooters stand in gives the target nothing.",
-      "source": "Rulebook p.28"
+      "source": "Rulebook, Cover"
     },
     {
       "id": "q_ranged_004",
@@ -140,7 +140,7 @@
       ],
       "answer": 1,
       "explanation": "If modifiers make hitting impossible, the unit may still shoot, needs a 6 to hit, but rolls only half its Attacks (rounding down) — 5 dice here. A natural 1 is always a miss regardless.",
-      "source": "Rulebook p.26"
+      "source": "Rulebook, The Ranged Phase — Modifiers"
     },
     {
       "id": "q_melee_001",
@@ -154,7 +154,7 @@
       ],
       "answer": 3,
       "explanation": "Attacks against a flank are doubled before rolling to hit: 20 becomes 40. The tempting 60 is the rear multiplier (trebled), not the flank one.",
-      "source": "Rulebook p.30"
+      "source": "Rulebook, The Combat Phase — Striking"
     },
     {
       "id": "q_melee_002",
@@ -168,7 +168,7 @@
       ],
       "answer": 1,
       "explanation": "A charge that passes through or ends on Difficult Terrain or an Obstacle is Hindered: a single -1 to hit that Combat. Obstacles don't stop charges (that is the 'cannot charge' trap), and the penalty is to hit, not to damage. Strider/Reform! avoid it.",
-      "source": "Rulebook p.31"
+      "source": "Rulebook, The Combat Phase — Hindered Charges"
     },
     {
       "id": "q_melee_003",
@@ -182,7 +182,7 @@
       ],
       "answer": 2,
       "explanation": "In your Turn only your Engaged units strike; the enemy defends and will get to hit back in their own Combat Phase. Expecting the enemy to roll back immediately is one of the most common beginner misplays.",
-      "source": "Rulebook p.30"
+      "source": "Rulebook, The Combat Phase"
     },
     {
       "id": "q_morale_001",
@@ -196,7 +196,7 @@
       ],
       "answer": 2,
       "explanation": "You roll 2D6 and add the unit's current total damage (plus any special-rule modifiers). If that total reaches or exceeds the Nerve value, the test is failed.",
-      "source": "Rulebook p.33"
+      "source": "Rulebook, Nerve — How to Test"
     },
     {
       "id": "q_morale_002",
@@ -210,7 +210,7 @@
       ],
       "answer": 2,
       "explanation": "A Wavering unit may only be given Halt!, Change Facing! or Back!, and it cannot make ranged attacks that Turn. It's more restricted than 'anything but Charge!', but it isn't frozen to Halt! alone.",
-      "source": "Rulebook p.33"
+      "source": "Rulebook, Nerve — Effects of a Failed Test (Wavering)"
     },
     {
       "id": "q_morale_003",
@@ -224,7 +224,7 @@
       ],
       "answer": 2,
       "explanation": "Double 1 is 'Hold Your Ground!' — the target passes the Nerve test automatically no matter how much damage or how many modifiers apply. A frequent source of frustration when trying to break a stubborn unit.",
-      "source": "Rulebook p.34"
+      "source": "Rulebook, Nerve — Exceptional Morale Results (Hold Your Ground!)"
     },
     {
       "id": "q_morale_004",
@@ -238,7 +238,7 @@
       ],
       "answer": 2,
       "explanation": "Failing the Withdraw! Nerve test means the unit breaks in confusion and is immediately Routed and removed — there is no half-measure. Any enemies it was fighting simply stay put.",
-      "source": "Rulebook p.22"
+      "source": "Rulebook, The Movement Phase — Withdraw!"
     },
     {
       "id": "q_morale_005",
@@ -252,7 +252,7 @@
       ],
       "answer": 1,
       "explanation": "A non-Individual unit that is Engaged only by Individuals automatically passes the Nerve test when it Withdraws! — so it always escapes. This is handy against lone chaff-catchers.",
-      "source": "Rulebook p.35"
+      "source": "Rulebook, Other Units — Individuals (Combat)"
     },
     {
       "id": "q_magic_001",
@@ -266,7 +266,7 @@
       ],
       "answer": 3,
       "explanation": "Most spells hit on a flat 4+ and ignore the normal ranged to-hit modifiers, so cover does nothing to an ordinary spell. Spells marked 'Magical Missile' are the exception — see the Magical Missile question.",
-      "source": "Rulebook p.39"
+      "source": "Rulebook, Magic — Spells"
     },
     {
       "id": "q_magic_002",
@@ -280,7 +280,7 @@
       ],
       "answer": 1,
       "explanation": "Spells follow the ranged rules, so a unit that moved At the Double! (too busy marching) cannot cast. Remember a unit may make only one ranged attack per Turn anyway, so it can't cast two spells either.",
-      "source": "Rulebook p.39"
+      "source": "Rulebook, Magic — Spells"
     },
     {
       "id": "q_magic_003",
@@ -294,7 +294,7 @@
       ],
       "answer": 0,
       "explanation": "Magical Missiles are the deliberate exception: they still hit on 4+, but unlike ordinary spells they DO suffer the usual to-hit modifiers like cover. Forgetting this is a common misplay in either direction.",
-      "source": "Rulebook p.39"
+      "source": "Rulebook, Magic — Spells"
     },
     {
       "id": "q_command_001",
@@ -308,7 +308,7 @@
       ],
       "answer": 3,
       "explanation": "A Command Order may be issued at any point during a unit's move — by the issuing or receiving unit — except in the middle of a pivot, which must be completed first.",
-      "source": "FAQ v1.0 (Command Orders)"
+      "source": "FAQ v0.1 — Command Order Timing"
     },
     {
       "id": "q_command_002",
@@ -322,7 +322,7 @@
       ],
       "answer": 0,
       "explanation": "Each commander is free to issue a Command Order separately, at whatever point in the phase suits them; they don't all fire simultaneously.",
-      "source": "FAQ v1.0 (Command Orders)"
+      "source": "FAQ v0.1 — Command Order Timing"
     },
     {
       "id": "q_special_rules_001",
@@ -336,7 +336,7 @@
       ],
       "answer": 0,
       "explanation": "Wild Charge (n) is added AFTER Speed is doubled: (5 x 2) + 2 = 12\". The 14\" trap doubles the total after adding (i.e. (5+2) x 2), and 7\" forgets to double at all.",
-      "source": "Rulebook p.38"
+      "source": "Rulebook, Special Rules — Wild Charge (n)"
     },
     {
       "id": "q_special_rules_002",
@@ -350,7 +350,7 @@
       ],
       "answer": 3,
       "explanation": "Vicious re-rolls natural, unmodified 1s when rolling to DAMAGE (and can be limited to a phase, e.g. Vicious (Combat), which the Mawpup Launcher grants your Green Horde). Re-rolling failed to-hit dice is a different rule (Elite).",
-      "source": "Rulebook p.38"
+      "source": "Rulebook, Special Rules — Vicious"
     },
     {
       "id": "q_special_rules_003",
@@ -364,7 +364,7 @@
       ],
       "answer": 1,
       "explanation": "Traits have no game effect by themselves; they only flag a unit so that other rules can single it out — e.g. the Mawpup Launcher can target friendly Green Horde units. That's why Green Horde lives in traits, not special_rules.",
-      "source": "Rulebook p.36"
+      "source": "Rulebook, Special Rules — Traits"
     },
     {
       "id": "q_special_rules_004",
@@ -378,7 +378,7 @@
       ],
       "answer": 1,
       "explanation": "Inspiring forces a re-roll of a Waver/Rout result for itself and friendly units within 6\" (Very Inspiring reaches 9\"); the second roll stands. It doesn't guarantee a pass. Note a 'We Are Doomed!' from Combat can't be re-rolled this way.",
-      "source": "Rulebook p.37"
+      "source": "Rulebook, Special Rules — Inspiring"
     },
     {
       "id": "q_unit_stats_001",
@@ -392,7 +392,7 @@
       ],
       "answer": 1,
       "explanation": "War Engines are Height 2, the same as Infantry. Cavalry are 3 and Monsters are 5 — don't assume a big machine is tall.",
-      "source": "Rulebook p.10"
+      "source": "Rulebook, Arcs and Line of Sight — Unit Height"
     },
     {
       "id": "q_unit_stats_002",
@@ -406,7 +406,7 @@
       ],
       "answer": 0,
       "explanation": "'D6+n' means roll a single D6 and add n, so D6+8 gives 9–14 attacks that Turn. It is not six dice plus eight, nor a flat 14.",
-      "source": "Rulebook p.5"
+      "source": "Rulebook, Getting Started — Dice"
     },
     {
       "id": "q_terrain_001",
@@ -420,7 +420,7 @@
       ],
       "answer": 0,
       "explanation": "At the Double! treats Difficult Terrain as Blocking, so the unit must go around. A normal Advance! can move through it (and Pathfinder ignores the penalty entirely). The crux here is the terrain rule, not the order's base distance.",
-      "source": "Rulebook p.24"
+      "source": "Rulebook, Terrain — Difficult Terrain"
     },
     {
       "id": "q_terrain_002",
@@ -434,7 +434,7 @@
       ],
       "answer": 0,
       "explanation": "Obstacles are crossed normally during ordinary moves and can be ended upon; only At the Double! treats them as Blocking. War Engines are the exception — THEY treat Obstacles as Blocking — which is the reverse of the trap answer.",
-      "source": "Rulebook p.24"
+      "source": "Rulebook, Terrain — Obstacles"
     },
     {
       "id": "q_terrain_003",
@@ -448,7 +448,7 @@
       ],
       "answer": 2,
       "explanation": "When pivoting on its centre, a unit can swing through Blocking Terrain and other units, as long as the finished position is clear. A straight move (forward/back/sideways), by contrast, cannot cross Blocking Terrain.",
-      "source": "Rulebook p.15"
+      "source": "Rulebook, The Movement Phase — Interpenetration When Pivoting"
     },
     {
       "id": "q_scenario_001",
@@ -462,7 +462,7 @@
       ],
       "answer": 0,
       "explanation": "After Round 6 the second player rolls: on a 4-6 both players take one more Turn (Round 7), on a 1-3 the game ends. This dice roll, not a fixed length, is what determines the final Turn.",
-      "source": "Rulebook p.41"
+      "source": "Rulebook, Playing a Game — Duration"
     },
     {
       "id": "q_scenario_002",
@@ -476,7 +476,7 @@
       ],
       "answer": 2,
       "explanation": "Carrying a Loot Counter caps a unit's Speed at 5 (unless it was already below 5). The crux is the Loot Counter rule, not the printed Speed — which is why this is a scenario question even though the effect lands on movement.",
-      "source": "FAQ v1.0 Errata (Rulebook p.68)"
+      "source": "FAQ/Errata v0.1, Errata — Loot Counters"
     },
     {
       "id": "q_scenario_003",
@@ -490,7 +490,7 @@
       ],
       "answer": 1,
       "explanation": "Basic victory goes to whoever has the most surviving units; if tied, the player who still has their hero wins, otherwise it's a draw. It counts units, not models or points — which quietly favours a numerous Goblin list.",
-      "source": "Rulebook p.41"
+      "source": "Rulebook, Playing a Game — Victory"
     },
     {
       "id": "q_morale_006",
@@ -504,7 +504,7 @@
       ],
       "answer": 2,
       "explanation": "A Nerve test failed because of ranged damage causes Wavering, not a Rout. The unit stays on the table but next Turn can only be given Halt!, Change Facing! or Back! and cannot shoot. Only combat-caused fails Rout a unit outright.",
-      "source": "Rulebook p.33"
+      "source": "Rulebook, Nerve — Effects of a Failed Test (Wavering)"
     },
     {
       "id": "q_morale_007",
@@ -518,7 +518,7 @@
       ],
       "answer": 3,
       "explanation": "A Nerve test failed because of combat damage means the unit is Routed — destroyed and removed. The same die total that would only Waver a unit from shooting Routs it in combat; the difference is the source of the damage, since the Nerve value itself is single.",
-      "source": "Rulebook p.33"
+      "source": "Rulebook, Nerve — Effects of a Failed Test (Routed)"
     },
     {
       "id": "q_morale_008",
@@ -532,7 +532,7 @@
       ],
       "answer": 3,
       "explanation": "Once damage exceeds a unit's Nerve value it is Devastated: it halves its Attacks AND treats any Waver result as a Rout. So even a shooting-caused fail now removes it, including the very test taken on becoming Devastated. Goblins tip over this line quickly.",
-      "source": "Rulebook p.33"
+      "source": "Rulebook, Nerve — Devastated Units"
     }
   ]
 }
