@@ -188,6 +188,33 @@ textarea {
   transform: scale(0.94);
 }
 
+/* ── Training Ground button ─────────────────────────────
+   Same visual treatment as the gear button (both skin-neutral).
+   .active reflects the current tab, set by app.js's switchTab().
+*/
+#training-btn {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+#training-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+#training-btn:active {
+  transform: scale(0.94);
+}
+
+#training-btn.active {
+  border-color: var(--gold, #d4a843);
+  background: rgba(0, 0, 0, 0.7);
+}
+
 /* ═══════════════════════════════════════════════════════
    4. THEME MODAL
    ═══════════════════════════════════════════════════════ */
@@ -2678,4 +2705,96 @@ select.setup-input {
   text-align: center;
   padding: 6px 0 10px;
   opacity: 0.85;
+}
+
+/* ═══════════════════════════════════════════════════════
+   26. TRAINING GROUND MODE
+   ═══════════════════════════════════════════════════════ */
+
+.training-progress {
+  font-family: 'Crimson Text', serif;
+  font-size: 12px;
+  color: var(--ash, #8a7f72);
+  margin-bottom: 8px;
+}
+
+.training-cat-badge {
+  background: rgba(212, 168, 67, 0.12);
+  color: var(--gold-light, #f0c94a);
+  border: 1px solid var(--gold-dim, #8a6e2e);
+  margin-bottom: 10px;
+}
+
+.training-question {
+  font-family: 'Crimson Text', serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ash-light, #d4c9b8);
+  margin-bottom: 14px;
+}
+
+.training-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.training-option {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 11px 12px;
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--ash-light, #d4c9b8);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.training-option:not(:disabled):hover {
+  border-color: var(--gold-dim, #8a6e2e);
+}
+
+.training-option:disabled {
+  cursor: default;
+}
+
+.training-option--correct {
+  border-color: var(--gold, #d4a843);
+  background: rgba(212, 168, 67, 0.12);
+  color: var(--gold-light, #f0c94a);
+}
+
+.training-option--wrong {
+  border-color: var(--blood, #9b1f1f);
+  background: rgba(155, 31, 31, 0.1);
+  color: var(--blood-light, #e03030);
+  opacity: 0.75;
+}
+
+.training-explanation {
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 5px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.training-explanation-text {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ash-light, #d4c9b8);
+}
+
+.training-source {
+  font-family: 'Crimson Text', serif;
+  font-size: 11px;
+  font-style: italic;
+  color: var(--ash, #8a7f72);
+  margin-top: 6px;
 }
