@@ -4,8 +4,24 @@ All notable changes to Warboss Companion are documented here.
 Format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
-- Rules-accuracy audit of the 35 Training Ground questions against the KoW 4E
-  mini-rulebook and FAQ (structural validation done; rules-correctness pending)
+- Rules-accuracy audit of the original 35 Training Ground questions against
+  the KoW 4E mini-rulebook and FAQ (structural validation done; rules-
+  correctness pending)
+- Training Ground: added 20 new questions to `data/systems/kow-training.json`
+  (35 → 55), rebalancing category coverage — `command` and `unit_stats` were
+  the thinnest categories going in
+  - Verified at write time per `docs/training-question-workflow.md` Phase 3:
+    each answer checked against the mini-rulebook/FAQ (plus a Full Rulebook
+    citation for Radiance of Life), with section-name sourcing rather than
+    page numbers; in-game unit references (Sharpstick Thrower, King on
+    Chariot, Wiz) cross-checked against `goblins.json`
+  - Phase 5 review against the combined 55-question bank: no true duplicates,
+    no distractor collisions, answer-index distribution flat (14/14/14/13)
+  - Category totals after merge: morale 9, movement 6, ranged 6, melee 6,
+    scenario 6, magic 5, special_rules 5, terrain 5, unit_stats 4, command 3
+  - No SPEC.md change required — schema and category set are unchanged, this
+    is a pure content addition
+  - Service worker cache bump handled manually (outside this change)
 
 ## [0.3.0] - 2026-07-02
 ### Added
