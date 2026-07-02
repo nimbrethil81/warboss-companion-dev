@@ -19,7 +19,7 @@ revisited only if the system's category set changes.
 |---|---|---|
 | Locked category list | 10 ids in `kow-training.json` header | Categories co-located with questions, per Single Source of Truth |
 | Category guideline doc | `docs/training-categories.md` | Scope + "not in scope" + boundary rules per category. Not shipped in the bundle — authoring reference only |
-| Authoritative source(s) | Mini-rulebook + FAQ v1.0 | Whatever the system's rules-of-record are. Must be pinned to a version (e.g. "FAQ v1.0") since these get revised |
+| Authoritative source(s) | Mini-rulebook + FAQ v1.0 + KoW army list extract | Whatever the system's rules-of-record are. Must be pinned to a version (e.g. "FAQ v1.0") since these get revised |
 | Data file path | `data/systems/<system>-training.json` | Flat sibling pattern, consistent with `<system>.json` |
 | Manifest entry | `training_file` field in `index.json` | Only touched once per system, not per batch |
 
