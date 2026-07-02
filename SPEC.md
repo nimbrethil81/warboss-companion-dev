@@ -498,11 +498,11 @@ Static reference for the Goblin army. Used in Muster to build rosters and in Bat
       "size": "Regiment",
       "type": "Infantry",
       "sp": 5,
-      "me": "5+",
+      "me": 5,
       "sh": "-",
-      "de": "3+",
-      "att": 15,
-      "ne": "16",
+      "de": 4,
+      "att": 12,
+      "ne": "14",
       "pts": 80,
       "special_rules": ["Rabble"],
       "traits": ["Goblin"]
@@ -512,6 +512,63 @@ Static reference for the Goblin army. Used in Muster to build rosters and in Bat
 ```
 
 > **Note:** Unit roster to be completed. Stats taken from the official Kings of War army lists. This file is reference data only — it does not duplicate anything stored in Google Sheets.
+
+**Unit options (upgrades).** Units may carry an `options` array. Absence is fully tolerated — Muster renders and points-costs whatever is present, and a unit with no `options` shows no upgrades. Example (real Goblin options):
+
+```json
+"options": [
+  { "id": "fleabag-riders-maniacs", "label": "Maniacs",
+    "description": "Gains Thunderous Charge (+1).",
+    "scope": "self", "cost": { "Troop": 5, "Regiment": 10 },
+    "effects": [ { "type": "add_special_rule", "rule": "Thunderous Charge (+1)" } ] },
+  { "id": "wiz-fleabag", "label": "Mount on a fleabag",
+    "scope": "self", "cost": { "*": 15 },
+    "effects": [ { "type": "set_field", "field": "sp", "value": 10 },
+                 { "type": "set_field", "field": "type", "value": "Hero/Cav" } ] }
+]
+```
+
+Field contract (per option):
+
+| Field | Required | Notes |
+|---|---|---|
+| `id` | yes | Unique within the unit. Immutable — saved armies reference selected option ids (same contract as `unit_id`). |
+| `label` | yes | Short display name shown in Muster. |
+| `description` | recommended | Human-readable effect text; the sole representation for battalion-scope options. |
+| `scope` | yes | `"self"` modifies the carrying unit; `"battalion"` affects/unlocks *other* units — informational in Muster v1, no cross-unit enforcement. |
+| `group` | no | Absent = independent toggle. A string = mutually-exclusive choose-one group (at most one selected per group). |
+| `cost` | yes (self-scope) | Map of size-label → integer points; `"*"` = flat cost across all sizes. Omitted for battalion-scope (cost attaches to the target unit, stated in `description`). |
+| `effects` | recommended (self-scope) | Array of structured effects (below). Drives stat/rule application; absence still leaves display + points correct. |
+
+Effect objects:
+
+| `type` | Payload | Meaning |
+|---|---|---|
+| `add_special_rule` | `rule` | Adds the named special rule to the profile. |
+| `set_field` | `field`, `value` | Sets a top-level profile field (e.g. `sp`, `type`) — covers stat and mount type changes. |
+| `add_weapon` | `name`, `range`, `sh`, `att` | Adds a weapon profile to the unit. |
+| `grant_spell` | `spell`, `power` | Adds an inline caster spell offered by the unit — distinct from the shared Arcane Library pool. |
+
+The effect vocabulary is closed for this pass; new types are additive and require a SPEC bump. Battalion-scope options carry no self effects in v1; the future composition system will action them.
+
+**Unit availability (composition caps).** A unit may carry an `availability` object recording how many times it can be taken. Two kinds, with different scopes:
+
+```json
+"availability": { "type": "limited", "scope": "battalion", "max": 2 }
+```
+```json
+"availability": { "type": "unique" }
+```
+
+`[N]` after a unit name in the army list = **Limited** (`type: "limited"`), max `N` selections *per Battalion*. `[U]` = **Unique** (`type: "unique"`), max 1 in the entire *army*. Absent `availability` = unconstrained.
+
+| Field | Required | Notes |
+|---|---|---|
+| `type` | yes | `"limited"` or `"unique"`. |
+| `scope` | limited only | `"battalion"` — the only scope the rulebook defines for limited units. |
+| `max` | limited only | Integer cap per Battalion (the `N` in `[N]`). |
+
+Like `options.scope: "battalion"`, this is capture-only in v1: Muster stores the true rule but does not yet enforce per-Battalion or per-army counts — that lands with the future army-composition system. Recording it now means the roster never needs re-reading when that system is built.
 
 ### `data/systems/kow-training.json` — Training Ground Question Bank
 
