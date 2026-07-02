@@ -533,6 +533,286 @@
       "answer": 3,
       "explanation": "Once damage exceeds a unit's Nerve value it is Devastated: it halves its Attacks AND treats any Waver result as a Rout. So even a shooting-caused fail now removes it, including the very test taken on becoming Devastated. Goblins tip over this line quickly.",
       "source": "Rulebook, Nerve — Devastated Units"
+    },
+    {
+      "id": "q_ranged_005",
+      "category": "ranged",
+      "question": "When drawing Line of Sight from your unit to a target, from which point(s) do you draw the imaginary line?",
+      "options": [
+        "From any point of your unit's front facing to any point of the target's base",
+        "From your unit's centre-point to the target's centre-point",
+        "From the closest point of your unit to the closest point of the target",
+        "From your unit's rear facing to the target's front facing"
+      ],
+      "answer": 0,
+      "explanation": "LOS is drawn from any point on your unit's front facing to any point on the target's base -- it doesn't have to be the shortest line, and centre-point-to-centre-point is a common but incorrect shortcut.",
+      "source": "Rulebook, Arcs and Line of Sight -- Drawing LOS"
+    },
+    {
+      "id": "q_ranged_006",
+      "category": "ranged",
+      "question": "Your Sharpstick Thrower has no special rule overriding its range. What is its Ranged range?",
+      "options": [
+        "24\"",
+        "36\"",
+        "48\"",
+        "60\""
+      ],
+      "answer": 2,
+      "explanation": "Unless otherwise specified, War Engines have a range of 48\". The Sharpstick Thrower's Piercing (1) doesn't change its range -- only named exceptions like the War-Trombone (12\") or Mawpup Launcher (36\") override the default.",
+      "source": "Rulebook, War Engines -- Ranged"
+    },
+    {
+      "id": "q_unit_stats_003",
+      "category": "unit_stats",
+      "question": "Per the Unit Height table, what Height is your King on Chariot for Line of Sight purposes?",
+      "options": [
+        "Height (2)",
+        "Height (3)",
+        "Height (4)",
+        "Height (5)"
+      ],
+      "answer": 2,
+      "explanation": "Chariots have a Height of 4 by unit type -- one taller than Cavalry (3), one shorter than Monsters (5). Height governs whether your model blocks or is blocked by intervening units and terrain.",
+      "source": "Rulebook, Arcs and Line of Sight -- Unit Height"
+    },
+    {
+      "id": "q_morale_009",
+      "category": "morale",
+      "question": "Your unit has suffered enough damage to exceed its Nerve value but hasn't yet Routed. What happens to its Attacks stat?",
+      "options": [
+        "Its Attacks stat is halved, rounding down, for both Combat and ranged attacks",
+        "Nothing changes until it actually fails a Nerve test",
+        "It loses all further ranged attacks but Combat is unaffected",
+        "Its Melee and Shooting values each worsen by 1"
+      ],
+      "answer": 0,
+      "explanation": "Once damage exceeds a unit's Nerve value it's Devastated: Attacks (including ranged and Magical Missile (n) values) are halved, rounding down, immediately -- not just after a failed Nerve test.",
+      "source": "Rulebook, Nerve Tests -- Devastated Units"
+    },
+    {
+      "id": "q_unit_stats_005",
+      "category": "unit_stats",
+      "question": "Your Wiz's profile lists its Shooting (Sh) stat as '-'. What does this tell you?",
+      "options": [
+        "It automatically hits with ranged attacks",
+        "It can never be the target of ranged attacks",
+        "It needs a 6 to hit with ranged attacks",
+        "It has no normal ranged attacks"
+      ],
+      "answer": 3,
+      "explanation": "A '-' in the Melee or Shooting stat simply means the unit has no normal attacks of that kind -- for the Wiz, its only 'ranged' output comes from its Spellcaster trait's own spells, not a Sh-based attack.",
+      "source": "Rulebook, Units -- Stats"
+    },
+    {
+      "id": "q_movement_004",
+      "category": "movement",
+      "question": "Your Wiz (an Individual) is Engaged in combat. Can it use the Individuals rule to pivot for free before receiving its order?",
+      "options": [
+        "No -- the free pivot only applies to Individuals that are not Engaged",
+        "Yes, Individuals can always pivot for free",
+        "Yes, but only up to 45 degrees",
+        "No, Individuals can never pivot, Engaged or not"
+      ],
+      "answer": 0,
+      "explanation": "The Individuals special rule grants a free pivot before orders 'unless they are Engaged' -- so an Engaged Individual loses that exception and is restricted to Halt!, Reform!, or Withdraw! like any other Engaged unit.",
+      "source": "Rulebook, Special Rules -- Individuals -- Movement"
+    },
+    {
+      "id": "q_movement_005",
+      "category": "movement",
+      "question": "Under an Advance! order, how many separate pivots (each up to 90 degrees) can your unit make during its move?",
+      "options": [
+        "None",
+        "One",
+        "Up to two",
+        "Up to three"
+      ],
+      "answer": 2,
+      "explanation": "Advance! allows up to two pivots of up to 90 degrees each, at any point in the move. That's more generous than At the Double! or a Charge!, which each only allow a single pivot.",
+      "source": "Rulebook, The Movement Phase -- Advance!"
+    },
+    {
+      "id": "q_movement_006",
+      "category": "movement",
+      "question": "During a Charge! move, how many pivots can the charging unit make, and how large can each be?",
+      "options": [
+        "None",
+        "Two pivots, up to 90 degrees each",
+        "One pivot, up to 180 degrees",
+        "One pivot, up to 90 degrees"
+      ],
+      "answer": 3,
+      "explanation": "A charging unit gets a single pivot of up to 90 degrees from its original facing at any point during the move. If that one pivot isn't enough to bring it into contact with the target's facing, the charge cannot be completed.",
+      "source": "Rulebook, The Movement Phase -- Charge! -- Moving Chargers"
+    },
+    {
+      "id": "q_special_rules_005",
+      "category": "special_rules",
+      "question": "Your unit has the Radiance of Life special rule. In which phase does it heal damage from friendly units within 6\"?",
+      "options": [
+        "The Movement Phase, after the unit completes its order",
+        "The Ranged Phase, before shooting",
+        "The Combat Phase, after attacks are resolved",
+        "Any phase, chosen by the controlling player"
+      ],
+      "answer": 0,
+      "explanation": "Radiance of Life triggers in the Movement Phase, after the unit has completed its order: it and all friendly units within 6\" remove one point of previously suffered damage. A unit can only benefit from one source of Radiance of Life per Turn.",
+      "source": "Full Rulebook, Special Rules -- Radiance of Life"
+    },
+    {
+      "id": "q_magic_005",
+      "category": "magic",
+      "question": "Your Spellcaster's profile lists three different spells it knows. How many of them can it cast in a single Ranged Phase?",
+      "options": [
+        "One",
+        "Two",
+        "All three, one after another",
+        "As many as its Attacks stat allows"
+      ],
+      "answer": 0,
+      "explanation": "Spells are Ranged attacks, and a unit can only make a single Ranged attack per Turn. Knowing multiple spells gives flexibility in which one to cast, not the ability to cast more than one.",
+      "source": "Rulebook, Special Rules -- Spells"
+    },
+    {
+      "id": "q_magic_006",
+      "category": "magic",
+      "question": "A spell is marked 'Friendly' but does not list 'Self' in its profile. Can the caster target itself with it?",
+      "options": [
+        "Yes, Friendly always includes the caster",
+        "Only if the caster is Wavering",
+        "Only if there are no other legal friendly targets",
+        "No -- without 'Self' listed, a Friendly spell cannot target the caster"
+      ],
+      "answer": 3,
+      "explanation": "Friendly spells can only target friendly units, and can only target the caster itself if 'Self' is also listed on the spell's profile. Without that qualifier, the caster is excluded from its own spell.",
+      "source": "Rulebook, Special Rules -- Spells"
+    },
+    {
+      "id": "q_melee_004",
+      "category": "melee",
+      "question": "Your unit is Engaged simultaneously by two enemy units, to its front and to its flank. How must it handle its attacks?",
+      "options": [
+        "It must direct all attacks at a single enemy",
+        "Attacks are split automatically, evenly, by the game",
+        "It can only attack the unit that charged it",
+        "It can split its attacks between the two enemies as it chooses, before rolling any dice"
+      ],
+      "answer": 3,
+      "explanation": "The controlling player freely distributes attacks among the enemies a unit is Engaged with, deciding the split before any dice are rolled. Bonuses like the flank/rear doubling/trebling are then applied separately to each portion.",
+      "source": "Rulebook, The Combat Phase -- Striking"
+    },
+    {
+      "id": "q_melee_005",
+      "category": "melee",
+      "question": "You have three separate Combats on the table in your Combat Phase. In what order must you resolve them?",
+      "options": [
+        "Alphabetically by unit name",
+        "In the order they occurred during the game",
+        "Whatever order you like, but each unit's attacks must be resolved fully before moving to the next",
+        "Smallest unit first"
+      ],
+      "answer": 2,
+      "explanation": "You choose the order in which to resolve your Combats, and within a Combat you choose the order of your own units' attacks -- but each unit's attacks must be fully resolved before moving on to the next.",
+      "source": "Rulebook, The Combat Phase"
+    },
+    {
+      "id": "q_melee_006",
+      "category": "melee",
+      "question": "Modifiers against your unit in Combat are so severe that it could no longer hit even with the maximum possible roll. What happens?",
+      "options": [
+        "The unit cannot attack at all this Combat",
+        "It attacks normally, ignoring the modifiers",
+        "It still attacks, needs a 6 to hit, but only rolls half its Attacks (rounding down)",
+        "It automatically hits once regardless"
+      ],
+      "answer": 2,
+      "explanation": "Even when modifiers would make hitting impossible at the normal target number, the unit can still attack: it needs 6s to hit and rolls only half its Attacks stat, rounding down. It's never simply locked out of attacking.",
+      "source": "Rulebook, The Combat Phase -- Modifiers"
+    },
+    {
+      "id": "q_terrain_004",
+      "category": "terrain",
+      "question": "Following the standard terrain height guidelines, what Height are Woods and Buildings typically assigned?",
+      "options": [
+        "Height (2)",
+        "Height (3)",
+        "Height (5)",
+        "Height (8)"
+      ],
+      "answer": 3,
+      "explanation": "The guideline table assigns Woods and Buildings Height (8) -- well above Hills (3) and High Hills (5) -- reflecting how effectively they block Line of Sight. As always, agree actual heights with your opponent before the game.",
+      "source": "Rulebook, Playing a Game -- Terrain and Line of Sight"
+    },
+    {
+      "id": "q_terrain_005",
+      "category": "terrain",
+      "question": "Part of your unit's base is standing inside an area of terrain. Does that terrain block Line of Sight to that part of your unit?",
+      "options": [
+        "Yes, always",
+        "No -- terrain does not block LOS to the part of a unit's own base that's within it",
+        "Only if the terrain is Blocking Terrain",
+        "Only if the unit is Infantry"
+      ],
+      "answer": 1,
+      "explanation": "If a unit has part of its base in an area of terrain, that terrain doesn't block Line of Sight to that part of the unit -- it only affects sight lines to points beyond it.",
+      "source": "Rulebook, Terrain and Line of Sight -- Drawing Line of Sight"
+    },
+    {
+      "id": "q_scenario_004",
+      "category": "scenario",
+      "question": "You won the roll-off and chose to deploy first, placing the first unit on the table. Does this also mean you get the first Turn?",
+      "options": [
+        "Yes, deploying first automatically grants the first Turn",
+        "No -- 'who goes first' is decided by a separate roll-off after deployment is complete",
+        "Only if you also won the terrain-placement roll-off",
+        "Yes, unless your opponent has a Scout unit"
+      ],
+      "answer": 1,
+      "explanation": "Deployment order and Turn order come from two separate roll-offs. After both armies are fully deployed, the players roll off again, and the winner chooses whether to take the first Turn or hand it to their opponent.",
+      "source": "Rulebook, Playing a Game -- Deployment / Who Goes First?"
+    },
+    {
+      "id": "q_scenario_005",
+      "category": "scenario",
+      "question": "During deployment, how far from the table's centre line must your units be placed?",
+      "options": [
+        "At least 6\"",
+        "More than 12\"",
+        "Exactly 24\"",
+        "There is no minimum distance"
+      ],
+      "answer": 1,
+      "explanation": "Units are deployed on their own long edge of the battlefield, more than 12\" away from the table's centre line, alternating placement with your opponent until both armies are fully deployed.",
+      "source": "Rulebook, Playing a Game -- Deployment"
+    },
+    {
+      "id": "q_command_003",
+      "category": "command",
+      "question": "A Command Order states that a unit 'cannot be given a Charge! order' this Turn. Can that unit still be moved into Combat by a spell like Surge?",
+      "options": [
+        "No, the restriction blocks any way of entering Combat",
+        "Yes -- a restriction on being given a Charge! order only limits charges declared in the Movement Phase",
+        "Only if the unit is Fearless",
+        "No, unless the caster is the unit's own Commander"
+      ],
+      "answer": 1,
+      "explanation": "A Command Order (or other rule) that prevents a Charge! order only restricts that order in the Movement Phase. It doesn't stop the unit being moved into Combat by other means, such as being Surged in during the Ranged Phase.",
+      "source": "FAQ v1.0, Command Orders"
+    },
+    {
+      "id": "q_scenario_006",
+      "category": "scenario",
+      "question": "Your unit is carrying a Loot Counter and is ordered to Withdraw! from combat. What happens to the Loot Counter?",
+      "options": [
+        "It stays with the unit through the Withdraw!",
+        "The unit must drop it at the start of the Withdraw! order",
+        "It's automatically returned to the enemy",
+        "Nothing -- only Individuals are affected by this rule"
+      ],
+      "answer": 1,
+      "explanation": "A unit that Withdraws! must drop any Loot Counter it's carrying at the start of that order -- you can't retreat and keep the loot in the same move.",
+      "source": "FAQ v1.0, Errata -- Loot Counters"
     }
   ]
 }
