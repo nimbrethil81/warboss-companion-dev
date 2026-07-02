@@ -4,6 +4,10 @@ Game-system-agnostic. Applies to KoW today; should hold unchanged if a second
 system is ever added, because everything system-specific is isolated into
 Phase 0 inputs rather than baked into the process.
 
+See also: `docs/training-question-workflow-prompts.md` — copy-paste starter
+prompts for each phase below, kept in a separate file so this doc stays pure
+process reference.
+
 ---
 
 ## Phase 0 — Per-system setup (one-time, not per batch)
