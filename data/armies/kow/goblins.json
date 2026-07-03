@@ -21,7 +21,9 @@
       "traits": [
         "Utterly Spineless"
       ],
-      "retired": true
+      "category": "Core",
+      "retired": true,
+      "retired_reason": "No Troop size for this unit in the 4E army list."
     },
     {
       "unit_id": "goblin-rabble-regiment",
@@ -38,7 +40,8 @@
       "special_rules": [],
       "traits": [
         "Green Horde"
-      ]
+      ],
+      "category": "Core"
     },
     {
       "unit_id": "goblin-rabble-horde",
@@ -55,7 +58,8 @@
       "special_rules": [],
       "traits": [
         "Green Horde"
-      ]
+      ],
+      "category": "Core"
     },
     {
       "unit_id": "goblin-sharpsticks-troop",
@@ -74,7 +78,9 @@
         "Green Horde"
       ],
       "traits": [],
-      "retired": true
+      "category": "Core",
+      "retired": true,
+      "retired_reason": "No Troop size for this unit in the 4E army list."
     },
     {
       "unit_id": "goblin-sharpsticks-regiment",
@@ -85,14 +91,16 @@
       "me": 5,
       "sh": "-",
       "de": 4,
-      "att": 20,
-      "ne": "16",
-      "pts": 120,
+      "att": 15,
+      "ne": "14",
+      "pts": 90,
       "special_rules": [
-        "Phalanx",
+        "Phalanx"
+      ],
+      "traits": [
         "Green Horde"
       ],
-      "traits": []
+      "category": "Core"
     },
     {
       "unit_id": "goblin-sharpsticks-horde",
@@ -104,91 +112,15 @@
       "sh": "-",
       "de": 4,
       "att": 30,
-      "ne": "20",
-      "pts": 165,
+      "ne": "21",
+      "pts": 145,
       "special_rules": [
-        "Phalanx",
-        "Green Horde"
-      ],
-      "traits": []
-    },
-    {
-      "unit_id": "goblin-spitters-troop",
-      "name": "Goblin Spitters",
-      "size": "Troop",
-      "type": "Infantry",
-      "sp": 5,
-      "me": 5,
-      "sh": 5,
-      "de": 3,
-      "att": 8,
-      "ne": "13",
-      "pts": 80,
-      "special_rules": [
-        "Green Horde"
-      ],
-      "traits": []
-    },
-    {
-      "unit_id": "goblin-spitters-regiment",
-      "name": "Goblin Spitters",
-      "size": "Regiment",
-      "type": "Infantry",
-      "sp": 5,
-      "me": 5,
-      "sh": 5,
-      "de": 3,
-      "att": 16,
-      "ne": "15",
-      "pts": 130,
-      "special_rules": [
-        "Green Horde"
-      ],
-      "traits": []
-    },
-    {
-      "unit_id": "luggit-gang-troop",
-      "name": "Luggit Gang",
-      "size": "Troop",
-      "type": "Infantry",
-      "sp": 5,
-      "me": 4,
-      "sh": "-",
-      "de": 4,
-      "att": 15,
-      "ne": "11",
-      "pts": 115,
-      "special_rules": [
-        "Brutal (1)",
-        "Crushing Strength (1)",
-        "Headstrong",
-        "Wild Charge (D3)"
+        "Phalanx"
       ],
       "traits": [
         "Green Horde"
-      ]
-    },
-    {
-      "unit_id": "luggit-gang-regiment",
-      "name": "Luggit Gang",
-      "size": "Regiment",
-      "type": "Infantry",
-      "sp": 5,
-      "me": 4,
-      "sh": "-",
-      "de": 4,
-      "att": 20,
-      "ne": "15",
-      "pts": 150,
-      "special_rules": [
-        "Brutal (1)",
-        "Crushing Strength (1)",
-        "Headstrong",
-        "Wild Charge (D3)"
       ],
-      "traits": [
-        "Green Horde"
-      ]
+      "category": "Core"
     },
     {
       "unit_id": "fleabag-riders-troop",
@@ -209,6 +141,22 @@
       ],
       "traits": [
         "Green Horde"
+      ],
+      "category": "Auxiliary",
+      "options": [
+        {
+          "id": "fleabag-riders-maniacs",
+          "label": "Maniacs",
+          "description": "Gains Thunderous Charge (+1).",
+          "scope": "self",
+          "cost": 5,
+          "effects": [
+            {
+              "type": "add_special_rule",
+              "rule": "Thunderous Charge (+1)"
+            }
+          ]
+        }
       ]
     },
     {
@@ -230,7 +178,213 @@
       ],
       "traits": [
         "Green Horde"
+      ],
+      "category": "Core",
+      "options": [
+        {
+          "id": "fleabag-riders-maniacs",
+          "label": "Maniacs",
+          "description": "Gains Thunderous Charge (+1).",
+          "scope": "self",
+          "cost": 10,
+          "effects": [
+            {
+              "type": "add_special_rule",
+              "rule": "Thunderous Charge (+1)"
+            }
+          ]
+        }
       ]
+    },
+    {
+      "unit_id": "goblin-spitters-troop",
+      "name": "Goblin Spitters",
+      "size": "Troop",
+      "type": "Infantry",
+      "sp": 5,
+      "me": 5,
+      "sh": 5,
+      "de": 3,
+      "att": 8,
+      "ne": "13",
+      "pts": 80,
+      "special_rules": [
+        "Green Horde"
+      ],
+      "traits": [],
+      "category": "Specialist",
+      "retired": true,
+      "retired_reason": "Superseded \u2014 army list PDF has no Troop size for Spitters, only Regiment/Horde, both Auxiliary."
+    },
+    {
+      "unit_id": "goblin-spitters-regiment",
+      "name": "Goblin Spitters",
+      "size": "Regiment",
+      "type": "Infantry",
+      "sp": 5,
+      "me": 6,
+      "sh": 6,
+      "de": 3,
+      "att": 10,
+      "ne": "14",
+      "pts": 85,
+      "special_rules": [
+        "Bows (24\")"
+      ],
+      "traits": [
+        "Green Horde"
+      ],
+      "category": "Auxiliary"
+    },
+    {
+      "unit_id": "goblin-spitters-horde",
+      "name": "Goblin Spitters",
+      "size": "Horde",
+      "type": "Infantry",
+      "sp": 5,
+      "me": 6,
+      "sh": 6,
+      "de": 3,
+      "att": 20,
+      "ne": "21",
+      "pts": 140,
+      "special_rules": [
+        "Bows (24\")"
+      ],
+      "traits": [
+        "Green Horde"
+      ],
+      "category": "Auxiliary"
+    },
+    {
+      "unit_id": "luggit-gang-troop",
+      "name": "Luggit Gang",
+      "size": "Troop",
+      "type": "Infantry",
+      "sp": 5,
+      "me": 4,
+      "sh": "-",
+      "de": 4,
+      "att": 15,
+      "ne": "11",
+      "pts": 115,
+      "special_rules": [
+        "Brutal (1)",
+        "Crushing Strength (1)",
+        "Headstrong",
+        "Wild Charge (D3)"
+      ],
+      "traits": [
+        "Green Horde"
+      ],
+      "category": "Auxiliary"
+    },
+    {
+      "unit_id": "luggit-gang-regiment",
+      "name": "Luggit Gang",
+      "size": "Regiment",
+      "type": "Infantry",
+      "sp": 5,
+      "me": 4,
+      "sh": "-",
+      "de": 4,
+      "att": 20,
+      "ne": "15",
+      "pts": 150,
+      "special_rules": [
+        "Brutal (1)",
+        "Crushing Strength (1)",
+        "Headstrong",
+        "Wild Charge (D3)"
+      ],
+      "traits": [
+        "Green Horde"
+      ],
+      "category": "Specialist"
+    },
+    {
+      "unit_id": "fleabag-rider-sniffs-troop",
+      "name": "Fleabag Rider Sniffs",
+      "size": "Troop",
+      "type": "Cavalry",
+      "sp": 10,
+      "me": 5,
+      "sh": 5,
+      "de": 3,
+      "att": 7,
+      "ne": "11",
+      "pts": 105,
+      "special_rules": [
+        "Feint",
+        "Vicious (Combat)",
+        "Shortbows (18\")"
+      ],
+      "traits": [
+        "Green Horde"
+      ],
+      "category": "Specialist"
+    },
+    {
+      "unit_id": "fleabag-rider-sniffs-regiment",
+      "name": "Fleabag Rider Sniffs",
+      "size": "Regiment",
+      "type": "Cavalry",
+      "sp": 10,
+      "me": 5,
+      "sh": 5,
+      "de": 3,
+      "att": 14,
+      "ne": "14",
+      "pts": 160,
+      "special_rules": [
+        "Feint",
+        "Vicious (Combat)",
+        "Shortbows (18\")"
+      ],
+      "traits": [
+        "Green Horde"
+      ],
+      "category": "Specialist"
+    },
+    {
+      "unit_id": "mawbeast-pack-troop",
+      "name": "Mawbeast Pack",
+      "size": "Troop",
+      "type": "Cavalry",
+      "sp": 6,
+      "me": 3,
+      "sh": "-",
+      "de": 3,
+      "att": 6,
+      "ne": "11",
+      "pts": 80,
+      "special_rules": [
+        "Crushing Strength (1)",
+        "Vicious (Combat)",
+        "Wild Charge (D3)"
+      ],
+      "traits": [],
+      "category": "Specialist"
+    },
+    {
+      "unit_id": "mawbeast-pack-regiment",
+      "name": "Mawbeast Pack",
+      "size": "Regiment",
+      "type": "Cavalry",
+      "sp": 6,
+      "me": 3,
+      "sh": "-",
+      "de": 3,
+      "att": 12,
+      "ne": "14",
+      "pts": 125,
+      "special_rules": [
+        "Crushing Strength (1)",
+        "Vicious (Combat)",
+        "Wild Charge (D3)"
+      ],
+      "traits": [],
+      "category": "Specialist"
     },
     {
       "unit_id": "trolls-troop",
@@ -249,7 +403,8 @@
         "Inspiring (Self)",
         "Regeneration (5+)"
       ],
-      "traits": []
+      "traits": [],
+      "category": "Specialist"
     },
     {
       "unit_id": "trolls-regiment",
@@ -265,11 +420,11 @@
       "pts": 190,
       "special_rules": [
         "Crushing Strength (2)",
-        "Headstrong",
         "Inspiring (Self)",
         "Regeneration (5+)"
       ],
-      "traits": []
+      "traits": [],
+      "category": "Specialist"
     },
     {
       "unit_id": "trolls-horde",
@@ -289,7 +444,102 @@
         "Regeneration (5+)"
       ],
       "traits": [],
-      "retired": true
+      "category": "Specialist",
+      "retired": true,
+      "retired_reason": "No Horde size for this unit in the 4E army list."
+    },
+    {
+      "unit_id": "fleabag-chariots-regiment",
+      "name": "Fleabag Chariots",
+      "size": "Regiment",
+      "type": "Chariot",
+      "sp": 9,
+      "me": 4,
+      "sh": "-",
+      "de": 4,
+      "att": 12,
+      "ne": "14",
+      "pts": 140,
+      "special_rules": [
+        "Brutal (1)",
+        "Thunderous Charge (2)",
+        "Vicious (Combat)"
+      ],
+      "traits": [],
+      "category": "Specialist",
+      "options": [
+        {
+          "id": "fleabag-chariots-shortbows",
+          "label": "Shortbows",
+          "description": "Gain Shortbows: 18\", Sh 5+, Att: 8.",
+          "scope": "self",
+          "cost": 15,
+          "effects": [
+            {
+              "type": "add_weapon",
+              "name": "Shortbows",
+              "range": "18\"",
+              "sh": 5,
+              "att": 8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "unit_id": "winggit-individual",
+      "name": "Winggit",
+      "size": "Individual",
+      "type": "Monster",
+      "sp": 10,
+      "me": 5,
+      "sh": "-",
+      "de": 4,
+      "att": 1,
+      "ne": "13",
+      "pts": 125,
+      "special_rules": [
+        "Fly",
+        "Firebombs (12\", Sh: 4+, Att: 3, Blast (D3), Piercing (1), Vicious (Ranged))",
+        "Eye in the Sky"
+      ],
+      "traits": [],
+      "category": "Support",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      }
+    },
+    {
+      "unit_id": "goblin-blaster-monster-chariot",
+      "name": "Goblin Blaster",
+      "size": "Individual",
+      "type": "Monster/Chariot",
+      "sp": 5,
+      "me": 3,
+      "sh": 6,
+      "de": 5,
+      "att": 3,
+      "ne": "10",
+      "pts": 80,
+      "special_rules": [
+        "Blast (D6)",
+        "Brutal (1)",
+        "Crushing Strength (3)",
+        "Fearless",
+        "Height (3)",
+        "Unit Strength 1",
+        "Makeshift Grenades (12\", Blast (D3), Piercing (1))",
+        "Boom"
+      ],
+      "traits": [],
+      "category": "Support",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      }
     },
     {
       "unit_id": "mincer-individual",
@@ -308,7 +558,10 @@
         "Crushing Strength (1)",
         "Thunderous Charge (1)"
       ],
-      "traits": []
+      "traits": [],
+      "category": "Support",
+      "retired": true,
+      "retired_reason": "Superseded \u2014 army list PDF has a single Mincer Mob (Regiment, Chariot type), not Individual/Troop/Regiment Monster sizes."
     },
     {
       "unit_id": "mincer-mob-troop",
@@ -327,44 +580,32 @@
         "Crushing Strength (1)",
         "Thunderous Charge (1)"
       ],
-      "traits": []
+      "traits": [],
+      "category": "Support",
+      "retired": true,
+      "retired_reason": "Superseded \u2014 no Troop size in the army list PDF for this unit."
     },
     {
       "unit_id": "mincer-mob-regiment",
       "name": "Mincer Mob",
       "size": "Regiment",
-      "type": "Monster",
-      "sp": 7,
-      "me": 4,
-      "sh": "-",
-      "de": 5,
-      "att": "D6+21",
-      "ne": "18",
-      "pts": 215,
-      "special_rules": [
-        "Brutal",
-        "Crushing Strength (1)",
-        "Thunderous Charge (1)"
-      ],
-      "traits": []
-    },
-    {
-      "unit_id": "winggit-individual",
-      "name": "Winggit",
-      "size": "Individual",
-      "type": "Monster",
-      "sp": 10,
+      "type": "Chariot",
+      "sp": 5,
       "me": 4,
       "sh": "-",
       "de": 4,
-      "att": 6,
-      "ne": "12",
-      "pts": 85,
+      "att": "D6+21",
+      "ne": "16",
+      "pts": 220,
       "special_rules": [
-        "Fly",
-        "Nimble"
+        "Big Shield",
+        "Brutal (1)",
+        "Crushing Strength (1)",
+        "Headstrong",
+        "Thunderous Charge (1)"
       ],
-      "traits": []
+      "traits": [],
+      "category": "Support"
     },
     {
       "unit_id": "giant-titan",
@@ -383,10 +624,40 @@
         "Crushing Strength (4)",
         "Height (6)",
         "Rallying (Green Horde Trait only)",
-        "Strider",
-        "Rampage (D6 - Combat)"
+        "Strider"
       ],
-      "traits": []
+      "traits": [],
+      "category": "Support",
+      "options": [
+        {
+          "id": "giant-club",
+          "label": "Giant Club",
+          "description": "Gain Rampage (D6 - Combat).",
+          "scope": "self",
+          "group": "giant-weapon",
+          "cost": 0,
+          "effects": [
+            {
+              "type": "add_special_rule",
+              "rule": "Rampage (D6 - Combat)"
+            }
+          ]
+        },
+        {
+          "id": "giant-cleaver",
+          "label": "Giant Cleaver",
+          "description": "Gain Slayer (D6 - Combat).",
+          "scope": "self",
+          "group": "giant-weapon",
+          "cost": 0,
+          "effects": [
+            {
+              "type": "add_special_rule",
+              "rule": "Slayer (D6 - Combat)"
+            }
+          ]
+        }
+      ]
     },
     {
       "unit_id": "goblin-slasher-titan",
@@ -405,25 +676,8 @@
         "Sharpstick Thrower (36\", Att: 2, Blast(D3), Piercing(2))",
         "Strider"
       ],
-      "traits": []
-    },
-    {
-      "unit_id": "big-rocks-thrower-war-engine",
-      "name": "Big Rocks Thrower",
-      "size": "War Engine",
-      "type": "War Engine",
-      "sp": 5,
-      "me": "-",
-      "sh": 5,
-      "de": 4,
-      "att": 3,
-      "ne": "12",
-      "pts": 95,
-      "special_rules": [
-        "Blast (D3)",
-        "Indirect"
-      ],
-      "traits": []
+      "traits": [],
+      "category": "Support"
     },
     {
       "unit_id": "sharpstick-thrower-war-engine",
@@ -432,33 +686,48 @@
       "type": "War Engine",
       "sp": 5,
       "me": "-",
-      "sh": 4,
+      "sh": 5,
       "de": 4,
-      "att": 4,
+      "att": 2,
       "ne": "11",
-      "pts": 75,
+      "pts": 65,
       "special_rules": [
-        "Piercing (1)"
+        "Sharpstick Thrower (48\", Blast (D3), Piercing (2), Reload)"
       ],
-      "traits": []
+      "traits": [
+        "Lobber"
+      ],
+      "category": "Support",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      }
     },
     {
-      "unit_id": "war-trombone-war-engine",
-      "name": "War-Trombone",
+      "unit_id": "big-rocks-thrower-war-engine",
+      "name": "Big Rocks Thrower",
       "size": "War Engine",
       "type": "War Engine",
       "sp": 5,
       "me": "-",
-      "sh": 4,
+      "sh": 6,
       "de": 4,
-      "att": 12,
-      "ne": "10",
+      "att": 2,
+      "ne": "11",
       "pts": 75,
       "special_rules": [
-        "War-Trombone (12\", Piercing(1))",
-        "Yielding"
+        "Big Rocks Thrower (48\", Blast (D3+1), Indirect, Piercing (3), Reload)"
       ],
-      "traits": []
+      "traits": [
+        "Lobber"
+      ],
+      "category": "Support",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      }
     },
     {
       "unit_id": "mawpup-launcher-war-engine",
@@ -478,7 +747,457 @@
       ],
       "traits": [
         "Lobber"
+      ],
+      "category": "Support",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      }
+    },
+    {
+      "unit_id": "troll-bruiser-individual",
+      "name": "Troll Bruiser",
+      "size": "Individual",
+      "type": "Hero (Lrg Inf)",
+      "sp": 6,
+      "me": 3,
+      "sh": "-",
+      "de": 5,
+      "att": 5,
+      "ne": "15",
+      "pts": 160,
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Inspiring",
+        "Regeneration (5+)"
+      ],
+      "traits": [],
+      "category": "Support",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      }
+    },
+    {
+      "unit_id": "war-trombone-war-engine",
+      "name": "War-Trombone",
+      "size": "War Engine",
+      "type": "War Engine",
+      "sp": 5,
+      "me": "-",
+      "sh": 4,
+      "de": 4,
+      "att": 12,
+      "ne": "10",
+      "pts": 75,
+      "special_rules": [
+        "War-Trombone (12\", Piercing(1))",
+        "Yielding"
+      ],
+      "traits": [],
+      "category": "Support",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      }
+    },
+    {
+      "unit_id": "wiz-hero",
+      "name": "Wiz",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 5,
+      "me": 5,
+      "sh": "-",
+      "de": 4,
+      "att": 1,
+      "ne": "11",
+      "pts": 55,
+      "special_rules": [
+        "Individual",
+        "Yielding"
+      ],
+      "traits": [
+        "Spellcaster"
+      ],
+      "category": "Commander",
+      "commander_role": "champion",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      },
+      "options": [
+        {
+          "id": "wiz-fleabag",
+          "label": "Mount on a fleabag",
+          "description": "Increases Sp to 10 and changes to Hero/Cav.",
+          "scope": "self",
+          "cost": 15,
+          "effects": [
+            {
+              "type": "set_field",
+              "field": "sp",
+              "value": 10
+            },
+            {
+              "type": "set_field",
+              "field": "type",
+              "value": "Hero (Cav)"
+            }
+          ]
+        },
+        {
+          "id": "wiz-lightning-bolt",
+          "label": "Lightning Bolt (3)",
+          "scope": "self",
+          "group": "wiz-spell",
+          "cost": 20,
+          "effects": [
+            {
+              "type": "grant_spell",
+              "spell": "Lightning Bolt",
+              "power": 3
+            }
+          ]
+        },
+        {
+          "id": "wiz-bane-chant",
+          "label": "Bane Chant (2)",
+          "scope": "self",
+          "group": "wiz-spell",
+          "cost": 20,
+          "effects": [
+            {
+              "type": "grant_spell",
+              "spell": "Bane Chant",
+              "power": 2
+            }
+          ]
+        },
+        {
+          "id": "wiz-hex",
+          "label": "Hex (2)",
+          "scope": "self",
+          "group": "wiz-spell",
+          "cost": 10,
+          "effects": [
+            {
+              "type": "grant_spell",
+              "spell": "Hex",
+              "power": 2
+            }
+          ]
+        },
+        {
+          "id": "wiz-weakness",
+          "label": "Weakness (2)",
+          "scope": "self",
+          "group": "wiz-spell",
+          "cost": 15,
+          "effects": [
+            {
+              "type": "grant_spell",
+              "spell": "Weakness",
+              "power": 2
+            }
+          ]
+        }
       ]
+    },
+    {
+      "unit_id": "stinggit-individual",
+      "name": "Stinggit",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 6,
+      "me": 3,
+      "sh": 4,
+      "de": 4,
+      "att": 4,
+      "ne": "11",
+      "pts": 125,
+      "special_rules": [
+        "Crushing Strength (1)",
+        "Duellist (D3)",
+        "Feint",
+        "Individual",
+        "Scout",
+        "Stealthy",
+        "Vicious (Combat)",
+        "Throwing Knives (12\")"
+      ],
+      "traits": [],
+      "category": "Commander",
+      "commander_role": "champion",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      }
+    },
+    {
+      "unit_id": "banggit-individual",
+      "name": "Banggit",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 5,
+      "me": 6,
+      "sh": 4,
+      "de": 4,
+      "att": 3,
+      "ne": "11",
+      "pts": 95,
+      "special_rules": [
+        "Individual",
+        "Yielding",
+        "Grenades (12\", Blast (D3), Piercing (1))",
+        "Incendiary"
+      ],
+      "traits": [],
+      "category": "Commander",
+      "commander_role": "champion",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      }
+    },
+    {
+      "unit_id": "grunk-blackclaw-individual",
+      "name": "Grunk Blackclaw",
+      "size": "Individual",
+      "type": "Hero (Lrg Inf)",
+      "sp": 5,
+      "me": 4,
+      "sh": 5,
+      "de": 5,
+      "att": 5,
+      "ne": "14",
+      "pts": 165,
+      "special_rules": [
+        "Crushing Strength (2)",
+        "Headstrong",
+        "Inspiring",
+        "Mawpup Cannon (18\", Blast (2), Piercing (1), Vicious (Ranged))",
+        "50mm Base"
+      ],
+      "traits": [
+        "Lobber"
+      ],
+      "category": "Commander",
+      "commander_role": "champion",
+      "availability": {
+        "type": "unique"
+      }
+    },
+    {
+      "unit_id": "biggit-individual",
+      "name": "Biggit",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 5,
+      "me": 4,
+      "sh": "-",
+      "de": 4,
+      "att": 3,
+      "ne": "13",
+      "pts": 105,
+      "special_rules": [
+        "Crushing Strength (1)",
+        "Individual",
+        "Inspiring",
+        "Rallying (Green Horde Trait only)"
+      ],
+      "traits": [],
+      "category": "Commander",
+      "commander_role": "champion",
+      "options": [
+        {
+          "id": "biggit-fleabag",
+          "label": "Mount on a fleabag",
+          "description": "Increases Sp to 10 and changes to Hero/Cav.",
+          "scope": "self",
+          "cost": 25,
+          "effects": [
+            {
+              "type": "set_field",
+              "field": "sp",
+              "value": 10
+            },
+            {
+              "type": "set_field",
+              "field": "type",
+              "value": "Hero (Cav)"
+            }
+          ]
+        },
+        {
+          "id": "biggit-legion-upgrade",
+          "label": "Legion Upgrade (Rabble/Sharpstick Hordes)",
+          "description": "Any Rabble / Sharpstick Hordes in this Battalion may upgrade to a Legion (gaining 5 Attacks, Ne 27+, base size 200x120mm) for +30pts (Rabble) / +35pts (Sharpsticks).",
+          "scope": "battalion"
+        }
+      ]
+    },
+    {
+      "unit_id": "flaggit-hero",
+      "name": "Flaggit",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 5,
+      "me": 5,
+      "sh": "-",
+      "de": 4,
+      "att": 1,
+      "ne": "10",
+      "pts": 60,
+      "special_rules": [
+        "Individual",
+        "Very Inspiring",
+        "Yielding"
+      ],
+      "traits": [],
+      "category": "Commander",
+      "commander_role": "warlord",
+      "availability": {
+        "type": "limited",
+        "scope": "battalion",
+        "max": 2
+      },
+      "options": [
+        {
+          "id": "flaggit-fleabag",
+          "label": "Mount on a fleabag",
+          "description": "Increases Sp to 10 and changes to Hero/Cav.",
+          "scope": "self",
+          "cost": 15,
+          "effects": [
+            {
+              "type": "set_field",
+              "field": "sp",
+              "value": 10
+            },
+            {
+              "type": "set_field",
+              "field": "type",
+              "value": "Hero (Cav)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "unit_id": "king-individual",
+      "name": "King",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 5,
+      "me": 4,
+      "sh": "-",
+      "de": 4,
+      "att": 5,
+      "ne": "15",
+      "pts": 115,
+      "special_rules": [
+        "Elite",
+        "Crushing Strength (1)",
+        "Individual",
+        "Very Inspiring"
+      ],
+      "traits": [],
+      "category": "Commander",
+      "commander_role": "warlord",
+      "options": [
+        {
+          "id": "king-fleabag",
+          "label": "Mount on a fleabag",
+          "description": "Increases Sp to 10 and changes to Hero/Cav.",
+          "scope": "self",
+          "cost": 30,
+          "effects": [
+            {
+              "type": "set_field",
+              "field": "sp",
+              "value": 10
+            },
+            {
+              "type": "set_field",
+              "field": "type",
+              "value": "Hero (Cav)"
+            }
+          ]
+        },
+        {
+          "id": "king-legion-upgrade",
+          "label": "Legion Upgrade (Rabble/Sharpstick Hordes)",
+          "description": "Any Rabble / Sharpstick Hordes in this Battalion may upgrade to a Legion (gaining 5 Attacks, Ne 27+, base size 200x120mm) for +30pts (Rabble) / +35pts (Sharpsticks).",
+          "scope": "battalion"
+        }
+      ]
+    },
+    {
+      "unit_id": "groany-snark-individual",
+      "name": "Groany Snark",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 10,
+      "me": 4,
+      "sh": "-",
+      "de": 4,
+      "att": 5,
+      "ne": "14",
+      "pts": 175,
+      "special_rules": [
+        "Blast (D3)",
+        "Crushing Strength (1)",
+        "Fly",
+        "Individual",
+        "Inspiring",
+        "Thunderous Charge (2)",
+        "Dubious Tech"
+      ],
+      "traits": [],
+      "category": "Commander",
+      "commander_role": "warlord",
+      "availability": {
+        "type": "unique"
+      }
+    },
+    {
+      "unit_id": "grupp-longnail-individual",
+      "name": "Grupp Longnail",
+      "size": "Individual",
+      "type": "Hero (Inf)",
+      "sp": 5,
+      "me": 3,
+      "sh": "-",
+      "de": 4,
+      "att": 4,
+      "ne": "13",
+      "pts": 185,
+      "special_rules": [
+        "Blast (D3)",
+        "Crushing Strength (1)",
+        "Ensnare",
+        "Fearless",
+        "Individual",
+        "Inspiring",
+        "Hex (2)",
+        "Lightning Bolt (5)",
+        "Drain Power"
+      ],
+      "traits": [
+        "Spellcaster"
+      ],
+      "category": "Commander",
+      "commander_role": "warlord",
+      "availability": {
+        "type": "unique"
+      }
     },
     {
       "unit_id": "king-on-chariot-hero",
@@ -499,47 +1218,36 @@
         "Individual",
         "Thunderous Charge (1)"
       ],
-      "traits": []
+      "traits": [],
+      "category": "Commander",
+      "commander_role": "warlord"
     },
     {
-      "unit_id": "flaggit-hero",
-      "name": "Flaggit",
+      "unit_id": "kuzlo-and-madfall-individual",
+      "name": "Kuzlo and Madfall",
       "size": "Individual",
-      "type": "Hero (Inf)",
-      "sp": 5,
-      "me": 5,
+      "type": "Hero (Lrg Cav)",
+      "sp": 8,
+      "me": 3,
       "sh": "-",
       "de": 4,
-      "att": 1,
-      "ne": "10",
-      "pts": 60,
+      "att": 5,
+      "ne": "14",
+      "pts": 160,
       "special_rules": [
-        "Individual",
-        "Very Inspiring",
-        "Yielding"
+        "Crushing Strength (2)",
+        "Dread",
+        "Inspiring (Self)",
+        "Pathfinder",
+        "Regenerate (4+)",
+        "Vicious (Combat)"
       ],
-      "traits": []
-    },
-    {
-      "unit_id": "wiz-hero",
-      "name": "Wiz",
-      "size": "Individual",
-      "type": "Hero (Inf)",
-      "sp": 5,
-      "me": 5,
-      "sh": "-",
-      "de": 4,
-      "att": 1,
-      "ne": "11",
-      "pts": 55,
-      "special_rules": [
-        "Individual",
-        "Inspiring",
-        "Yielding"
-      ],
-      "traits": [
-        "Spellcaster"
-      ]
+      "traits": [],
+      "category": "Commander",
+      "commander_role": "warlord",
+      "availability": {
+        "type": "unique"
+      }
     }
   ]
 }
