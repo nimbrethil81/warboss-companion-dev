@@ -30,7 +30,7 @@
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION  = 'wbc-v21';
+const CACHE_VERSION  = 'wbc-v22';
 const CACHE_SHELL    = CACHE_VERSION + '-shell';   // app shell + data
 const CACHE_FONTS    = CACHE_VERSION + '-fonts';   // Google Fonts responses
 
@@ -47,6 +47,7 @@ const SHELL_FILES = [
   './js/skins.js',
   './js/app.js',
   './js/storage.js',
+  './js/resolver.js',
   './js/sheets.js',
   './js/muster.js',
   './js/battle.js',
