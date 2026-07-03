@@ -1,26 +1,35 @@
 /**
- * battle.js — Battle mode logic for Warboss Companion (v0.2)
+ * battle.js — Battle mode logic for Warboss Companion (v0.3 — Options Consumption)
  *
  * Responsibilities:
  *   - Render the battle setup screen (army picker from Muster saves,
  *     opponent name, "who goes first?" selection, start)
  *   - Drive the in-game turn/phase loop
  *   - Display phase prompts sourced from kow.json (never hardcoded here)
- *   - Render contextual unit stat cards per phase
+ *   - Render contextual unit stat cards per phase, including fitted-option
+ *     chips and any added weapons/spells from selected options
  *   - Manage per-unit "Routed" toggle in the roster
  *   - Accept quick notes per turn
  *   - Handle game end: write summary to Sheets via sheets.js,
  *     then hand off to chronicle.js
  *
- * Army loading (v0.2):
- *   Battle now requires a saved Muster army. On setup, armies are fetched
- *   from Sheets (with cache fallback). The chosen army's unit_ids are
- *   resolved against WBC.armyData (goblins.json) to build the in-game roster.
- *   The selected army is held in WBCStorage.KEYS.SELECTED_ARMY for the
- *   duration of setup; it is cleared once the game object is built.
+ * Army loading (v0.3):
+ *   Battle requires a saved Muster army. On setup, armies are fetched from
+ *   Sheets (with cache fallback). The chosen army's saved units field is
+ *   normalised via WBCResolver.normalizeArmyUnits() (accepts both legacy
+ *   bare-unit_id entries and current {unit_id, options} entries), then each
+ *   entry is resolved via WBCResolver.resolve() against WBC.armyData
+ *   (goblins.json) to build the in-game roster. The EFFECTIVE profile
+ *   (post-options) is snapshotted into each roster instance at game start
+ *   and never re-resolved — mid-game state stays stable even if goblins.json
+ *   changes before the game ends. The selected army is held in
+ *   WBCStorage.KEYS.SELECTED_ARMY for the duration of setup; it is cleared
+ *   once the game object is built.
  *
  * Dependencies (must be loaded before this file):
  *   - storage.js  (WBCStorage)
+ *   - resolver.js (WBCResolver) — all saved-army normalisation and
+ *                                 option/effect resolution goes through this
  *   - sheets.js   (WBCSheets)
  *   - app.js      (window.WBC — provides WBC.systemConfig, WBC.armyData,
  *                  WBC.switchTab)
@@ -30,6 +39,8 @@
  *     go via WBCStorage
  *   - This file NEVER reads Sheets directly — all reads/writes go via
  *     WBCSheets
+ *   - This file NEVER computes effective stats/points itself — always via
+ *     WBCResolver
  *   - All game-specific values (phase names, max turns, prompts) come
  *     from WBC.systemConfig at runtime
  *   - DOM manipulation is scoped to #page-battle and its children only
@@ -282,18 +293,15 @@ var WBCBattle = (function () {
     }
 
     var options = _armies.map(function (a) {
-      var unitIds;
-      try {
-        unitIds = typeof a.units === 'string' ? JSON.parse(a.units) : (a.units || []);
-      } catch (e) { unitIds = []; }
+      var entries = WBCResolver.normalizeArmyUnits(a.units);
 
-      var pts = unitIds.reduce(function (sum, uid) {
-        var u = _findUnitInArmyData(uid);
-        return sum + (u && typeof u.pts === 'number' ? u.pts : 0);
+      var pts = entries.reduce(function (sum, entry) {
+        var u = _findUnitInArmyData(entry.unit_id);
+        return sum + (u ? WBCResolver.resolve(u, entry.options).pts : 0);
       }, 0);
 
       var label = _escapeHtml(a.army_name || 'Unnamed')
-        + ' (' + unitIds.length + ' units, ' + pts + ' pts)';
+        + ' (' + entries.length + ' units, ' + pts + ' pts)';
 
       return '<option value="' + _escapeHtml(a.army_id) + '">' + label + '</option>';
     });
@@ -422,42 +430,57 @@ var WBCBattle = (function () {
       return;
     }
 
-    /* Resolve unit_ids → full unit objects from WBC.armyData (goblins.json).
-       unit_id identifies the UNIT TYPE (e.g. "goblin_rabble") and stays
-       untouched — Muster/Sheets still key off it. Duplicate entries in
-       the army (e.g. 6x Goblin Rabble) share that unit_id, so each gets
-       its own inst_id here to track routed/damage state per instance. */
-    var unitIds;
-    try {
-      unitIds = typeof armyRecord.units === 'string'
-        ? JSON.parse(armyRecord.units)
-        : (armyRecord.units || []);
-    } catch (e) { unitIds = []; }
+    /* Resolve saved-army entries → full unit objects from WBC.armyData
+       (goblins.json), running each through the shared WBCResolver so the
+       roster snapshots the EFFECTIVE profile (post-options), not the base
+       one. unit_id identifies the UNIT TYPE and stays untouched — Muster/
+       Sheets still key off it. Duplicate entries in the army (e.g. 6x
+       Goblin Rabble) share that unit_id, so each gets its own inst_id here
+       to track routed/damage state per instance.
+
+       The snapshot is taken once, at game start, and never re-resolved:
+       mid-game state stays stable even if goblins.json changes before the
+       game ends (decision 4, Options Consumption design). */
+    var entries = WBCResolver.normalizeArmyUnits(armyRecord.units);
 
     var units = [];
     var missing = [];
-    unitIds.forEach(function (uid) {
-      var u = _findUnitInArmyData(uid);
+    entries.forEach(function (entry) {
+      var u = _findUnitInArmyData(entry.unit_id);
       if (u) {
-        units.push({
+        var resolved = WBCResolver.resolve(u, entry.options);
+        var instance = {
           inst_id:       _uuid(),   /* unique per unit instance */
           unit_id:       u.unit_id,
-          name:          u.name,
-          size:          u.size,
-          type:          u.type,
-          sp:            u.sp,
-          me:            u.me,
-          sh:            u.sh,
-          de:            u.de,
-          att:           u.att,
-          ne:            u.ne,
-          special_rules: u.special_rules || [],
+          name:          resolved.profile.name,
+          size:          resolved.profile.size,
+          type:          resolved.profile.type,
+          sp:            resolved.profile.sp,
+          me:            resolved.profile.me,
+          sh:            resolved.profile.sh,
+          de:            resolved.profile.de,
+          att:           resolved.profile.att,
+          ne:            resolved.profile.ne,
+          special_rules: resolved.profile.special_rules,
           routed:        false,
           damage:        0
-        });
+        };
+        /* Omit these fields entirely when empty — keeps legacy-army
+           snapshots unchanged and the resume path needs no migration,
+           since absent fields simply render nothing. */
+        if (resolved.weapons.length > 0)  instance.weapons = resolved.weapons;
+        if (resolved.spells.length > 0)   instance.spells = resolved.spells;
+        if (entry.options.length > 0)     instance.selected_option_ids = entry.options.slice();
+        if (resolved.applied.length > 0) {
+          instance.option_labels = resolved.applied.map(function (a) { return a.label; });
+        }
+        if (resolved.warnings.length > 0) {
+          console.warn('[battle] option resolution warnings for ' + u.unit_id + ':', resolved.warnings);
+        }
+        units.push(instance);
       } else {
-        missing.push(uid);
-        console.warn('[battle] unit_id not found in armyData:', uid);
+        missing.push(entry.unit_id);
+        console.warn('[battle] unit_id not found in armyData:', entry.unit_id);
       }
     });
 
@@ -789,6 +812,15 @@ var WBCBattle = (function () {
     var sizeLine  = _escapeHtml((u.size || '') + (u.type ? ' · ' + u.type : ''));
     var instId    = u.inst_id;
 
+    /* Fitted-option chips — only present on instances resolved through
+       Options Consumption; absent on pre-existing/legacy game snapshots,
+       so this renders nothing for them (Fail Gracefully). */
+    var chipsHTML = (u.option_labels && u.option_labels.length > 0)
+      ? '<div class="unit-card-chips">' + u.option_labels.map(function (label) {
+          return '<span class="unit-option-chip">' + _escapeHtml(label) + '</span>';
+        }).join('') + '</div>'
+      : '';
+
     /* Contextual stats for the current phase */
     var statDefs  = PHASE_STATS[_game.current_phase] || [];
     var statsHTML = statDefs.map(function (def) {
@@ -800,6 +832,25 @@ var WBCBattle = (function () {
         '</div>',
       ].join('');
     }).join('');
+
+    /* Added weapons / granted spells from applied options — compact
+       sub-lines, only rendered when present. */
+    var weaponsHTML = (u.weapons && u.weapons.length > 0)
+      ? '<div class="unit-card-extras">' + u.weapons.map(function (w) {
+          return '<span class="unit-extra-line">'
+            + _escapeHtml(w.name) + ' · ' + _escapeHtml(w.range || '')
+            + ' · Sh ' + _escapeHtml(String(w.sh)) + '+ · Att ' + _escapeHtml(String(w.att))
+            + '</span>';
+        }).join('') + '</div>'
+      : '';
+
+    var spellsHTML = (u.spells && u.spells.length > 0)
+      ? '<div class="unit-card-extras">' + u.spells.map(function (s) {
+          return '<span class="unit-extra-line">'
+            + _escapeHtml(s.spell) + ' (' + _escapeHtml(String(s.power)) + ')'
+            + '</span>';
+        }).join('') + '</div>'
+      : '';
 
     /* Special rules — truncated by CSS, expands on tap.
        Keyed by inst_id (not unit_id) so duplicate units in the roster
@@ -823,6 +874,7 @@ var WBCBattle = (function () {
       '    <div class="unit-card-names">',
       '      <div class="unit-card-name">' + label + '</div>',
       '      <div class="unit-card-size">' + sizeLine + '</div>',
+      chipsHTML,
       '    </div>',
       '    <button class="unit-routed-btn" data-inst-id="' + instId + '">',
       isRouted ? 'Restore' : 'Routed',
@@ -833,6 +885,8 @@ var WBCBattle = (function () {
         ? '<div class="unit-card-stats">' + statsHTML + '</div>'
         : '',
 
+      weaponsHTML,
+      spellsHTML,
       rulesHTML,
 
       '</div>',
