@@ -746,21 +746,26 @@
   ================================================================
   SCRIPTS
   Load order matters:
-    1. skins.js   — SKINS object (all four CSS + HTML content blocks)
-    2. app.js     — routing, tab switching, skin loading, modal
-    3. storage.js — all localStorage read/write (no other file touches it)
-    4. sheets.js  — all Google Sheets read/write (no other file touches it)
-    5. muster.js  — Muster mode logic
-    6. battle.js  — Battle mode logic
-    7. chronicle.js — Chronicle mode logic
+    1. skins.js    — SKINS object (all four CSS + HTML content blocks)
+    2. storage.js  — all localStorage read/write (no other file touches it)
+    3. resolver.js — option/effect resolution + saved-army normalisation
+                      (no dependencies; must load before muster.js/battle.js,
+                      the only two consumers)
+    4. sheets.js   — all Google Sheets read/write (no other file touches it)
+    5. app.js      — routing, tab switching, skin loading, modal
+    6. muster.js   — Muster mode logic
+    7. battle.js   — Battle mode logic
+    8. chronicle.js — Chronicle mode logic
+    9. training.js — Training Ground mode logic
 
   All scripts are deferred: they execute after HTML parsing is
   complete but before DOMContentLoaded fires, in source order.
-  Skin injection (step 1→2) happens before any mode module runs.
+  Skin injection (step 1) happens before any mode module runs.
   ================================================================
 -->
 <script src="js/skins.js?v=8"     defer></script>
 <script src="js/storage.js?v=3"   defer></script>
+<script src="js/resolver.js?v=1"  defer></script>
 <script src="js/sheets.js?v=4"    defer></script>
 <script src="js/app.js?v=3"       defer></script>
 <script src="js/muster.js?v=3"    defer></script>
