@@ -41,3 +41,12 @@ jobs:
           git add -A
           git diff --cached --quiet || git commit -m "Deploy from dev: ${{ github.sha }}"
           git push
+
+      # Step 5: Force a fresh Pages build
+      #         Pages doesn't always trigger automatically off a bot push, so we call the build API directly
+      - name: Trigger GitHub Pages build
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.LIVE_REPO_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/nimbrethil81/warboss-companion/pages/builds
