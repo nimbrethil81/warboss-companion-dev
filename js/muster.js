@@ -1,28 +1,36 @@
 /**
- * muster.js — Muster mode logic for Warboss Companion (v0.2)
+ * muster.js — Muster mode logic for Warboss Companion (v0.3 — Options Consumption)
  *
  * Responsibilities:
  *   - Browse units from WBC.armyData (goblins.json) and add/remove them
  *     to build a named army list
- *   - Display total points and a configurable points limit
- *   - Save named armies to Sheets (unit_ids only — no stat duplication)
+ *   - Author unit options (upgrades) per selected unit — independent toggles,
+ *     mutually-exclusive groups, and informational battalion-scope options
+ *   - Display live points, resolved via the shared WBCResolver against each
+ *     unit's selected options — never computed locally (Single Source of Truth)
+ *   - Save named armies to Sheets as { unit_id, options[] } entries — options
+ *     are id references only, never duplicated stat data
  *   - List all saved armies with load/delete actions
  *   - Armies are available to Battle mode via WBCStorage.saveSelectedArmy()
  *
- * Unit ID immutability rule (enforced at data level, documented here):
- *   unit_id values in goblins.json are permanent keys. They must NEVER
- *   be renamed once an army has been saved, or saved armies will fail to
- *   resolve those units. To retire a unit, add "retired": true to its
- *   goblins.json entry instead of deleting it.
+ * Unit ID / option ID immutability rule (enforced at data level, documented here):
+ *   unit_id values in goblins.json, and option `id` values within a unit's
+ *   `options` array, are permanent keys. They must NEVER be renamed once an
+ *   army has been saved, or saved armies will fail to resolve those
+ *   units/options. To retire a unit, add "retired": true to its goblins.json
+ *   entry instead of deleting it.
  *
  * Dependencies (must be loaded before this file):
  *   - storage.js  (WBCStorage)
+ *   - resolver.js (WBCResolver) — all option/effect resolution + saved-army
+ *                                 entry normalisation goes through this
  *   - sheets.js   (WBCSheets)
  *   - app.js      (window.WBC — provides WBC.armyData, WBC.switchTab)
  *
  * Module isolation rules:
  *   - This file NEVER touches localStorage directly — all reads/writes go via WBCStorage
  *   - This file NEVER reads Sheets directly — all reads/writes go via WBCSheets
+ *   - This file NEVER computes effective stats/points itself — always via WBCResolver
  *   - No unit stat values are hardcoded here — all data comes from WBC.armyData at runtime
  *   - DOM manipulation is scoped to #page-muster and its children only
  */
@@ -32,12 +40,23 @@ var WBCMuster = (function () {
 
   // ─── Module state ─────────────────────────────────────────────────────────
 
+  /**
+   * _draft.entries: array of { unit_id: string, options: string[] }, index-
+   * addressed. Two entries with the same unit_id are independent rows that
+   * may carry different selected options — index, not unit_id, is identity
+   * within a draft.
+   */
   var _draft = {
     army_id:    null,       // null = new army; UUID = editing existing
     army_name:  '',
-    unit_ids:   [],         // ordered array of unit_id strings
+    entries:    [],
     pts_limit:  2000,
   };
+
+  /** Indices (into _draft.entries) whose options panel is currently expanded. */
+  var _expandedIndices = new Set();
+
+  var CATEGORY_ORDER = ['Core', 'Auxiliary', 'Specialist', 'Support', 'Commander'];
 
   // ─── Utility ──────────────────────────────────────────────────────────────
 
@@ -73,7 +92,8 @@ var WBCMuster = (function () {
   // ─── Data helpers ─────────────────────────────────────────────────────────
 
   /**
-   * All available units from goblins.json, excluding retired ones.
+   * All units eligible for NEW selection from goblins.json — retired units
+   * excluded. Used ONLY by the picker.
    * @returns {Array}
    */
   function _availableUnits() {
@@ -83,27 +103,58 @@ var WBCMuster = (function () {
   }
 
   /**
-   * Look up a unit object by unit_id from WBC.armyData.
-   * Returns null if not found (handles retired/removed units gracefully).
+   * Look up a unit object by unit_id from WBC.armyData — searches ALL units,
+   * including retired ones. Used everywhere an already-selected entry (in
+   * the draft, or in a previously-saved army) needs to resolve: unit_id
+   * immutability means a retired unit must still resolve correctly for
+   * armies that reference it; retirement only hides it from the picker.
+   *
+   * Returns null only for a genuinely unknown/malformed unit_id.
+   *
    * @param {string} unitId
    * @returns {Object|null}
    */
-  function _findUnit(unitId) {
-    var units = _availableUnits();
-    for (var i = 0; i < units.length; i++) {
-      if (units[i].unit_id === unitId) return units[i];
+  function _resolveUnit(unitId) {
+    var armyData = window.WBC && window.WBC.armyData;
+    if (!armyData || !Array.isArray(armyData.units)) return null;
+    for (var i = 0; i < armyData.units.length; i++) {
+      if (armyData.units[i].unit_id === unitId) return armyData.units[i];
     }
     return null;
   }
 
   /**
-   * Calculate total points for the current draft from WBC.armyData.
+   * Effective points for one draft entry, via the shared resolver.
+   * Unknown unit_id resolves to 0 (graceful degradation — matches the
+   * "(not found)" row rendering).
+   * @param {{unit_id: string, options: string[]}} entry
+   * @returns {number}
+   */
+  function _entryPts(entry) {
+    var u = _resolveUnit(entry.unit_id);
+    if (!u) return 0;
+    return WBCResolver.resolve(u, entry.options).pts;
+  }
+
+  /**
+   * Calculate total points for the current draft.
    * @returns {number}
    */
   function _draftTotal() {
-    return _draft.unit_ids.reduce(function (sum, uid) {
-      var u = _findUnit(uid);
-      return sum + (u && typeof u.pts === 'number' ? u.pts : 0);
+    return _draft.entries.reduce(function (sum, entry) {
+      return sum + _entryPts(entry);
+    }, 0);
+  }
+
+  /**
+   * Sum effective points for a normalised entries array belonging to a
+   * SAVED army (not the live draft) — used by the army list cards.
+   * @param {Array<{unit_id:string, options:string[]}>} entries
+   * @returns {number}
+   */
+  function _savedArmyPts(entries) {
+    return entries.reduce(function (sum, entry) {
+      return sum + _entryPts(entry);
     }, 0);
   }
 
@@ -133,7 +184,8 @@ var WBCMuster = (function () {
     var newBtn = _el('muster-new-btn');
     if (newBtn) {
       newBtn.addEventListener('click', function () {
-        _draft = { army_id: null, army_name: '', unit_ids: [], pts_limit: 2000 };
+        _draft = { army_id: null, army_name: '', entries: [], pts_limit: 2000 };
+        _expandedIndices = new Set();
         _renderBuilder();
       });
     }
@@ -170,22 +222,15 @@ var WBCMuster = (function () {
       : '';
 
     armies.forEach(function (army) {
-      var unitIds;
-      try {
-        unitIds = typeof army.units === 'string' ? JSON.parse(army.units) : (army.units || []);
-      } catch (e) { unitIds = []; }
-
-      var pts = unitIds.reduce(function (sum, uid) {
-        var u = _findUnit(uid);
-        return sum + (u && typeof u.pts === 'number' ? u.pts : 0);
-      }, 0);
+      var entries = WBCResolver.normalizeArmyUnits(army.units);
+      var pts = _savedArmyPts(entries);
 
       html += [
         '<div class="muster-army-card" data-army-id="' + _escapeHtml(army.army_id) + '">',
         '  <div class="muster-army-card-info">',
         '    <div class="muster-army-card-name">' + _escapeHtml(army.army_name || 'Unnamed Army') + '</div>',
         '    <div class="muster-army-card-meta">',
-        '      ' + unitIds.length + ' unit' + (unitIds.length !== 1 ? 's' : ''),
+        '      ' + entries.length + ' unit' + (entries.length !== 1 ? 's' : ''),
         '      · ' + pts + ' pts',
         '    </div>',
         '  </div>',
@@ -193,7 +238,7 @@ var WBCMuster = (function () {
         '    <button class="muster-card-btn muster-card-btn--edit"',
         '            data-army-id="' + _escapeHtml(army.army_id) + '"',
         '            data-army-name="' + _escapeHtml(army.army_name || '') + '"',
-        '            data-unit-ids="' + _escapeHtml(JSON.stringify(unitIds)) + '"',
+        '            data-entries="' + _escapeHtml(JSON.stringify(entries)) + '"',
         '            aria-label="Edit ' + _escapeHtml(army.army_name || 'army') + '">',
         '      Edit',
         '    </button>',
@@ -213,14 +258,15 @@ var WBCMuster = (function () {
     /* Bind edit buttons */
     _qsa('.muster-card-btn--edit', listEl).forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var unitIds;
-        try { unitIds = JSON.parse(this.getAttribute('data-unit-ids')); } catch (e) { unitIds = []; }
+        var entries;
+        try { entries = JSON.parse(this.getAttribute('data-entries')); } catch (e) { entries = []; }
         _draft = {
           army_id:   this.getAttribute('data-army-id'),
           army_name: this.getAttribute('data-army-name'),
-          unit_ids:  unitIds,
+          entries:   entries,
           pts_limit: 2000,
         };
+        _expandedIndices = new Set();
         _renderBuilder();
       });
     });
@@ -261,8 +307,8 @@ var WBCMuster = (function () {
     var page = _el('page-muster');
     if (!page) return;
 
-    var isNew    = !_draft.army_id;
-    var total    = _draftTotal();
+    var isNew     = !_draft.army_id;
+    var total     = _draftTotal();
     var overLimit = total > _draft.pts_limit;
 
     page.innerHTML = [
@@ -289,11 +335,9 @@ var WBCMuster = (function () {
       '</div>',
 
       /* Selected units */
-      '<div class="section-label">Selected units (' + _draft.unit_ids.length + ')</div>',
+      '<div class="section-label">Selected units (' + _draft.entries.length + ')</div>',
       '<div id="muster-selected-list" class="muster-selected-list">',
-      _draft.unit_ids.length === 0
-        ? '<p class="setup-hint" id="muster-empty-hint">No units added yet. Pick from the list below.</p>'
-        : _draft.unit_ids.map(function (uid) { return _selectedUnitRow(uid); }).join(''),
+      _renderSelectedList(),
       '</div>',
 
       /* Available units picker */
@@ -316,51 +360,149 @@ var WBCMuster = (function () {
     _bindBuilderEvents();
   }
 
-  function _selectedUnitRow(unitId) {
-    var u = _findUnit(unitId);
+  function _renderSelectedList() {
+    if (_draft.entries.length === 0) {
+      return '<p class="setup-hint" id="muster-empty-hint">No units added yet. Pick from the list below.</p>';
+    }
+    return _draft.entries.map(function (entry, index) {
+      return _selectedUnitRow(entry, index);
+    }).join('');
+  }
+
+  function _selectedUnitRow(entry, index) {
+    var u = _resolveUnit(entry.unit_id);
+
     if (!u) {
-      /* Graceful degradation: unit not found (retired or unknown) */
+      /* Graceful degradation: genuinely unknown unit_id (not retired — those
+         still resolve via _resolveUnit; this is a truly missing reference) */
       return [
         '<div class="muster-sel-row muster-sel-row--missing">',
-        '  <span class="muster-sel-name">' + _escapeHtml(unitId) + ' <em>(not found)</em></span>',
-        '  <button class="muster-remove-btn" data-unit-id="' + _escapeHtml(unitId) + '"',
+        '  <span class="muster-sel-name">' + _escapeHtml(entry.unit_id) + ' <em>(not found)</em></span>',
+        '  <button class="muster-remove-btn" data-entry-index="' + index + '"',
         '          aria-label="Remove unit">✕</button>',
         '</div>',
       ].join('');
     }
 
-    var label = _escapeHtml(u.name) + (u.size ? ' <span class="muster-sel-size">(' + _escapeHtml(u.size) + ')</span>' : '');
+    var resolved    = WBCResolver.resolve(u, entry.options);
+    var hasOptions  = Array.isArray(u.options) && u.options.length > 0;
+    var expanded    = _expandedIndices.has(index);
+    var fittedCount = entry.options.length;
 
-    return [
-      '<div class="muster-sel-row" data-unit-id="' + _escapeHtml(unitId) + '">',
+    var label = _escapeHtml(u.name)
+      + (u.size ? ' <span class="muster-sel-size">(' + _escapeHtml(u.size) + ')</span>' : '')
+      + (u.retired ? ' <span class="muster-sel-retired-tag">retired</span>' : '');
+
+    var rowHtml = [
+      '<div class="muster-sel-row" data-entry-index="' + index + '">',
       '  <span class="muster-sel-name">' + label + '</span>',
-      '  <span class="muster-sel-pts">' + (typeof u.pts === 'number' ? u.pts + ' pts' : '') + '</span>',
-      '  <button class="muster-remove-btn" data-unit-id="' + _escapeHtml(unitId) + '"',
+      '  <span class="muster-sel-pts">' + resolved.pts + ' pts</span>',
+      hasOptions
+        ? [
+            '  <button class="muster-opt-expand" data-entry-index="' + index + '"',
+            '          aria-expanded="' + (expanded ? 'true' : 'false') + '">',
+            '    ⚙' + (fittedCount > 0 ? ' <span class="muster-opt-badge-count">' + fittedCount + '</span>' : ''),
+            '    ' + (expanded ? '▾' : '▸'),
+            '  </button>',
+          ].join('')
+        : '',
+      '  <button class="muster-remove-btn" data-entry-index="' + index + '"',
       '          aria-label="Remove ' + _escapeHtml(u.name) + '">✕</button>',
       '</div>',
     ].join('');
+
+    if (hasOptions && expanded) {
+      rowHtml += '<div class="muster-opt-panel">' + _renderOptionsPanel(u, entry, index) + '</div>';
+    }
+
+    return rowHtml;
+  }
+
+  function _renderOptionsPanel(u, entry, index) {
+    return u.options.map(function (option) {
+      var costLabel = typeof option.cost === 'number'
+        ? (option.cost === 0 ? 'free' : '+' + option.cost + ' pts')
+        : '';
+      var descHtml = option.description
+        ? '<div class="muster-opt-desc">' + _escapeHtml(option.description) + '</div>'
+        : '';
+
+      if (option.scope === 'battalion') {
+        return [
+          '<div class="muster-opt-row muster-opt-row--info">',
+          '  <div class="muster-opt-info">',
+          '    <span class="muster-opt-label">' + _escapeHtml(option.label) + '</span>',
+          '    <span class="muster-opt-badge muster-opt-badge--battalion">Battalion</span>',
+          '    ' + descHtml,
+          '  </div>',
+          '</div>',
+        ].join('');
+      }
+
+      var selected = entry.options.indexOf(option.id) !== -1;
+      var rowClass = option.group ? 'muster-opt-row--group' : 'muster-opt-row--toggle';
+
+      return [
+        '<div class="muster-opt-row ' + rowClass + '">',
+        '  <button class="muster-opt-toggle' + (selected ? ' muster-opt-toggle--selected' : '') + '"',
+        '          data-entry-index="' + index + '"',
+        '          data-option-id="' + _escapeHtml(option.id) + '"',
+        '          data-option-group="' + _escapeHtml(option.group || '') + '"',
+        '          aria-pressed="' + (selected ? 'true' : 'false') + '"',
+        '          aria-label="' + (selected ? 'Remove' : 'Add') + ' ' + _escapeHtml(option.label) + '">',
+        '    ' + (selected ? '✓' : '+'),
+        '  </button>',
+        '  <div class="muster-opt-info">',
+        '    <span class="muster-opt-label">' + _escapeHtml(option.label) + '</span>',
+        costLabel ? '    <span class="muster-opt-cost">' + costLabel + '</span>' : '',
+        '    ' + descHtml,
+        '  </div>',
+        '</div>',
+      ].join('');
+    }).join('');
   }
 
   function _renderPickerRows() {
     var units = _availableUnits();
     if (units.length === 0) return '<p class="setup-hint">No units available.</p>';
 
-    /* Group by type */
+    /* Group by category, fixed rulebook order; unknown/missing category
+       falls through to a trailing "Other" group (defensive — every audited
+       unit carries a category, but a malformed entry must not vanish). */
     var groups = {};
     var groupOrder = [];
     units.forEach(function (u) {
-      var key = u.type || 'Other';
+      var key = CATEGORY_ORDER.indexOf(u.category) !== -1 ? u.category : 'Other';
       if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
       groups[key].push(u);
     });
+    groupOrder.sort(function (a, b) {
+      var ai = CATEGORY_ORDER.indexOf(a); if (ai === -1) ai = CATEGORY_ORDER.length;
+      var bi = CATEGORY_ORDER.indexOf(b); if (bi === -1) bi = CATEGORY_ORDER.length;
+      return ai - bi;
+    });
 
     var html = '';
-    groupOrder.forEach(function (typeName) {
-      html += '<div class="section-label section-label--sub">' + _escapeHtml(typeName) + '</div>';
-      groups[typeName].forEach(function (u) {
+    groupOrder.forEach(function (categoryName) {
+      html += '<div class="section-label section-label--sub">' + _escapeHtml(categoryName) + '</div>';
+      groups[categoryName].forEach(function (u) {
         var rules = (u.special_rules || []);
         var rulesHtml = rules.length
           ? '<span class="muster-picker-rules">' + _escapeHtml(rules.join(', ')) + '</span>'
+          : '';
+
+        var availabilityHtml = '';
+        if (u.availability) {
+          if (u.availability.type === 'limited') {
+            availabilityHtml = '<span class="muster-avail-badge">Limited: max '
+              + _escapeHtml(String(u.availability.max)) + ' per Battalion</span>';
+          } else if (u.availability.type === 'unique') {
+            availabilityHtml = '<span class="muster-avail-badge muster-avail-badge--unique">Unique — 1 per army</span>';
+          }
+        }
+
+        var optionsHint = (Array.isArray(u.options) && u.options.length > 0)
+          ? '<span class="muster-opt-hint">⚙ options</span>'
           : '';
 
         html += [
@@ -369,6 +511,7 @@ var WBCMuster = (function () {
           '    <span class="muster-picker-name">',
           '      ' + _escapeHtml(u.name),
           '      ' + (u.size ? '<span class="muster-sel-size">(' + _escapeHtml(u.size) + ')</span>' : ''),
+          '      ' + optionsHint,
           '    </span>',
           '    <div class="muster-picker-stats">',
           '      <span class="usg-cell"><span class="usg-label">Sp</span>' + _statDisplay(u.sp) + '</span>',
@@ -379,6 +522,7 @@ var WBCMuster = (function () {
           '      <span class="usg-cell"><span class="usg-label">Ne</span>' + _statDisplay(u.ne) + '</span>',
           '    </div>',
           '    ' + rulesHtml,
+          '    ' + availabilityHtml,
           '  </div>',
           '  <div class="muster-picker-right">',
           '    <span class="muster-picker-pts">' + (typeof u.pts === 'number' ? u.pts : '—') + '</span>',
@@ -398,7 +542,7 @@ var WBCMuster = (function () {
     var backBtn = _el('muster-back-btn');
     if (backBtn) {
       backBtn.addEventListener('click', function () {
-        if (_draft.unit_ids.length > 0 || _draft.army_name.trim() !== '') {
+        if (_draft.entries.length > 0 || _draft.army_name.trim() !== '') {
           if (!window.confirm('Discard unsaved changes?')) return;
         }
         _renderList();
@@ -438,14 +582,32 @@ var WBCMuster = (function () {
       });
     }
 
-    /* Remove unit buttons (in selected list) */
+    /* Selected list: remove, options-expand, options-toggle (delegated) */
     var selList = _el('muster-selected-list');
     if (selList) {
       selList.addEventListener('click', function (e) {
-        var btn = e.target.closest('.muster-remove-btn');
-        if (!btn) return;
-        var uid = btn.getAttribute('data-unit-id');
-        if (uid) _removeUnit(uid);
+        var removeBtn = e.target.closest('.muster-remove-btn');
+        if (removeBtn) {
+          var idx = parseInt(removeBtn.getAttribute('data-entry-index'), 10);
+          _removeEntry(idx);
+          return;
+        }
+
+        var expandBtn = e.target.closest('.muster-opt-expand');
+        if (expandBtn) {
+          var eidx = parseInt(expandBtn.getAttribute('data-entry-index'), 10);
+          _toggleExpanded(eidx);
+          return;
+        }
+
+        var optBtn = e.target.closest('.muster-opt-toggle');
+        if (optBtn) {
+          var oidx  = parseInt(optBtn.getAttribute('data-entry-index'), 10);
+          var oid   = optBtn.getAttribute('data-option-id');
+          var group = optBtn.getAttribute('data-option-group') || null;
+          _toggleOption(oidx, oid, group);
+          return;
+        }
       });
     }
 
@@ -457,15 +619,63 @@ var WBCMuster = (function () {
   // ─── Draft mutations ───────────────────────────────────────────────────────
 
   function _addUnit(unitId) {
-    _draft.unit_ids.push(unitId);
+    _draft.entries.push({ unit_id: unitId, options: [] });
     _refreshSelectedList();
     _refreshPtsBar();
   }
 
-  function _removeUnit(unitId) {
-    /* Remove only the first occurrence (allows duplicates) */
-    var idx = _draft.unit_ids.indexOf(unitId);
-    if (idx !== -1) _draft.unit_ids.splice(idx, 1);
+  function _removeEntry(index) {
+    if (index < 0 || index >= _draft.entries.length) return;
+    _draft.entries.splice(index, 1);
+    /* Indices shift on removal — safest to collapse all open panels rather
+       than risk a stale index pointing at the wrong row. */
+    _expandedIndices = new Set();
+    _refreshSelectedList();
+    _refreshPtsBar();
+  }
+
+  function _toggleExpanded(index) {
+    if (_expandedIndices.has(index)) {
+      _expandedIndices.delete(index);
+    } else {
+      _expandedIndices.add(index);
+    }
+    _refreshSelectedList();
+  }
+
+  /**
+   * Toggle a single option on a draft entry.
+   * Independent options (group === null): simple toggle.
+   * Grouped options: selecting one clears any other selected id in the same
+   * group on that unit (mutual exclusion); selecting the already-selected
+   * one clears the group (all group options are optional upgrades).
+   *
+   * @param {number} index — entry index in _draft.entries
+   * @param {string} optionId
+   * @param {string|null} group
+   */
+  function _toggleOption(index, optionId, group) {
+    var entry = _draft.entries[index];
+    if (!entry) return;
+
+    var pos = entry.options.indexOf(optionId);
+
+    if (group) {
+      var u = _resolveUnit(entry.unit_id);
+      var groupIds = (u && Array.isArray(u.options))
+        ? u.options.filter(function (o) { return o.group === group; }).map(function (o) { return o.id; })
+        : [optionId];
+
+      var withoutGroup = entry.options.filter(function (id) { return groupIds.indexOf(id) === -1; });
+      entry.options = (pos !== -1) ? withoutGroup : withoutGroup.concat([optionId]);
+    } else {
+      if (pos !== -1) {
+        entry.options.splice(pos, 1);
+      } else {
+        entry.options.push(optionId);
+      }
+    }
+
     _refreshSelectedList();
     _refreshPtsBar();
   }
@@ -474,21 +684,13 @@ var WBCMuster = (function () {
     var listEl = _el('muster-selected-list');
     if (!listEl) return;
 
-    if (_draft.unit_ids.length === 0) {
-      listEl.innerHTML = '<p class="setup-hint" id="muster-empty-hint">No units added yet. Pick from the list below.</p>';
-    } else {
-      listEl.innerHTML = _draft.unit_ids.map(function (uid) {
-        return _selectedUnitRow(uid);
-      }).join('');
-    }
+    listEl.innerHTML = _renderSelectedList();
 
     /* Update count label */
-    var label = _qs('.section-label', _el('page-muster'));
-    /* Find specifically the "Selected units" label */
     var labels = _qsa('.section-label', _el('page-muster'));
     labels.forEach(function (el) {
       if (el.textContent.indexOf('Selected units') === 0) {
-        el.textContent = 'Selected units (' + _draft.unit_ids.length + ')';
+        el.textContent = 'Selected units (' + _draft.entries.length + ')';
       }
     });
   }
@@ -530,11 +732,18 @@ var WBCMuster = (function () {
     var now    = _isoNow();
     var armyId = _draft.army_id || _uuid();
 
+    /* Always write object form — { unit_id, options } — even for units with
+       no options selected. Legacy bare-string entries are read forever but
+       never written again; armies migrate to the new form on next save. */
+    var unitsPayload = _draft.entries.map(function (entry) {
+      return { unit_id: entry.unit_id, options: entry.options.slice() };
+    });
+
     var record = {
       army_id:     armyId,
       army_name:   name,
       game_system: (window.WBC && window.WBC.armyData && window.WBC.armyData.game_system) || 'kow',
-      units:       JSON.stringify(_draft.unit_ids),
+      units:       JSON.stringify(unitsPayload),
       created_at:  _draft.army_id ? undefined : now,  // only set on create
       updated_at:  now,
     };
@@ -561,7 +770,8 @@ var WBCMuster = (function () {
         if (!existing) cached.push(Object.assign({}, record, { army_id: armyId }));
         WBCStorage.saveArmiesCache(cached);
 
-        _draft = { army_id: null, army_name: '', unit_ids: [], pts_limit: 2000 };
+        _draft = { army_id: null, army_name: '', entries: [], pts_limit: 2000 };
+        _expandedIndices = new Set();
         _renderList();
       } else {
         if (saveBtn) saveBtn.disabled = false;
