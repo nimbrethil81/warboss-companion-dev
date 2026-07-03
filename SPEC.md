@@ -519,14 +519,16 @@ Static reference for the Goblin army. Used in Muster to build rosters and in Bat
 "options": [
   { "id": "fleabag-riders-maniacs", "label": "Maniacs",
     "description": "Gains Thunderous Charge (+1).",
-    "scope": "self", "cost": { "Troop": 5, "Regiment": 10 },
+    "scope": "self", "cost": 5,
     "effects": [ { "type": "add_special_rule", "rule": "Thunderous Charge (+1)" } ] },
   { "id": "wiz-fleabag", "label": "Mount on a fleabag",
-    "scope": "self", "cost": { "*": 15 },
+    "scope": "self", "cost": 15,
     "effects": [ { "type": "set_field", "field": "sp", "value": 10 },
                  { "type": "set_field", "field": "type", "value": "Hero/Cav" } ] }
 ]
 ```
+
+Each option's `cost` is the flat points for that unit's single size — because units are split per size, the same option appears on each size's entry with its own value (Maniacs above is `5` on the Troop entry; the Regiment entry carries it at `10`).
 
 Field contract (per option):
 
@@ -537,7 +539,7 @@ Field contract (per option):
 | `description` | recommended | Human-readable effect text; the sole representation for battalion-scope options. |
 | `scope` | yes | `"self"` modifies the carrying unit; `"battalion"` affects/unlocks *other* units — informational in Muster v1, no cross-unit enforcement. |
 | `group` | no | Absent = independent toggle. A string = mutually-exclusive choose-one group (at most one selected per group). |
-| `cost` | yes (self-scope) | Map of size-label → integer points; `"*"` = flat cost across all sizes. Omitted for battalion-scope (cost attaches to the target unit, stated in `description`). |
+| `cost` | yes (self-scope) | Integer points added when the option is selected. Omitted for battalion-scope (cost attaches to the target unit, stated in `description`); free options use `0`. Units are split per size, so each size's cost lives on its own unit object — no size-keyed map. |
 | `effects` | recommended (self-scope) | Array of structured effects (below). Drives stat/rule application; absence still leaves display + points correct. |
 
 Effect objects:
