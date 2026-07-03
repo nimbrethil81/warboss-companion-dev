@@ -110,7 +110,7 @@ Game-specific values — number of turns, phase names, prompt text, unit stats �
 | Live | https://nimbrethil81.github.io/warboss-companion/ | Production — stable, tested releases only |
 | Development | https://nimbrethil81.github.io/warboss-companion-dev/ | Active development and testing |
 
-**Workflow:** All changes are built and tested in the dev repo first. A GitHub Action copies changed files from dev to live, overwriting files of the same name. No change goes to live without passing in dev first.
+**Workflow:** All changes are built and tested in the dev repo first. A GitHub Action copies changed files from dev to live, overwriting files of the same name. The deploy also triggers the Pages build. No change goes to live without passing in dev first.
 
 ### Repository & File Structure
 
