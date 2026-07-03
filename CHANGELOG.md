@@ -23,9 +23,44 @@ Format is based on [Keep a Changelog](https://keepachangelog.com/).
     is a pure content addition
   - Service worker cache bump handled manually (outside this change)
 
-## [0.3.0] - 2026-07-02
+## [0.3.1] - 2026-07-03
 ### Added
-- Training Ground (beta): a multiple-choice rules-recall quiz mode, reached via
+- Options Consumption: unit options (upgrades) are now consumed by the app —
+  authored in Muster and displayed in Battle
+- `js/resolver.js`: new shared module — the single place effective profiles and
+  effective points are computed. Given a unit and selected option ids it applies
+  all four effect types (`add_special_rule`, `set_field`, `add_weapon`,
+  `grant_spell`) and also normalises the saved-army `units` field. Pure logic;
+  no DOM, localStorage, Sheets, or fetch. Consumed by both Muster and Battle so
+  option logic is never duplicated (Way of Working #3)
+- Muster: per-unit options panel — independent toggles, mutually-exclusive
+  groups (single-select with deselection), and informational battalion-scope
+  rows; live points recompute; picker now grouped by `category` (Core,
+  Auxiliary, Specialist, Support, Commander) with display-only `availability`
+  badges (Limited / Unique) and an options marker
+- Battle: roster cards now show the **effective** profile (mounted/upgraded
+  unit), with fitted-option chips under the unit name and any added weapons /
+  granted spells as compact sub-lines. The effective profile is snapshotted onto
+  each roster instance at game start and never re-resolved mid-game
+### Changed
+- Saved-army `units` field: entries may now be `{ unit_id, options }` objects as
+  well as bare `unit_id` strings. Readers accept both; writers always write the
+  object form. Legacy `unit_id`-only armies load unchanged and migrate on next
+  save (Fail Gracefully)
+- `service-worker.js`: cache bumped to `wbc-v22`; `js/resolver.js` added to the
+  precached shell
+### Fixed
+- Muster: an army containing a `retired: true` unit no longer renders it as
+  "(not found)" or silently drops its points when edited. Retired units resolve
+  and count correctly for armies that already reference them; retirement only
+  hides a unit from *new* selection in the picker (unit_id immutability protects
+  the reference — Battle already handled this correctly)
+### Notes
+- `availability` caps and battalion-scope option effects are captured and shown
+  but not yet enforced — per-Battalion / per-army composition validation lands
+  with the future army-composition system
+
+
   an archery-target button beside Settings (top-right) — kept out of the bottom
   nav to signal experimental status
 - `data/systems/kow-training.json`: hand-authored question bank (35 questions)
