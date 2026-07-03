@@ -2530,6 +2530,183 @@ select.setup-input {
   font-size: 12px;
 }
 
+/* Retired tag on a selected-unit row — the unit still resolves (unit_id
+   immutability), it just can't be added anew from the picker */
+.muster-sel-retired-tag {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ash, #8a7f72);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+/* ── Builder: options expand/panel (upgrades authoring) ─── */
+.muster-opt-expand {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: 5px;
+  border: 1px solid var(--tab-border, #352b1c);
+  background: transparent;
+  color: var(--gold-dim, #8a6e2e);
+  font-family: 'Cinzel', serif;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.muster-opt-expand:hover,
+.muster-opt-expand[aria-expanded="true"] {
+  border-color: var(--gold-dim, #8a6e2e);
+  color: var(--gold-light, #f0c94a);
+}
+
+.muster-opt-badge-count {
+  display: inline-block;
+  min-width: 15px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--gold-dim, #8a6e2e);
+  color: var(--ink, #0d0b08);
+  font-size: 10px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 15px;
+}
+
+.muster-opt-panel {
+  background: var(--ink, #0d0b08);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  padding: 8px 10px;
+  margin: -6px 0 6px;
+}
+
+.muster-opt-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.muster-opt-row + .muster-opt-row {
+  border-top: 1px solid var(--tab-border, #352b1c);
+}
+
+.muster-opt-toggle {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 5px;
+  border: 1px solid var(--tab-border, #352b1c);
+  background: transparent;
+  color: var(--ash, #8a7f72);
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+
+.muster-opt-toggle:hover {
+  border-color: var(--gold-dim, #8a6e2e);
+  color: var(--gold-light, #f0c94a);
+}
+
+.muster-opt-toggle--selected {
+  background: rgba(212, 168, 67, 0.14);
+  border-color: var(--gold-dim, #8a6e2e);
+  color: var(--gold-light, #f0c94a);
+}
+
+/* Grouped (mutually-exclusive) options render as a slightly rounder toggle
+   to hint at radio-like behaviour without needing a native radio input */
+.muster-opt-row--group .muster-opt-toggle {
+  border-radius: 999px;
+}
+
+.muster-opt-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.muster-opt-label {
+  font-family: 'Crimson Text', serif;
+  font-size: 14px;
+  color: var(--ash-light, #d4c9b8);
+  margin-right: 6px;
+}
+
+.muster-opt-cost {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  color: var(--gold-dim, #8a6e2e);
+}
+
+.muster-opt-desc {
+  font-family: 'Crimson Text', serif;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ash, #8a7f72);
+  line-height: 1.4;
+  margin-top: 2px;
+}
+
+/* Battalion-scope options — informational only in v1, no control */
+.muster-opt-row--info {
+  opacity: 0.85;
+}
+
+.muster-opt-badge {
+  display: inline-block;
+  font-family: 'Cinzel', serif;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ash, #8a7f72);
+  border: 1px solid var(--tab-border, #352b1c);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.muster-opt-badge--battalion {
+  border-color: var(--gold-dim, #8a6e2e);
+  color: var(--gold-dim, #8a6e2e);
+}
+
+/* ── Builder: picker — options hint + availability badge ── */
+.muster-opt-hint {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  color: var(--gold-dim, #8a6e2e);
+  margin-left: 4px;
+}
+
+.muster-avail-badge {
+  display: block;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--ash, #8a7f72);
+  margin-top: 4px;
+}
+
+.muster-avail-badge--unique {
+  color: var(--gold-dim, #8a6e2e);
+}
+
 /* ── Builder: available-unit picker cards ──────────────── */
 .muster-picker {
   margin-bottom: 8px;
