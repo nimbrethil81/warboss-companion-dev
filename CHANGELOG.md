@@ -23,10 +23,41 @@ Format is based on [Keep a Changelog](https://keepachangelog.com/).
     is a pure content addition
   - Service worker cache bump handled manually (outside this change)
 
-## [0.3.1] - 2026-07-03
+## [0.3.2] - 2026-07-03
 ### Added
-- Options Consumption: unit options (upgrades) are now consumed by the app —
-  authored in Muster and displayed in Battle
+- Artefacts Consumption: magic artefacts are now authored per unit in Muster and
+  displayed in Battle, with full effect application
+- `data/systems/kow-artefacts.json`: the magic artefact catalogue — all 44 KoW 4E
+  artefacts (26 common, 18 heroic) from the Rulebook Magic chapter, each with
+  cost, description, per-artefact restrictions, and structured effects where the
+  effect is an unconditional profile change (conditional/bespoke artefacts are
+  description-only by design). System-level data, loaded via the new optional
+  `artefact_file` manifest field
+- `kow.json` `artefact_rules` block: data-driven artefact eligibility
+  (max-per-unit, unique-per-army, global exclusions for War Engines / non-hero
+  Monsters / Unique `[U]` units, and common/heroic class gates) — no eligibility
+  strings hardcoded in JS
+- `js/resolver.js`: `resolve()` gains an optional third `artefact` argument;
+  new `modify_field` effect type (a numeric delta with optional min/max clamp,
+  type-preserving so string-stored fields like `ne` round-trip correctly);
+  `add_weapon` gains an optional weapon-level `special_rules`; new pure
+  eligibility functions `isArtefactEligibleForUnit` / `getEligibleArtefacts`
+- Muster: per-eligible-unit Artefact section in the expand panel — single-select
+  with deselection, Common/Heroic badges, live points, and unique-per-army
+  enforcement (artefacts equipped elsewhere in the draft are disabled)
+- Battle: the equipped artefact is snapshotted into the roster's effective
+  profile at game start and shown as a visually distinct chip
+- `js/app.js`: Fail-Gracefully artefact-catalogue loader, parallel to the army
+  index and outside the blocking boot path
+### Changed
+- Saved-army `units` entries may now carry an `artefact` id alongside `options`.
+  Readers accept legacy, options-era, and current forms; writers always write the
+  current `{ unit_id, options, artefact }` form. Old armies load unchanged and
+  migrate on next save (Fail Gracefully)
+- `service-worker.js`: cache bumped to `wbc-v23`; `kow-artefacts.json` added to
+  the precached shell
+
+
 - `js/resolver.js`: new shared module — the single place effective profiles and
   effective points are computed. Given a unit and selected option ids it applies
   all four effect types (`add_special_rule`, `set_field`, `add_weapon`,
