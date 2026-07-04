@@ -23,6 +23,18 @@ Format is based on [Keep a Changelog](https://keepachangelog.com/).
     is a pure content addition
   - Service worker cache bump handled manually (outside this change)
 
+## [0.3.3] - 2026-07-04
+### Changed
+- Muster: the Save Army button is now sticky at the bottom of the builder
+  screen, so it's reachable without scrolling past the full unit list —
+  positioned to never overlap the bottom nav or the protruding Battle icon
+  (both sit outside the Muster page's own scroll box, so no overlap is
+  possible by construction)
+- Save status/error messages moved inside the sticky action bar so feedback
+  stays visible alongside the button
+### Fixed
+- `service-worker.js`: cache bumped to `wbc-v24` (style.css, muster.js changed)
+
 ## [0.3.2] - 2026-07-03
 ### Added
 - Artefacts Consumption: magic artefacts are now authored per unit in Muster and
