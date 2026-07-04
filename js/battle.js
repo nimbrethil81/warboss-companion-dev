@@ -1,5 +1,5 @@
 /**
- * battle.js — Battle mode logic for Warboss Companion (v0.3 — Options Consumption)
+ * battle.js — Battle mode logic for Warboss Companion (v0.3 — Options + Artefacts Consumption)
  *
  * Responsibilities:
  *   - Render the battle setup screen (army picker from Muster saves,
@@ -7,7 +7,8 @@
  *   - Drive the in-game turn/phase loop
  *   - Display phase prompts sourced from kow.json (never hardcoded here)
  *   - Render contextual unit stat cards per phase, including fitted-option
- *     chips and any added weapons/spells from selected options
+ *     and equipped-artefact chips, and any added weapons/spells from
+ *     selected options or the artefact
  *   - Manage per-unit "Routed" toggle in the roster
  *   - Accept quick notes per turn
  *   - Handle game end: write summary to Sheets via sheets.js,
@@ -16,15 +17,16 @@
  * Army loading (v0.3):
  *   Battle requires a saved Muster army. On setup, armies are fetched from
  *   Sheets (with cache fallback). The chosen army's saved units field is
- *   normalised via WBCResolver.normalizeArmyUnits() (accepts both legacy
- *   bare-unit_id entries and current {unit_id, options} entries), then each
- *   entry is resolved via WBCResolver.resolve() against WBC.armyData
- *   (goblins.json) to build the in-game roster. The EFFECTIVE profile
- *   (post-options) is snapshotted into each roster instance at game start
+ *   normalised via WBCResolver.normalizeArmyUnits() (accepts legacy
+ *   bare-unit_id entries and current {unit_id, options, artefact} entries),
+ *   then each entry is resolved via WBCResolver.resolve() against
+ *   WBC.armyData (goblins.json) and WBC.artefactData (kow-artefacts.json)
+ *   to build the in-game roster. The EFFECTIVE profile (post-options,
+ *   post-artefact) is snapshotted into each roster instance at game start
  *   and never re-resolved — mid-game state stays stable even if goblins.json
- *   changes before the game ends. The selected army is held in
- *   WBCStorage.KEYS.SELECTED_ARMY for the duration of setup; it is cleared
- *   once the game object is built.
+ *   or kow-artefacts.json changes before the game ends. The selected army is
+ *   held in WBCStorage.KEYS.SELECTED_ARMY for the duration of setup; it is
+ *   cleared once the game object is built.
  *
  * Dependencies (must be loaded before this file):
  *   - storage.js  (WBCStorage)
@@ -297,7 +299,8 @@ var WBCBattle = (function () {
 
       var pts = entries.reduce(function (sum, entry) {
         var u = _findUnitInArmyData(entry.unit_id);
-        return sum + (u ? WBCResolver.resolve(u, entry.options).pts : 0);
+        var art = _findArtefact(entry.artefact);
+        return sum + (u ? WBCResolver.resolve(u, entry.options, art).pts : 0);
       }, 0);
 
       var label = _escapeHtml(a.army_name || 'Unnamed')
@@ -324,6 +327,22 @@ var WBCBattle = (function () {
     if (!armyData || !Array.isArray(armyData.units)) return null;
     for (var i = 0; i < armyData.units.length; i++) {
       if (armyData.units[i].unit_id === unitId) return armyData.units[i];
+    }
+    return null;
+  }
+
+  /**
+   * Look up an artefact in WBC.artefactData by id.
+   * Returns null if not found or the catalogue never loaded (Fail
+   * Gracefully — a unit with an artefact id that can't be resolved simply
+   * shows without it, rather than blocking roster build).
+   */
+  function _findArtefact(artefactId) {
+    if (!artefactId) return null;
+    var data = window.WBC && window.WBC.artefactData;
+    if (!data || !Array.isArray(data.artefacts)) return null;
+    for (var i = 0; i < data.artefacts.length; i++) {
+      if (data.artefacts[i].id === artefactId) return data.artefacts[i];
     }
     return null;
   }
@@ -439,8 +458,9 @@ var WBCBattle = (function () {
        to track routed/damage state per instance.
 
        The snapshot is taken once, at game start, and never re-resolved:
-       mid-game state stays stable even if goblins.json changes before the
-       game ends (decision 4, Options Consumption design). */
+       mid-game state stays stable even if goblins.json or kow-artefacts.json
+       changes before the game ends (decision 4, Options Consumption design;
+       extended to artefacts on the same basis). */
     var entries = WBCResolver.normalizeArmyUnits(armyRecord.units);
 
     var units = [];
@@ -448,7 +468,8 @@ var WBCBattle = (function () {
     entries.forEach(function (entry) {
       var u = _findUnitInArmyData(entry.unit_id);
       if (u) {
-        var resolved = WBCResolver.resolve(u, entry.options);
+        var artefact = _findArtefact(entry.artefact);
+        var resolved = WBCResolver.resolve(u, entry.options, artefact);
         var instance = {
           inst_id:       _uuid(),   /* unique per unit instance */
           unit_id:       u.unit_id,
@@ -474,8 +495,14 @@ var WBCBattle = (function () {
         if (resolved.applied.length > 0) {
           instance.option_labels = resolved.applied.map(function (a) { return a.label; });
         }
+        /* Artefact kept as its own field (singular — at most one per unit,
+           per the rulebook), separate from option_labels. */
+        if (resolved.artefact) {
+          instance.artefact_id    = resolved.artefact.id;
+          instance.artefact_label = resolved.artefact.label;
+        }
         if (resolved.warnings.length > 0) {
-          console.warn('[battle] option resolution warnings for ' + u.unit_id + ':', resolved.warnings);
+          console.warn('[battle] option/artefact resolution warnings for ' + u.unit_id + ':', resolved.warnings);
         }
         units.push(instance);
       } else {
@@ -812,13 +839,17 @@ var WBCBattle = (function () {
     var sizeLine  = _escapeHtml((u.size || '') + (u.type ? ' · ' + u.type : ''));
     var instId    = u.inst_id;
 
-    /* Fitted-option chips — only present on instances resolved through
-       Options Consumption; absent on pre-existing/legacy game snapshots,
-       so this renders nothing for them (Fail Gracefully). */
-    var chipsHTML = (u.option_labels && u.option_labels.length > 0)
-      ? '<div class="unit-card-chips">' + u.option_labels.map(function (label) {
-          return '<span class="unit-option-chip">' + _escapeHtml(label) + '</span>';
-        }).join('') + '</div>'
+    /* Fitted-option and artefact chips — only present on instances resolved
+       through Options/Artefacts Consumption; absent on pre-existing/legacy
+       game snapshots, so this renders nothing for them (Fail Gracefully). */
+    var chips = (u.option_labels || []).map(function (label) {
+      return '<span class="unit-option-chip">' + _escapeHtml(label) + '</span>';
+    });
+    if (u.artefact_label) {
+      chips.push('<span class="unit-option-chip unit-artefact-chip">' + _escapeHtml(u.artefact_label) + '</span>');
+    }
+    var chipsHTML = chips.length > 0
+      ? '<div class="unit-card-chips">' + chips.join('') + '</div>'
       : '';
 
     /* Contextual stats for the current phase */
