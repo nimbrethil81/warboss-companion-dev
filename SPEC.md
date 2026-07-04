@@ -141,8 +141,9 @@ warboss-companion/
 ├── data/
 │   ├── systems/
 │   │   ├── index.json      ← Manifest of all supported game systems
-│   │   ├── kow.json        ← KoW turn sequence, phases, prompts, rules
-│   │   └── kow-training.json ← Training Ground question bank + categories (beta)
+│   │   ├── kow.json        ← KoW turn sequence, phases, prompts, rules, artefact_rules
+│   │   ├── kow-training.json ← Training Ground question bank + categories (beta)
+│   │   └── kow-artefacts.json ← Magic artefact catalogue (system-level)
 │   └── armies/
 │       └── kow/
 │           ├── index.json  ← Manifest of all KoW factions
@@ -159,28 +160,35 @@ warboss-companion/
 
 - `sheets.js` is the only file that touches Google Sheets. When migrating to a new database, only this file changes.
 - `storage.js` is the only file that touches localStorage. Centralises offline fallback.
-- `resolver.js` is the only place effective profiles and effective points are computed. Given a unit and a set of selected option ids, it produces the effective profile (stats, added special rules, added weapons, granted spells) and effective points; it also normalises the saved-army `units` field into a consistent `{ unit_id, options }` shape. Both Muster (authoring/pricing) and Battle (roster build) consume it, so option logic is never duplicated. Pure logic — no DOM, localStorage, Sheets, or fetch.
+- `resolver.js` is the only place effective profiles and effective points are computed. Given a unit, its selected option ids, and an optional equipped artefact, it produces the effective profile (stats, added special rules, added weapons, granted spells) and effective points; it also decides artefact eligibility (via `kow.json`'s `artefact_rules` plus each artefact's own restrictions) and normalises the saved-army `units` field into a consistent `{ unit_id, options, artefact }` shape. Both Muster (authoring/pricing) and Battle (roster build) consume it, so option/artefact logic is never duplicated. Pure logic — no DOM, localStorage, Sheets, or fetch.
 - `data/systems/kow.json` is the single source of truth for all KoW game rules, turn sequence, and prompts. Adding a new game system means adding a new JSON file alongside it — no code changes required.
 - `data/armies/kow/goblins.json` holds static unit reference data. This belongs in version control, not in Sheets. Sheets stores game results and reflections.
 - `data/armies/kow/index.json` is a manifest listing all available factions for KoW. The app reads this to discover armies without needing to enumerate directory contents (which browsers cannot do natively). Adding a new army means adding the file and one line to this manifest.
 - `data/systems/index.json` is a manifest listing all supported game systems. Adding a new game system means adding a new systems JSON file, a new `armies/{system}/` folder, and one line to this manifest.
 - `data/systems/kow-training.json` holds the Training Ground question bank and its category vocabulary. It is **not** part of the boot chain — `training.js` loads it lazily on first activation of the mode, and the `training_file` manifest field is optional. A missing or malformed bank degrades Training Ground to an empty/error state and cannot affect Muster, Battle, or Chronicle.
+- `data/systems/kow-artefacts.json` holds the magic artefact catalogue at the system level (artefacts are core rules shared by every faction, not faction-specific — so they live here, never in `goblins.json`). The eligibility *rules* live separately in `kow.json`'s `artefact_rules` block; this file is the catalogue only. It is loaded via the optional `artefact_file` manifest field, in parallel with the army index and outside the blocking boot path: a missing/malformed catalogue leaves `WBC.artefactData` null and simply hides the artefact picker/chip, never affecting the core modes (Fail Gracefully — same isolation posture as the Training Ground bank).
 
 ### Data Flow
 
 ```
 On app load
-  └── app.js loads kow.json (turn sequence, prompts)
+  └── app.js loads kow.json (turn sequence, prompts, artefact_rules)
+  └── app.js loads kow-artefacts.json in parallel (if the system declares
+      artefact_file) — non-blocking; on failure WBC.artefactData stays null
+      and the app boots and runs normally without artefacts (Fail Gracefully)
   └── sheets.js fetches saved armies and past games (with localStorage fallback on failure)
 
 During Muster
   └── muster.js loads/saves armies via sheets.js; resolver.js normalises the
       saved units field and computes effective points per selected unit
+      (including its equipped artefact); resolver.js also determines which
+      artefacts each unit is eligible to equip
 
 During Battle mode
   └── battle.js holds all game state in localStorage
-  └── On start, resolver.js resolves each saved-army entry into the effective
-      profile snapshotted onto the roster (see localStorage schema below)
+  └── On start, resolver.js resolves each saved-army entry (options + artefact)
+      into the effective profile snapshotted onto the roster (see localStorage
+      schema below)
   └── No Sheets writes during play (offline-safe, fast)
 
 On game end
@@ -210,21 +218,24 @@ Four tabs. Each tab represents one entity type — no data duplicated across tab
 | created_at | timestamp | ISO 8601 |
 | updated_at | timestamp | ISO 8601 |
 
-**`armies.units` entry forms.** The serialised array may hold entries in either
-of two shapes, freely mixed:
+**`armies.units` entry forms.** The serialised array may hold entries in any of
+these shapes, freely mixed:
 
 - **Legacy** — a bare `unit_id` string (`"goblin-rabble-regiment"`). Written by
   pre-Options-Consumption versions.
-- **Current** — an object `{ "unit_id": "...", "options": ["opt-id", ...] }`
-  carrying the selected option ids for that unit. `options` may be absent or
-  empty.
+- **Options-era** — an object `{ "unit_id": "...", "options": ["opt-id", ...] }`.
+- **Current** — an object `{ "unit_id": "...", "options": ["opt-id", ...], "artefact": "artefact-id" }`
+  carrying the selected option ids and the single equipped artefact id for that
+  unit. `options` may be absent or empty; `artefact` may be absent or `null`
+  (a unit may equip at most one artefact, per the rulebook).
 
-Rule: **readers accept both forms; writers always write the object form** (even
-for units with no options). Existing legacy armies load unchanged and migrate to
-object form the next time they are saved in Muster (Fail Gracefully). Option-id
-immutability is what makes stored option references stable across saves.
-Normalisation to a consistent `{ unit_id, options }` array happens in exactly
-one place — `resolver.js` — never re-implemented per caller.
+Rule: **readers accept all forms; writers always write the current object form**
+(even for units with no options and no artefact). Existing legacy/options-era
+armies load unchanged and migrate to the current form the next time they are
+saved in Muster (Fail Gracefully). Id immutability (unit, option, and artefact
+ids alike) is what makes stored references stable across saves. Normalisation to
+a consistent `{ unit_id, options, artefact }` array happens in exactly one
+place — `resolver.js` — never re-implemented per caller.
 
 **`games` tab**
 | Column | Type | Notes |
@@ -288,6 +299,8 @@ localStorage is the source of truth **during an active game only**. On game end,
       "spells":  [{ "spell": "Lightning Bolt", "power": 3 }],
       "selected_option_ids": ["wiz-fleabag", "wiz-lightning-bolt"],
       "option_labels": ["Mount on a fleabag", "Lightning Bolt"],
+      "artefact_id": "inspiring-talisman",
+      "artefact_label": "Inspiring Talisman",
       "routed": false,
       "damage": 0
     }
@@ -300,10 +313,13 @@ All stat fields on a roster instance are the **effective** values from
 `resolver.js`, snapshotted once at game start and never re-resolved — mid-game
 state is stable even if `goblins.json` changes before the game ends. `inst_id`
 is unique per instance so duplicate units (e.g. 6× Goblin Rabble) track routed/
-damage state independently. `weapons`, `spells`, `selected_option_ids`, and
-`option_labels` are **omitted entirely when empty**, so instances built from
-legacy (no-option) armies are byte-identical in spirit to pre-Options-Consumption
-snapshots and the resume path needs no migration (absent fields render nothing).
+damage state independently. `weapons`, `spells`, `selected_option_ids`,
+`option_labels`, and the singular `artefact_id`/`artefact_label` are **omitted
+entirely when empty/absent**, so instances built from legacy (no-option,
+no-artefact) armies are byte-identical in spirit to earlier snapshots and the
+resume path needs no migration (absent fields render nothing). The artefact is
+stored as its own singular pair (a unit carries at most one), kept separate from
+the plural `option_labels`.
 
 ### PWA & Offline Strategy
 
@@ -503,12 +519,14 @@ Allows the app to discover all supported game systems without hardcoding them in
 ```json
 {
   "systems": [
-    { "id": "kow", "name": "Kings of War", "version": "v4", "file": "kow.json", "training_file": "kow-training.json" }
+    { "id": "kow", "name": "Kings of War", "version": "v4", "file": "kow.json", "training_file": "kow-training.json", "artefact_file": "kow-artefacts.json" }
   ]
 }
 ```
 
 The optional `training_file` field points to a system's Training Ground question bank (see below). It is read only by `training.js`; its absence simply means that system has no Training Ground data yet, and the mode handles that gracefully.
+
+The optional `artefact_file` field points to a system's magic artefact catalogue (see below). `app.js` loads it in parallel with the army index; its absence, or a load failure, simply means Muster/Battle show no artefacts, and everything else works unchanged (Fail Gracefully).
 
 ### `data/armies/kow/index.json` — Army Manifest
 
@@ -588,11 +606,12 @@ Effect objects:
 | `type` | Payload | Meaning |
 |---|---|---|
 | `add_special_rule` | `rule` | Adds the named special rule to the profile. |
-| `set_field` | `field`, `value` | Sets a top-level profile field (e.g. `sp`, `type`) — covers stat and mount type changes. |
-| `add_weapon` | `name`, `range`, `sh`, `att` | Adds a weapon profile to the unit. |
+| `set_field` | `field`, `value` | Sets a top-level profile field to an absolute value (e.g. `sp`, `type`) — covers stat and mount type changes. |
+| `modify_field` | `field`, `delta`, optional `min`/`max` | Adds a delta to a numeric top-level field (e.g. `sp +1`, `de -1`), with optional clamp. Preserves the field's original JS type — fields stored as strings (e.g. the SPEC-locked `ne`) are parsed, adjusted, and cast back — so the effective profile stays shape-compatible with the base data. |
+| `add_weapon` | `name`, `range`, `sh`, `att`, optional `special_rules` | Adds a weapon profile to the unit; `special_rules` (e.g. `["Piercing (1)"]`) is carried when present. |
 | `grant_spell` | `spell`, `power` | Adds an inline caster spell offered by the unit — distinct from the shared Arcane Library pool. |
 
-The effect vocabulary is closed for this pass; new types are additive and require a SPEC bump. Battalion-scope options carry no self effects in v1; the future composition system will action them.
+This effect vocabulary is shared verbatim by unit options and magic artefacts (see below) — the resolver interprets it in exactly one place. New types are additive and require a SPEC bump. Battalion-scope options carry no self effects in v1; the future composition system will action them.
 
 **Unit availability (composition caps).** A unit may carry an `availability` object recording how many times it can be taken. Two kinds, with different scopes:
 
@@ -668,6 +687,71 @@ Hand-authored multiple-choice question bank for Training Ground, plus the catego
 
 **Randomisation:** question order is shuffled once per session; option order is re-shuffled on **every** presentation of a question, so a repeat can't be answered from remembered position. Both use Fisher–Yates on copies — the source arrays are never mutated.
 
+### `data/systems/kow-artefacts.json` — Magic Artefact Catalogue
+
+System-level catalogue of magic artefacts (core rules shared by every faction, so they live here, not in any army file). Source: Rulebook, Magic — Magical Artefacts. Loaded via the optional `artefact_file` manifest field; absence/failure is fully tolerated (Fail Gracefully).
+
+```json
+{
+  "system_id": "kow",
+  "version": "v4",
+  "artefacts": [
+    {
+      "id": "brew-of-haste",
+      "name": "Brew of Haste",
+      "class": "common",
+      "cost": 20,
+      "description": "The unit increases its Speed stat by +1.",
+      "effects": [ { "type": "modify_field", "field": "sp", "delta": 1 } ]
+    },
+    {
+      "id": "wings-of-honeymaze",
+      "name": "Wings of Honeymaze",
+      "class": "heroic",
+      "cost": 25,
+      "description": "The hero gains Fly but decreases its Defence by 1, to a minimum of 2+.",
+      "effects": [
+        { "type": "add_special_rule", "rule": "Fly" },
+        { "type": "modify_field", "field": "de", "delta": -1, "min": 2 }
+      ],
+      "restrictions": { "allowed_types": ["Hero (Inf)"] }
+    }
+  ]
+}
+```
+
+**Field contract (per artefact):**
+
+| Field | Required | Notes |
+|---|---|---|
+| `id` | yes | Unique, immutable — saved armies reference it (same contract as `unit_id`/option id). |
+| `name` | yes | Display name (used for the Muster label and the Battle chip). |
+| `class` | yes | `"common"` (any eligible unit) or `"heroic"` (Heroes only). |
+| `cost` | yes | Integer points added to the equipping unit. |
+| `description` | yes | Human-readable rules text. Always shown; the sole representation for artefacts whose effect is conditional/bespoke. |
+| `effects` | no | Array of structured effects (same vocabulary as options). Present **only** for artefacts making an *unconditional* profile change (always-active named rule, base-stat delta, granted spell/weapon). Conditional, once-per-game, and in-play-modifier artefacts carry no `effects` — they are description-only, so the effective profile never shows a modifier that is not always active. |
+| `restrictions` | no | Per-artefact narrowing on top of the class/global rules. `allowed_types` — a whitelist of exact `type` strings (e.g. `["Hero (Inf)", "Hero (Cav)"]` for "Infantry and Cavalry only"). `forbid_special_rules` — bars units carrying any listed rule (e.g. `["Individual", "Fly"]`). |
+
+**Eligibility rules — `kow.json` `artefact_rules` block.** The *rules* for who may equip what live in `kow.json` (data, not JS), keeping game values out of code. The catalogue above holds only per-artefact class/restrictions.
+
+```json
+"artefact_rules": {
+  "max_per_unit": 1,
+  "unique_per_army": true,
+  "global_exclusions": {
+    "exclude_types": ["War Engine"],
+    "exclude_types_unless_hero_prefix": ["Monster", "Monster/Chariot"],
+    "exclude_if_availability_type": ["unique"]
+  },
+  "class_gates": {
+    "common": { "requires_type_prefix": null },
+    "heroic": { "requires_type_prefix": "Hero" }
+  }
+}
+```
+
+Global exclusions apply to every unit before class gates: War Engines are barred; `Monster`/`Monster/Chariot` are barred *unless* the unit's `type` begins `"Hero"` (so `Hero (Mon)` is eligible, plain Monsters are not); and Unique `[U]` units (those whose `availability.type` is `"unique"`) are barred outright. Class gates then narrow heroic-class artefacts to units whose `type` begins `"Hero"`. Each artefact's own `restrictions` narrow further still. `max_per_unit` (1) and `unique_per_army` (each artefact at most once across the army) are enforced by Muster at selection time, since they require looking across the whole draft. All eligibility logic is implemented once in `resolver.js` (`isArtefactEligibleForUnit`, `getEligibleArtefacts`) and consumed by Muster — never re-implemented.
+
 ---
 
 ## 5. Modes
@@ -683,14 +767,20 @@ Hand-authored multiple-choice question bank for Training Ground, plus the catego
 - Load a saved army into Battle mode
 
 **Options authoring (v0.3 — Options Consumption):**
-- The draft is an **index-addressed** array of `{ unit_id, options }` entries, not a flat `unit_id` list, so two copies of the same unit can carry different options. Removal and option editing address a row by its array index.
-- Each selected unit with options shows an expand control (⚙ + fitted-count badge) opening an inline options panel:
+- The draft is an **index-addressed** array of `{ unit_id, options, artefact }` entries, not a flat `unit_id` list, so two copies of the same unit can carry different options/artefact. Removal and per-row editing address a row by its array index.
+- Each selected unit with options and/or eligible artefacts shows an expand control (⚙ + fitted-count badge, counting options + artefact) opening an inline panel:
   - **Independent options** (no `group`) render as toggles.
   - **Grouped options** (shared `group` string) render as single-select with deselection — picking one clears any other in the group; re-picking the selected one clears the group (all group options are optional upgrades).
   - **Battalion-scope options** (`scope: "battalion"`) render as **informational** rows (label + description, no control, nothing stored) — no cross-unit enforcement in v1.
 - Points recompute live from the resolver as options toggle (free = 0; battalion-scope options carry no cost on the unit, per their description).
 - The picker groups available units by **`category`** in rulebook order (Core, Auxiliary, Specialist, Support, Commander), surfaces `availability` caps as display-only badges (Limited: max N per Battalion / Unique — 1 per army), and marks units that carry options.
-- **Saved format:** always written as object-form `{ unit_id, options }` entries (see §4, `armies.units`).
+- **Saved format:** always written as object-form `{ unit_id, options, artefact }` entries (see §4, `armies.units`).
+
+**Artefact authoring (v0.3 — Artefacts Consumption):**
+- The same expand panel gains an **Artefact** section listing the artefacts this unit is eligible to equip (per `resolver.js` eligibility, from `kow.json`'s `artefact_rules` + each artefact's own restrictions). War Engines and other ineligible units show no Artefact section.
+- Single-select with deselection — at most one artefact per unit (rulebook); picking a second replaces the first, re-picking clears it. Each row shows the artefact's cost, a Common/Heroic class badge, and its description.
+- **Unique-per-army** is enforced at authoring time: an artefact already equipped by another unit in the draft renders disabled, with an "already equipped by …" note.
+- Points recompute live including the artefact's cost. Artefacts that make an unconditional profile change (e.g. Brew of Haste's +1 Speed, via `modify_field`) feed the effective stats; conditional/bespoke artefacts are display-only.
 
 **Retired-unit resolution:** a saved army referencing a `retired: true` unit still resolves and displays correctly (with a "retired" tag), counting its full points — retirement only hides a unit from *new* selection in the picker, it does not drop it from armies that already reference it. (This corrects an earlier bug where an edited army silently dropped retired units and their points.)
 
@@ -701,7 +791,7 @@ Hand-authored multiple-choice question bank for Training Ground, plus the catego
 - Sharing armies with other users
 
 **UI notes:**
-- Simple add/remove unit interface with inline per-unit options panel
+- Simple add/remove unit interface with inline per-unit options + artefact panel
 - Saved armies listed on a home screen for quick selection
 
 ---
@@ -722,7 +812,7 @@ Hand-authored multiple-choice question bank for Training Ground, plus the catego
 - Displays all units in the loaded army
 - One-tap "Routed" toggle per unit — routed units are visually marked and moved to a collapsed section
 - Units not yet engaged remain prominent
-- Each unit card reflects the **effective** profile from the resolver — the mounted/upgraded unit, not the base entry — with fitted options shown as chips under the unit name and any added weapons / granted spells shown as compact sub-lines (v0.3, Options Consumption). Armies referencing a now-`retired` unit_id still resolve and display (unit_id immutability protects the reference).
+- Each unit card reflects the **effective** profile from the resolver — the mounted/upgraded/artefact-bearing unit, not the base entry — with fitted options and the equipped artefact shown as chips under the unit name (the artefact chip visually distinct), and any added weapons / granted spells shown as compact sub-lines (v0.3, Options + Artefacts Consumption). Armies referencing a now-`retired` unit_id still resolve and display (unit_id immutability protects the reference).
 
 *Phase prompts*
 - At the start of each phase, display relevant prompts from `kow.json`
@@ -877,6 +967,7 @@ Target: functional at the table within 3 weeks
 ### Later — v0.3+
 - [x] Training Ground (beta): multiple-choice rules-recall quiz mode
 - [x] Options Consumption: unit options (upgrades) authored in Muster and shown in Battle; shared `resolver.js`; effective-profile roster; category grouping + availability badges (display-only); retired-unit resolution fix
+- [x] Artefacts Consumption: magic artefact catalogue (`kow-artefacts.json`); `artefact_rules` eligibility in `kow.json`; per-unit artefact authoring in Muster with unique-per-army enforcement; artefact chip + effective profile in Battle; `modify_field` effect type
 - [ ] Training Ground: rules-accuracy audit of the question bank against the KoW 4E mini-rulebook and FAQ (structural validation done; rules-correctness pending)
 - [ ] Per-unit damage tracking in Battle mode
 - [ ] Quick reference rule cards accessible mid-game
