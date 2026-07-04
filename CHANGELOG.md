@@ -23,6 +23,10 @@ Format is based on [Keep a Changelog](https://keepachangelog.com/).
     is a pure content addition
   - Service worker cache bump handled manually (outside this change)
 
+## [0.3.5] - 2026-07-04
+### Fixed
+- Settings and Training Ground buttons could render above the page title — level with the iOS status bar icons — when Warboss Companion was installed as a standalone PWA via "Add to Home Screen". Caused by `#gear-btn` and `#training-btn` using a fixed `top: 14px` while the page title correctly accounted for `env(safe-area-inset-top)`. Both buttons now use `calc(env(safe-area-inset-top, 0px) + 14px)`, matching the title's inset handling. No visual change in Safari or desktop browsers (inset is `0px` there).
+
 ## [0.3.4] - 2026-07-04
 ### Fixed
 - Muster: replaced the 0.3.3 sticky-footer approach for the Save Army button —
