@@ -1,31 +1,40 @@
 /**
- * muster.js — Muster mode logic for Warboss Companion (v0.3 — Options Consumption)
+ * muster.js — Muster mode logic for Warboss Companion (v0.3 — Options + Artefacts Consumption)
  *
  * Responsibilities:
  *   - Browse units from WBC.armyData (goblins.json) and add/remove them
  *     to build a named army list
  *   - Author unit options (upgrades) per selected unit — independent toggles,
  *     mutually-exclusive groups, and informational battalion-scope options
+ *   - Author a single magic artefact per eligible unit (WBC.artefactData —
+ *     kow-artefacts.json), gated by WBC.systemConfig.artefact_rules via the
+ *     shared WBCResolver eligibility functions; enforces unique-per-army at
+ *     selection time by disabling artefacts already equipped elsewhere in
+ *     the draft
  *   - Display live points, resolved via the shared WBCResolver against each
- *     unit's selected options — never computed locally (Single Source of Truth)
- *   - Save named armies to Sheets as { unit_id, options[] } entries — options
- *     are id references only, never duplicated stat data
+ *     unit's selected options AND artefact — never computed locally
+ *     (Single Source of Truth)
+ *   - Save named armies to Sheets as { unit_id, options[], artefact } entries
+ *     — options/artefact are id references only, never duplicated stat data
  *   - List all saved armies with load/delete actions
  *   - Armies are available to Battle mode via WBCStorage.saveSelectedArmy()
  *
- * Unit ID / option ID immutability rule (enforced at data level, documented here):
- *   unit_id values in goblins.json, and option `id` values within a unit's
- *   `options` array, are permanent keys. They must NEVER be renamed once an
- *   army has been saved, or saved armies will fail to resolve those
- *   units/options. To retire a unit, add "retired": true to its goblins.json
- *   entry instead of deleting it.
+ * Unit ID / option ID / artefact ID immutability rule (enforced at data
+ * level, documented here):
+ *   unit_id values in goblins.json, option `id` values within a unit's
+ *   `options` array, and artefact `id` values in kow-artefacts.json, are all
+ *   permanent keys. They must NEVER be renamed once an army has been saved,
+ *   or saved armies will fail to resolve those units/options/artefacts. To
+ *   retire a unit, add "retired": true to its goblins.json entry instead of
+ *   deleting it.
  *
  * Dependencies (must be loaded before this file):
  *   - storage.js  (WBCStorage)
- *   - resolver.js (WBCResolver) — all option/effect resolution + saved-army
- *                                 entry normalisation goes through this
+ *   - resolver.js (WBCResolver) — all option/effect/artefact resolution +
+ *                                 saved-army entry normalisation goes through this
  *   - sheets.js   (WBCSheets)
- *   - app.js      (window.WBC — provides WBC.armyData, WBC.switchTab)
+ *   - app.js      (window.WBC — provides WBC.armyData, WBC.systemConfig,
+ *                  WBC.artefactData, WBC.switchTab)
  *
  * Module isolation rules:
  *   - This file NEVER touches localStorage directly — all reads/writes go via WBCStorage
@@ -41,10 +50,10 @@ var WBCMuster = (function () {
   // ─── Module state ─────────────────────────────────────────────────────────
 
   /**
-   * _draft.entries: array of { unit_id: string, options: string[] }, index-
-   * addressed. Two entries with the same unit_id are independent rows that
-   * may carry different selected options — index, not unit_id, is identity
-   * within a draft.
+   * _draft.entries: array of { unit_id: string, options: string[], artefact: string|null },
+   * index-addressed. Two entries with the same unit_id are independent rows
+   * that may carry different options/artefact — index, not unit_id, is
+   * identity within a draft.
    */
   var _draft = {
     army_id:    null,       // null = new army; UUID = editing existing
@@ -124,16 +133,86 @@ var WBCMuster = (function () {
   }
 
   /**
+   * The active system's artefact eligibility rules (kow.json.artefact_rules).
+   * Absent config or absent block → {} (eligibility resolver treats a falsy
+   * rules object as "nothing eligible", which is the safe default).
+   * @returns {Object}
+   */
+  function _artefactRules() {
+    var cfg = window.WBC && window.WBC.systemConfig;
+    return (cfg && cfg.artefact_rules) || null;
+  }
+
+  /**
+   * The full artefact catalogue (kow-artefacts.json.artefacts), or [] if the
+   * catalogue never loaded (Fail Gracefully — the app boots and functions
+   * without artefacts; Muster simply shows no artefact section).
+   * @returns {Array}
+   */
+  function _artefactCatalogue() {
+    var data = window.WBC && window.WBC.artefactData;
+    return (data && Array.isArray(data.artefacts)) ? data.artefacts : [];
+  }
+
+  /**
+   * Look up a single artefact by id from the catalogue.
+   * @param {string} artefactId
+   * @returns {Object|null}
+   */
+  function _resolveArtefact(artefactId) {
+    if (!artefactId) return null;
+    var catalogue = _artefactCatalogue();
+    for (var i = 0; i < catalogue.length; i++) {
+      if (catalogue[i].id === artefactId) return catalogue[i];
+    }
+    return null;
+  }
+
+  /**
+   * Artefacts from the catalogue this unit is eligible to equip, per the
+   * shared resolver logic. Empty array if the catalogue/rules haven't
+   * loaded, or the unit has no eligible artefacts (e.g. a War Engine).
+   * @param {Object} unit
+   * @returns {Array}
+   */
+  function _eligibleArtefactsFor(unit) {
+    var rules = _artefactRules();
+    if (!rules) return [];
+    return WBCResolver.getEligibleArtefacts(unit, _artefactCatalogue(), rules);
+  }
+
+  /**
+   * If the given artefact id is already equipped by a DIFFERENT entry in the
+   * current draft, return that entry's unit display name; otherwise null.
+   * Enforces "each artefact is unique — once per army" (rulebook, p.54) at
+   * authoring time.
+   * @param {string} artefactId
+   * @param {number} excludeIndex — the entry currently being edited
+   * @returns {string|null}
+   */
+  function _artefactTakenElsewhere(artefactId, excludeIndex) {
+    for (var i = 0; i < _draft.entries.length; i++) {
+      if (i === excludeIndex) continue;
+      if (_draft.entries[i].artefact === artefactId) {
+        var u = _resolveUnit(_draft.entries[i].unit_id);
+        return u ? u.name : _draft.entries[i].unit_id;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Effective points for one draft entry, via the shared resolver.
    * Unknown unit_id resolves to 0 (graceful degradation — matches the
    * "(not found)" row rendering).
-   * @param {{unit_id: string, options: string[]}} entry
+   * @param {{unit_id: string, options: string[], artefact: string|null}} entry
    * @returns {number}
    */
   function _entryPts(entry) {
     var u = _resolveUnit(entry.unit_id);
     if (!u) return 0;
-    return WBCResolver.resolve(u, entry.options).pts;
+    var artefact = _resolveArtefact(entry.artefact);
+    return WBCResolver.resolve(u, entry.options, artefact).pts;
   }
 
   /**
@@ -384,10 +463,14 @@ var WBCMuster = (function () {
       ].join('');
     }
 
-    var resolved    = WBCResolver.resolve(u, entry.options);
-    var hasOptions  = Array.isArray(u.options) && u.options.length > 0;
-    var expanded    = _expandedIndices.has(index);
-    var fittedCount = entry.options.length;
+    var artefact     = _resolveArtefact(entry.artefact);
+    var resolved     = WBCResolver.resolve(u, entry.options, artefact);
+    var hasOptions   = Array.isArray(u.options) && u.options.length > 0;
+    var eligibleArts = _eligibleArtefactsFor(u);
+    var hasArtefacts = eligibleArts.length > 0;
+    var expandable   = hasOptions || hasArtefacts;
+    var expanded     = _expandedIndices.has(index);
+    var fittedCount  = entry.options.length + (entry.artefact ? 1 : 0);
 
     var label = _escapeHtml(u.name)
       + (u.size ? ' <span class="muster-sel-size">(' + _escapeHtml(u.size) + ')</span>' : '')
@@ -397,7 +480,7 @@ var WBCMuster = (function () {
       '<div class="muster-sel-row" data-entry-index="' + index + '">',
       '  <span class="muster-sel-name">' + label + '</span>',
       '  <span class="muster-sel-pts">' + resolved.pts + ' pts</span>',
-      hasOptions
+      expandable
         ? [
             '  <button class="muster-opt-expand" data-entry-index="' + index + '"',
             '          aria-expanded="' + (expanded ? 'true' : 'false') + '">',
@@ -411,8 +494,11 @@ var WBCMuster = (function () {
       '</div>',
     ].join('');
 
-    if (hasOptions && expanded) {
-      rowHtml += '<div class="muster-opt-panel">' + _renderOptionsPanel(u, entry, index) + '</div>';
+    if (expandable && expanded) {
+      var panelHtml = '';
+      if (hasOptions) panelHtml += _renderOptionsPanel(u, entry, index);
+      if (hasArtefacts) panelHtml += _renderArtefactPanel(eligibleArts, entry, index);
+      rowHtml += '<div class="muster-opt-panel">' + panelHtml + '</div>';
     }
 
     return rowHtml;
@@ -460,6 +546,54 @@ var WBCMuster = (function () {
         '</div>',
       ].join('');
     }).join('');
+  }
+
+  /**
+   * Render the Artefact section of a unit's expand panel — single-select
+   * across the unit's eligible artefacts (at most one per unit, per
+   * rulebook), with any artefact already equipped by ANOTHER unit in the
+   * current draft shown disabled (each artefact is unique — once per army).
+   * @param {Array} eligibleArts — from _eligibleArtefactsFor(u)
+   * @param {Object} entry
+   * @param {number} index
+   * @returns {string}
+   */
+  function _renderArtefactPanel(eligibleArts, entry, index) {
+    var rows = eligibleArts.map(function (art) {
+      var selected    = entry.artefact === art.id;
+      var takenByName = !selected ? _artefactTakenElsewhere(art.id, index) : null;
+      var disabled    = !!takenByName;
+      var costLabel   = art.cost === 0 ? 'free' : '+' + art.cost + ' pts';
+      var classBadge  = '<span class="muster-opt-badge muster-opt-badge--' + art.class + '">'
+        + (art.class === 'heroic' ? 'Heroic' : 'Common') + '</span>';
+
+      return [
+        '<div class="muster-opt-row muster-opt-row--group' + (disabled ? ' muster-opt-row--disabled' : '') + '">',
+        '  <button class="muster-opt-toggle' + (selected ? ' muster-opt-toggle--selected' : '') + '"',
+        '          data-entry-index="' + index + '"',
+        '          data-artefact-id="' + _escapeHtml(art.id) + '"',
+        '          aria-pressed="' + (selected ? 'true' : 'false') + '"',
+        disabled ? '          disabled' : '',
+        '          aria-label="' + (selected ? 'Remove' : 'Equip') + ' ' + _escapeHtml(art.name) + '">',
+        '    ' + (selected ? '✓' : '+'),
+        '  </button>',
+        '  <div class="muster-opt-info">',
+        '    <span class="muster-opt-label">' + _escapeHtml(art.name) + '</span>',
+        '    <span class="muster-opt-cost">' + costLabel + '</span>',
+        '    ' + classBadge,
+        '    <div class="muster-opt-desc">' + _escapeHtml(art.description) + '</div>',
+        takenByName
+          ? '    <div class="muster-opt-desc muster-opt-desc--taken">Already equipped by ' + _escapeHtml(takenByName) + '</div>'
+          : '',
+        '  </div>',
+        '</div>',
+      ].join('');
+    }).join('');
+
+    return '<div class="muster-artefact-section">'
+      + '<div class="section-label section-label--sub">Artefact</div>'
+      + rows
+      + '</div>';
   }
 
   function _renderPickerRows() {
@@ -602,7 +736,14 @@ var WBCMuster = (function () {
 
         var optBtn = e.target.closest('.muster-opt-toggle');
         if (optBtn) {
-          var oidx  = parseInt(optBtn.getAttribute('data-entry-index'), 10);
+          var oidx = parseInt(optBtn.getAttribute('data-entry-index'), 10);
+
+          var artefactId = optBtn.getAttribute('data-artefact-id');
+          if (artefactId !== null) {
+            _toggleArtefact(oidx, artefactId);
+            return;
+          }
+
           var oid   = optBtn.getAttribute('data-option-id');
           var group = optBtn.getAttribute('data-option-group') || null;
           _toggleOption(oidx, oid, group);
@@ -619,7 +760,7 @@ var WBCMuster = (function () {
   // ─── Draft mutations ───────────────────────────────────────────────────────
 
   function _addUnit(unitId) {
-    _draft.entries.push({ unit_id: unitId, options: [] });
+    _draft.entries.push({ unit_id: unitId, options: [], artefact: null });
     _refreshSelectedList();
     _refreshPtsBar();
   }
@@ -680,6 +821,31 @@ var WBCMuster = (function () {
     _refreshPtsBar();
   }
 
+  /**
+   * Toggle a unit's equipped artefact. At most one per unit (selecting a
+   * new one replaces any previously equipped); selecting the equipped one
+   * again clears it. Refuses selection if the artefact is already equipped
+   * by ANOTHER unit in the draft (rulebook: each artefact is unique — once
+   * per army) — the row's toggle is disabled in that case, but the guard
+   * here protects against any stale-DOM edge case.
+   * @param {number} index
+   * @param {string} artefactId
+   */
+  function _toggleArtefact(index, artefactId) {
+    var entry = _draft.entries[index];
+    if (!entry) return;
+
+    if (entry.artefact === artefactId) {
+      entry.artefact = null;
+    } else {
+      if (_artefactTakenElsewhere(artefactId, index)) return;
+      entry.artefact = artefactId;
+    }
+
+    _refreshSelectedList();
+    _refreshPtsBar();
+  }
+
   function _refreshSelectedList() {
     var listEl = _el('muster-selected-list');
     if (!listEl) return;
@@ -732,11 +898,12 @@ var WBCMuster = (function () {
     var now    = _isoNow();
     var armyId = _draft.army_id || _uuid();
 
-    /* Always write object form — { unit_id, options } — even for units with
-       no options selected. Legacy bare-string entries are read forever but
-       never written again; armies migrate to the new form on next save. */
+    /* Always write object form — { unit_id, options, artefact } — even for
+       units with no options/artefact selected. Legacy bare-string entries
+       are read forever but never written again; armies migrate to the new
+       form on next save. */
     var unitsPayload = _draft.entries.map(function (entry) {
-      return { unit_id: entry.unit_id, options: entry.options.slice() };
+      return { unit_id: entry.unit_id, options: entry.options.slice(), artefact: entry.artefact || null };
     });
 
     var record = {
