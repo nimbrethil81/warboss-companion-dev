@@ -425,15 +425,17 @@ var WBCMuster = (function () {
       _renderPickerRows(),
       '</div>',
 
-      /* Save / cancel */
+      /* Save / cancel — status/error live INSIDE the sticky bar so feedback
+         stays visible alongside the button rather than scrolling out of
+         view below it once .muster-builder-actions is sticky. */
       '<div class="muster-builder-actions">',
       '  <button id="muster-save-btn" class="muster-primary-btn"',
       '          ' + (_draft.army_name.trim() === '' ? 'disabled' : '') + '>',
       '    Save Army',
       '  </button>',
+      '  <div id="muster-save-status"  class="muster-status"   style="display:none;">Saving…</div>',
+      '  <div id="muster-save-error"   class="battle-error"    style="display:none;"></div>',
       '</div>',
-      '<div id="muster-save-status"  class="muster-status"   style="display:none;">Saving…</div>',
-      '<div id="muster-save-error"   class="battle-error"    style="display:none;"></div>',
     ].join('');
 
     _bindBuilderEvents();
