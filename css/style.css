@@ -2911,8 +2911,22 @@ select.setup-input {
 }
 
 /* ── Builder: actions + status ─────────────────────────── */
+/*
+   Sticky at the bottom of .page-muster's own scroll box (not the viewport),
+   so it can never overlap #bottom-nav or the protruding #btn-battle circle —
+   both are siblings of .page, sitting entirely outside this scroll container,
+   so sticky's containing-block boundary is naturally clear of them with no
+   pixel-offset math needed.
+*/
 .muster-builder-actions {
-  margin-top: 16px;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 16px -20px 0;   /* -20px cancels .page's side padding so the bar runs edge-to-edge */
+  padding: 12px 20px calc(env(safe-area-inset-bottom, 0px) + 12px);
+  background: var(--tab-bg, #0f0d0a);
+  border-top: 1px solid var(--tab-border, #352b1c);
+  box-shadow: 0 -6px 12px -6px rgba(0, 0, 0, 0.35);
 }
 
 .muster-status {
