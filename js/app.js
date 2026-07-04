@@ -32,6 +32,7 @@
 
   var STORAGE_KEY_CONFIG      = 'wbc_system_config';
   var STORAGE_KEY_ARMY_INDEX  = 'wbc_army_index';
+  var STORAGE_KEY_ARTEFACTS   = 'wbc_artefacts_cache';
   var STORAGE_KEY_SKIN        = 'wbc_skin_key';
   var STORAGE_KEY_ACTIVE_GAME = 'wbc_active_game';
 
@@ -52,6 +53,9 @@
     systemConfig : null,   // same object — battle.js and chronicle.js read this name
     armyIndex    : null,   // parsed armies/kow/index.json
     armyData     : null,   // parsed goblins.json (the active army file)
+    artefactData : null,   // parsed kow-artefacts.json (catalogue) — may stay null;
+                            // absence degrades Muster/Battle to no-artefact display only
+                            // (Fail Gracefully — never blocks boot or the core modes)
     isOffline    : false,
 
     /* Called by mode modules after they initialise */
@@ -67,6 +71,7 @@
   /* ─── Internal state ───────────────────────────────────────────────────── */
 
   var _skinState = { world: 'fantasy', tone: 'grimdark' };
+  var _currentSystemMeta = null;   // the systems/index.json entry for the active system
 
   var _SKIN_KEY_MAP = {
     'fantasy-grimdark' : 'gf',
@@ -310,6 +315,7 @@
         /* For MVP: use the first system (KoW). Future: let user pick. */
         var system = index.systems[0];
         WBC.currentSystem = system.id;
+        _currentSystemMeta = system;   // keep manifest entry for artefact_file lookup
         return _fetchJSON(SYSTEM_BASE_URL + system.file);
       })
       .then(function (config) {
@@ -320,6 +326,7 @@
         WBC.systemConfig = config;   // alias — battle.js reads this name
         WBCStorage.set(STORAGE_KEY_CONFIG, JSON.stringify(config));
         _onConfigReady();
+        _loadArtefactData(WBC.currentSystem);   // parallel, non-blocking (Fail Gracefully)
         return _loadArmyIndex(WBC.currentSystem);
       })
       .catch(function (err) {
@@ -336,6 +343,7 @@
         WBC.systemConfig = WBC.config;   // alias — battle.js reads this name
         WBC.currentSystem = WBC.config.system_id || DEFAULT_SYSTEM;
         _onConfigReady();
+        if (_currentSystemMeta) { _loadArtefactData(WBC.currentSystem); }
         _loadArmyIndex(WBC.currentSystem);
         _showDataNotice('Rules loaded from cache. Some data may be out of date.');
       } else {
@@ -393,6 +401,42 @@
         } catch (cacheErr) {
           console.error('WBC: army index cache fallback failed:', cacheErr);
         }
+      });
+  }
+
+  /* ─── Artefact catalogue loading ────────────────────────────────────────── */
+
+  /**
+   * _loadArtefactData(systemId)
+   * Fetches the system's artefact catalogue (data/systems/{artefact_file}),
+   * if the active systems/index.json entry declares one. Entirely optional:
+   * a missing artefact_file, or a fetch/parse failure, leaves WBC.artefactData
+   * as null and never blocks boot or any core mode. Muster/Battle degrade to
+   * showing no artefact picker/chip when it's null (Fail Gracefully) — same
+   * pattern as Training Ground's lazy, isolated kow-training.json load.
+   */
+  function _loadArtefactData(systemId) {
+    var fileName = _currentSystemMeta && _currentSystemMeta.artefact_file;
+    if (!fileName) return;   // system has no artefact catalogue — nothing to do
+
+    _fetchJSON(SYSTEM_BASE_URL + fileName)
+      .then(function (data) {
+        if (!data || !Array.isArray(data.artefacts)) {
+          throw new Error('Artefact catalogue malformed for system: ' + systemId);
+        }
+        WBC.artefactData = data;
+        WBCStorage.set(STORAGE_KEY_ARTEFACTS, JSON.stringify(data));
+      })
+      .catch(function (err) {
+        console.warn('WBC: artefact catalogue fetch failed, attempting cache:', err);
+        try {
+          var raw = WBCStorage.get(STORAGE_KEY_ARTEFACTS);
+          if (raw) { WBC.artefactData = JSON.parse(raw); }
+        } catch (cacheErr) {
+          console.error('WBC: artefact catalogue cache fallback failed:', cacheErr);
+        }
+        /* If both fetch and cache fail, WBC.artefactData stays null — the
+           app continues to boot and function normally without artefacts. */
       });
   }
 
