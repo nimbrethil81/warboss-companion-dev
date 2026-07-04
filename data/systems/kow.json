@@ -218,5 +218,19 @@
       "title": "Loot Counters",
       "body": "While carrying a Loot Counter, a unit's Speed is reduced to 5 (unless it is already less than 5). A unit with a Loot Counter cannot be moved by Wind Blast, Enthral, or Surge spells. A unit must drop its Loot Counter at the start of a Withdraw! order. Individuals cannot pick up or carry Loot Counters."
     }
-  ]
+  ],
+  "artefact_rules": {
+    "max_per_unit": 1,
+    "unique_per_army": true,
+    "global_exclusions": {
+      "exclude_types": ["War Engine"],
+      "exclude_types_unless_hero_prefix": ["Monster", "Monster/Chariot"],
+      "exclude_if_availability_type": ["unique"]
+    },
+    "class_gates": {
+      "common": { "requires_type_prefix": null },
+      "heroic": { "requires_type_prefix": "Hero" }
+    },
+    "_notes": "Source: Rulebook, Magic — Magical Artefacts (p.54). global_exclusions apply before class_gates, to every unit regardless of common/heroic. exclude_types: unit type is barred outright. exclude_types_unless_hero_prefix: unit type is barred UNLESS its type string starts with 'Hero' (so 'Hero (Mon)' is eligible, but a plain 'Monster' or 'Monster/Chariot' is not). exclude_if_availability_type: a unit whose availability.type matches is a [U] Unique unit and is barred outright, regardless of type. class_gates.heroic.requires_type_prefix further narrows heroic-class artefacts to units whose type starts with 'Hero' — combined with global_exclusions this means only Hero (Mon) is eligible for heroic artefacts among monster-typed heroes, consistent with the rulebook. Per-artefact restrictions (allowed_types, forbid_special_rules) in kow-artefacts.json narrow further still on top of these rules."
+  }
 }
