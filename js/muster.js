@@ -244,6 +244,8 @@ var WBCMuster = (function () {
     if (!page) return;
 
     page.innerHTML = [
+      '<div class="muster-scroll-area">',
+
       '<div class="page-header">',
       '  <div class="page-title">Muster</div>',
       '  <div class="page-subtitle">Your armies</div>',
@@ -258,6 +260,8 @@ var WBCMuster = (function () {
       '</button>',
 
       '<div id="muster-list-error" class="battle-error" style="display:none;"></div>',
+
+      '</div>', /* /.muster-scroll-area */
     ].join('');
 
     var newBtn = _el('muster-new-btn');
@@ -390,7 +394,15 @@ var WBCMuster = (function () {
     var total     = _draftTotal();
     var overLimit = total > _draft.pts_limit;
 
+    /* #page-muster is a non-scrolling flex column (see style.css); this
+       inner wrapper does the actual scrolling. .muster-builder-actions
+       renders AFTER it, as a plain flex sibling — always visible, no
+       position:sticky, so it can't be affected by iOS Safari's dynamic
+       toolbar resizing the viewport mid-scroll (the bug behind the
+       mis-positioned sticky bar). */
     page.innerHTML = [
+      '<div class="muster-scroll-area">',
+
       '<div class="page-header muster-builder-header">',
       '  <button id="muster-back-btn" class="muster-back-btn" aria-label="Back to army list">‹ Back</button>',
       '  <div class="page-title">' + (isNew ? 'New Army' : 'Edit Army') + '</div>',
@@ -425,9 +437,11 @@ var WBCMuster = (function () {
       _renderPickerRows(),
       '</div>',
 
-      /* Save / cancel — status/error live INSIDE the sticky bar so feedback
-         stays visible alongside the button rather than scrolling out of
-         view below it once .muster-builder-actions is sticky. */
+      '</div>', /* /.muster-scroll-area */
+
+      /* Save / cancel — a plain flex sibling of the scroll area, so it is
+         always on screen without any scroll-position tracking. Status/error
+         live inside it so feedback stays visible alongside the button. */
       '<div class="muster-builder-actions">',
       '  <button id="muster-save-btn" class="muster-primary-btn"',
       '          ' + (_draft.army_name.trim() === '' ? 'disabled' : '') + '>',
