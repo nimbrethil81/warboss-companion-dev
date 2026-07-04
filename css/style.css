@@ -1753,6 +1753,19 @@ button:focus-visible,
   opacity: 0.5;
 }
 
+/* Equipped-artefact chip — visually distinct from option chips (a named
+   magic item, not a generic upgrade); reuses the blood accent already
+   used elsewhere for "special/important" markers */
+.unit-artefact-chip {
+  color: var(--blood, #9b1f1f);
+  border-color: var(--blood, #9b1f1f);
+  background: rgba(155, 31, 31, 0.08);
+}
+
+.unit-card--routed .unit-artefact-chip {
+  opacity: 0.5;
+}
+
 /* Routed / Restore button — minimum 44×44px tap target */
 .unit-routed-btn {
   flex-shrink: 0;
@@ -2728,6 +2741,41 @@ select.setup-input {
 .muster-opt-badge--battalion {
   border-color: var(--gold-dim, #8a6e2e);
   color: var(--gold-dim, #8a6e2e);
+}
+
+/* ── Builder: artefact section (within the same expand panel as options) ── */
+.muster-artefact-section {
+  margin-top: 4px;
+}
+
+.muster-artefact-section .section-label--sub {
+  margin: 6px 0 4px;
+  font-size: 10px;
+}
+
+.muster-opt-badge--common {
+  border-color: var(--ash, #8a7f72);
+  color: var(--ash, #8a7f72);
+}
+
+.muster-opt-badge--heroic {
+  border-color: var(--blood, #9b1f1f);
+  color: var(--blood, #9b1f1f);
+}
+
+/* An artefact already equipped by another unit in the draft — disabled,
+   not merely unselected (rulebook: each artefact is unique per army) */
+.muster-opt-row--disabled {
+  opacity: 0.45;
+}
+
+.muster-opt-row--disabled .muster-opt-toggle {
+  cursor: not-allowed;
+}
+
+.muster-opt-desc--taken {
+  color: var(--blood, #9b1f1f);
+  font-style: normal;
 }
 
 /* ── Builder: picker — options hint + availability badge ── */
