@@ -1,0 +1,364 @@
+{
+  "system_id": "kow",
+  "version": "v4",
+  "source": "Rulebook, Magic — Magical Artefacts",
+  "_authoring_notes": [
+    "Eligibility RULES (global exclusions, class gates, max-per-unit, unique-per-army) live in kow.json's artefact_rules block, NOT here. This file is the catalogue only: each entry carries its class and any per-artefact restriction that narrows the class/global rules further.",
+    "effects[] is present ONLY when an artefact makes an unconditional change to the profile (a named special rule that is always active, a base-stat delta, a granted spell, or a granted weapon). Conditional (e.g. 'vs Regeneration'), once-per-game, in-play to-hit modifiers, and bespoke mechanics are represented by description alone — never as a structured effect — so the resolved effective profile never shows a modifier that is not always active.",
+    "Effect vocabulary used: add_special_rule, modify_field (delta, with optional min/max), grant_spell, add_weapon (with optional weapon-level special_rules). set_field (absolute) is unused by artefacts.",
+    "class 'heroic' gates to Heroes (type begins 'Hero'); some heroic items narrow further via restrictions.allowed_types. 'Infantry and Cavalry only' => Hero (Inf), Hero (Cav) — Large Infantry/Cavalry, Chariot and Monster hero subtypes are distinct types and are excluded. 'Infantry only' => Hero (Inf).",
+    "restrictions.forbid_special_rules bars units carrying any listed rule (e.g. Individual, Fly)."
+  ],
+
+  "artefacts": [
+    {
+      "id": "blade-of-slashing",
+      "name": "Blade of Slashing",
+      "class": "common",
+      "cost": 5,
+      "description": "When rolling to hit in Combat, re-roll one of the dice that failed to hit."
+    },
+    {
+      "id": "fire-oil",
+      "name": "Fire-Oil",
+      "class": "common",
+      "cost": 5,
+      "description": "Gains Crushing Strength (+1) and Piercing (+1), each only against units with Regeneration."
+    },
+    {
+      "id": "healing-brew",
+      "name": "Healing Brew",
+      "class": "common",
+      "cost": 5,
+      "description": "Once per game, when given a Movement order, roll a die: on 1-3 regain 1 point of damage, on 4-6 regain 2."
+    },
+    {
+      "id": "lilianas-tear",
+      "name": "Liliana's Tear",
+      "class": "common",
+      "cost": 5,
+      "description": "The unit is not affected by the Dread, Shattering, or Brutal special rules."
+    },
+    {
+      "id": "mace-of-crushing",
+      "name": "Mace of Crushing",
+      "class": "common",
+      "cost": 5,
+      "description": "When rolling to damage in Combat, re-roll one of the dice that failed to damage."
+    },
+    {
+      "id": "war-bow-of-kaba",
+      "name": "War-Bow of Kaba",
+      "class": "common",
+      "cost": 5,
+      "description": "Gains a ranged attack: War-Bow of Kaba 24\", Att 1, Ra 4+, Piercing (1). Does not benefit from the unit's own special rules.",
+      "effects": [
+        { "type": "add_weapon", "name": "War-Bow of Kaba", "range": "24\"", "sh": 4, "att": 1, "special_rules": ["Piercing (1)"] }
+      ]
+    },
+    {
+      "id": "dwarfen-ale",
+      "name": "Dwarfen Ale",
+      "class": "common",
+      "cost": 10,
+      "description": "The unit gains the Headstrong special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Headstrong" } ]
+    },
+    {
+      "id": "hanns-sanguinary-scripture",
+      "name": "Hann's Sanguinary Scripture",
+      "class": "common",
+      "cost": 10,
+      "description": "The unit gains the Lifeleech (+1) special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Lifeleech (+1)" } ]
+    },
+    {
+      "id": "aegis-of-the-elohi",
+      "name": "Aegis of the Elohi",
+      "class": "common",
+      "cost": 15,
+      "description": "The unit gains the Iron Resolve (+1) special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Iron Resolve (+1)" } ]
+    },
+    {
+      "id": "chalice-of-wrath",
+      "name": "Chalice of Wrath",
+      "class": "common",
+      "cost": 15,
+      "description": "The unit gains the Retaliate! special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Retaliate!" } ]
+    },
+    {
+      "id": "helm-of-confidence",
+      "name": "Helm of Confidence",
+      "class": "common",
+      "cost": 15,
+      "description": "The unit gains the Inspiring (Self) special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Inspiring (Self)" } ]
+    },
+    {
+      "id": "mead-of-madness",
+      "name": "Mead of Madness",
+      "class": "common",
+      "cost": 15,
+      "description": "The unit gains the Wild Charge (+1) special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Wild Charge (+1)" } ]
+    },
+    {
+      "id": "orb-of-towering-presence",
+      "name": "Orb of Towering Presence",
+      "class": "common",
+      "cost": 15,
+      "description": "Increase the unit's Unit Strength by +1.",
+      "restrictions": { "forbid_special_rules": ["Individual", "Fly"] }
+    },
+    {
+      "id": "pipes-of-terror",
+      "name": "Pipes of Terror",
+      "class": "common",
+      "cost": 15,
+      "description": "The unit gains the Brutal (+1) special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Brutal (+1)" } ]
+    },
+    {
+      "id": "sir-jesses-boots-of-striding",
+      "name": "Sir Jesse's Boots of Striding",
+      "class": "common",
+      "cost": 15,
+      "description": "Once per game, the unit gains both Pathfinder and Strider until the end of the Turn."
+    },
+    {
+      "id": "staying-stone",
+      "name": "Staying Stone",
+      "class": "common",
+      "cost": 15,
+      "description": "The unit gains +1 to its Nerve stat value.",
+      "effects": [ { "type": "modify_field", "field": "ne", "delta": 1 } ]
+    },
+    {
+      "id": "brew-of-haste",
+      "name": "Brew of Haste",
+      "class": "common",
+      "cost": 20,
+      "description": "The unit increases its Speed stat by +1.",
+      "effects": [ { "type": "modify_field", "field": "sp", "delta": 1 } ]
+    },
+    {
+      "id": "hammer-of-measured-force",
+      "name": "Hammer of Measured Force",
+      "class": "common",
+      "cost": 20,
+      "description": "In Combat, this unit always damages the enemy on a 4+ regardless of any other modifiers."
+    },
+    {
+      "id": "sacred-horn",
+      "name": "Sacred Horn",
+      "class": "common",
+      "cost": 20,
+      "description": "The range of the unit's Aura is increased to 9\"."
+    },
+    {
+      "id": "blessing-of-the-gods",
+      "name": "Blessing of the Gods",
+      "class": "common",
+      "cost": 25,
+      "description": "The unit gains the Elite special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Elite" } ]
+    },
+    {
+      "id": "chant-of-hate",
+      "name": "Chant of Hate",
+      "class": "common",
+      "cost": 25,
+      "description": "The unit gains the Vicious special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Vicious" } ]
+    },
+    {
+      "id": "the-scrying-gem",
+      "name": "The Scrying Gem",
+      "class": "common",
+      "cost": 25,
+      "description": "When starting to deploy their units, your opponent must deploy D3+1 units instead of a single one."
+    },
+    {
+      "id": "diadem-of-dragonkind",
+      "name": "Diadem of Dragonkind",
+      "class": "common",
+      "cost": 30,
+      "description": "The unit gains the Fireball (4) spell; if it already has Fireball, its value is increased by 2 instead.",
+      "effects": [ { "type": "grant_spell", "spell": "Fireball", "power": 4 } ]
+    },
+    {
+      "id": "crystal-pendant-of-retribution",
+      "name": "Crystal Pendant of Retribution",
+      "class": "common",
+      "cost": 35,
+      "description": "When the unit suffers a Rout result, all units in base contact suffer 2D6 hits with Piercing (3), resolved by the routing player against their own unit(s); no Nerve test is taken for that damage.",
+      "restrictions": { "forbid_special_rules": ["Individual"] }
+    },
+    {
+      "id": "brew-of-strength",
+      "name": "Brew of Strength",
+      "class": "common",
+      "cost": 40,
+      "description": "The unit gains the Crushing Strength (+1) special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Crushing Strength (+1)" } ]
+    },
+    {
+      "id": "brew-of-sharpness",
+      "name": "Brew of Sharpness",
+      "class": "common",
+      "cost": 45,
+      "description": "The unit has a +1 to hit modifier with Combat attacks."
+    },
+
+    {
+      "id": "darklords-onyx-ring",
+      "name": "Darklord's Onyx Ring",
+      "class": "heroic",
+      "cost": 5,
+      "description": "Once per game, the hero gains Regeneration (4+); this must be used the first time the unit has any damage on it at the beginning of the hero's Turn.",
+      "restrictions": { "allowed_types": ["Hero (Inf)", "Hero (Cav)"] }
+    },
+    {
+      "id": "ej-periscope",
+      "name": "Ej Periscope",
+      "class": "heroic",
+      "cost": 5,
+      "description": "The hero gains the Leaper special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Leaper" } ],
+      "restrictions": { "allowed_types": ["Hero (Inf)"] }
+    },
+    {
+      "id": "amulet-of-the-fireheart",
+      "name": "Amulet of the Fireheart",
+      "class": "heroic",
+      "cost": 15,
+      "description": "Once per game, immediately after casting a spell, the hero may cast a second, different spell (no more than two spells in a single Turn)."
+    },
+    {
+      "id": "axe-of-the-giant-slayer",
+      "name": "Axe of the Giant Slayer",
+      "class": "heroic",
+      "cost": 15,
+      "description": "The hero gains the Slayer (D3) special rule in Combat.",
+      "effects": [ { "type": "add_special_rule", "rule": "Slayer (D3)" } ],
+      "restrictions": { "allowed_types": ["Hero (Inf)", "Hero (Cav)"] }
+    },
+    {
+      "id": "crown-of-the-wizard-king",
+      "name": "Crown of the Wizard King",
+      "class": "heroic",
+      "cost": 15,
+      "description": "The hero gains an additional 6\" range on all of its spells that target friendly units."
+    },
+    {
+      "id": "mournful-blade",
+      "name": "Mournful Blade",
+      "class": "heroic",
+      "cost": 15,
+      "description": "The hero gains the Duellist (D3) special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Duellist (D3)" } ],
+      "restrictions": { "allowed_types": ["Hero (Inf)", "Hero (Cav)"] }
+    },
+    {
+      "id": "scythe-of-the-harvester",
+      "name": "Scythe of the Harvester",
+      "class": "heroic",
+      "cost": 15,
+      "description": "The hero gains the Rampage (D3) special rule in Combat.",
+      "effects": [ { "type": "add_special_rule", "rule": "Rampage (D3)" } ],
+      "restrictions": { "allowed_types": ["Hero (Inf)", "Hero (Cav)"] }
+    },
+    {
+      "id": "torc-of-command",
+      "name": "Torc of Command",
+      "class": "heroic",
+      "cost": 15,
+      "description": "Command Orders attempted by this unit can be issued to units within 18\" instead of the normal 12\"."
+    },
+    {
+      "id": "tricksters-wand",
+      "name": "Trickster's Wand",
+      "class": "heroic",
+      "cost": 15,
+      "description": "The hero gains the Hex (2) spell.",
+      "effects": [ { "type": "grant_spell", "spell": "Hex", "power": 2 } ]
+    },
+    {
+      "id": "banner-of-command",
+      "name": "Banner of Command",
+      "class": "heroic",
+      "cost": 20,
+      "description": "When rolling to issue a Command Order with this unit, add an additional die to the attempt."
+    },
+    {
+      "id": "blade-of-the-beast-slayer",
+      "name": "Blade of the Beast Slayer",
+      "class": "heroic",
+      "cost": 20,
+      "description": "The unit gains Crushing Strength (+1) against Large Infantry, Large Cavalry, and Monsters."
+    },
+    {
+      "id": "boots-of-the-seven-leagues",
+      "name": "Boots of the Seven Leagues",
+      "class": "heroic",
+      "cost": 20,
+      "description": "The hero gains the Scout special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Scout" } ],
+      "restrictions": { "allowed_types": ["Hero (Inf)", "Hero (Cav)"] }
+    },
+    {
+      "id": "tome-of-darkness",
+      "name": "Tome of Darkness",
+      "class": "heroic",
+      "cost": 20,
+      "description": "The hero gains the Surge (5) spell; if it already has Surge, its value is increased by 3 instead.",
+      "effects": [ { "type": "grant_spell", "spell": "Surge", "power": 5 } ]
+    },
+    {
+      "id": "zephyr-crown",
+      "name": "Zephyr Crown",
+      "class": "heroic",
+      "cost": 20,
+      "description": "The unit gains the Wind Blast (5) spell; if it already has Wind Blast, its value is increased by 3 instead.",
+      "effects": [ { "type": "grant_spell", "spell": "Wind Blast", "power": 5 } ]
+    },
+    {
+      "id": "shroud-of-the-saint",
+      "name": "Shroud of the Saint",
+      "class": "heroic",
+      "cost": 25,
+      "description": "The hero gains the Heal (3) spell; if it already has Heal, its value is increased by 2 instead.",
+      "effects": [ { "type": "grant_spell", "spell": "Heal", "power": 3 } ]
+    },
+    {
+      "id": "wings-of-honeymaze",
+      "name": "Wings of Honeymaze",
+      "class": "heroic",
+      "cost": 25,
+      "description": "The hero gains the Fly special rule but decreases its Defence stat by 1, to a minimum of 2+.",
+      "effects": [
+        { "type": "add_special_rule", "rule": "Fly" },
+        { "type": "modify_field", "field": "de", "delta": -1, "min": 2 }
+      ],
+      "restrictions": { "allowed_types": ["Hero (Inf)"] }
+    },
+    {
+      "id": "the-boomstick",
+      "name": "The Boomstick",
+      "class": "heroic",
+      "cost": 30,
+      "description": "The hero gains the Lightning Bolt (3) spell; if it already has Lightning Bolt, its value is increased by 2 instead.",
+      "effects": [ { "type": "grant_spell", "spell": "Lightning Bolt", "power": 3 } ]
+    },
+    {
+      "id": "inspiring-talisman",
+      "name": "Inspiring Talisman",
+      "class": "heroic",
+      "cost": 30,
+      "description": "The hero gains the Inspiring special rule.",
+      "effects": [ { "type": "add_special_rule", "rule": "Inspiring" } ]
+    }
+  ]
+}
