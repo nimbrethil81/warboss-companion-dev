@@ -2910,19 +2910,37 @@ select.setup-input {
   border-color: var(--gold-light, #f0c94a);
 }
 
+/* ── Muster page structure ───────────────────────────────
+   #page-muster stops scrolling itself and becomes a plain flex column.
+   .muster-scroll-area (a dedicated inner wrapper, rendered by both
+   _renderList and _renderBuilder) does the actual scrolling, carrying the
+   padding .page normally provides. .muster-builder-actions renders AFTER
+   it as a true flex SIBLING — always on screen, no position:sticky.
+
+   This replaces an earlier position:sticky attempt: sticky's containing-
+   block math became unreliable on iOS Safari, where the dynamic toolbar
+   collapsing mid-scroll (visible as the address bar shrinking) recomputes
+   the 100dvh-based layout and can leave a sticky element anchored at a
+   stale position. A plain flex sibling has no scroll-tracking to get
+   wrong — it is simply always laid out below the scroll area, the same
+   proven pattern #bottom-nav already uses one level up. */
+#page-muster {
+  overflow-y: hidden;
+  padding: 0;
+}
+
+.muster-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: calc(env(safe-area-inset-top, 0px) + 16px) 20px 100px;
+}
+
 /* ── Builder: actions + status ─────────────────────────── */
-/*
-   Sticky at the bottom of .page-muster's own scroll box (not the viewport),
-   so it can never overlap #bottom-nav or the protruding #btn-battle circle —
-   both are siblings of .page, sitting entirely outside this scroll container,
-   so sticky's containing-block boundary is naturally clear of them with no
-   pixel-offset math needed.
-*/
 .muster-builder-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 5;
-  margin: 16px -20px 0;   /* -20px cancels .page's side padding so the bar runs edge-to-edge */
+  flex-shrink: 0;
   padding: 12px 20px calc(env(safe-area-inset-bottom, 0px) + 12px);
   background: var(--tab-bg, #0f0d0a);
   border-top: 1px solid var(--tab-border, #352b1c);
