@@ -12,7 +12,9 @@ Author one faction at a time, in stages, with an Opus audit gate before acceptan
 ## 2. One-faction-at-a-time, staged (mirrors the staged-builds discipline)
 Do NOT attempt multiple factions in one pass, and do NOT author options before the stat table is verified.
 
-**Prep.** Identify the faction's pages in the army list PDF. Have on hand: `kow-enums.json` (locked vocabulary), one authored faction as the gold shape (`goblins.json`), and this prompt.
+**Prep.** Identify the faction's pages in the army list PDF, then note who needs what — these are two different audiences:
+- *Input the drafting AI needs:* only the faction's pages from the army list PDF (the `{{SOURCE}}`). The prompt is otherwise self-contained — the type/size vocabulary and the gold shape are already inlined in it, so `kow-enums.json` and `goblins.json` do **not** need to be attached to it. (Optionally attach `goblins.json` to a weaker non-Claude model as an extra full-file shape reference — but only with an explicit "shape reference only, do not copy any of its units or values" instruction, since it invites copying Goblins-specific data into the new faction.)
+- *For your audit + load-test gates (not attached to the prompt):* `kow-enums.json`, to validate the finished draft against the live vocabulary, and one authored faction (`goblins.json`) as a known-good shape to compare against.
 
 **Stage 1 — Base stat table only.** Transcribe every unit's base profile (unit_id, name, type, size, sp/me/sh/de/att/ne, pts, special_rules, traits, category) directly from the PDF. No options, no availability yet.
 - Gate: unit count matches the source; every `type`/`size` is enum-valid; every `ne` is a single value; every single-model unit is `size:"1"`; each unit is tagged with the exact name as printed (hallucination check).
@@ -42,6 +44,7 @@ Replace `{{FACTION}}` and attach/paste the faction's army-list pages as `{{SOURC
 > **Controlled vocabulary — `type` and `size` MUST be exactly one of these strings:**
 > - `type` ∈ [Infantry, Heavy Infantry, Large Infantry, Monstrous Infantry, Cavalry, Large Cavalry, Chariot, Monster, Titan, War Engine, Hero (Inf), Hero (Cav), Hero (Lrg Inf), Hero (Lrg Cav), Hero (Cht), Hero (Mon), Hero (Titan), Monster/Chariot]
 > - `size` ∈ [Troop, Regiment, Horde, Legion, "1"]
+> - (These two lists mirror `kow-enums.json`; if they have since diverged, the JSON file is authoritative — flag the mismatch rather than guessing.)
 >
 > **Mapping + encoding rules (follow exactly):**
 > - `size` = the army-list SIZES column verbatim. Single-model units (heroes, war engines, monsters, titans) print `1` → store `"1"` (a string). There is NO `"Individual"` size — `Individual` is a *special rule* and belongs in `special_rules`.
