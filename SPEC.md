@@ -148,7 +148,8 @@ warboss-companion/
 │   │   ├── index.json      ← Manifest of all supported game systems
 │   │   ├── kow.json        ← KoW turn sequence, phases, prompts, rules, artefact_rules
 │   │   ├── kow-training.json ← Training Ground question bank + categories (beta)
-│   │   └── kow-artefacts.json ← Magic artefact catalogue (system-level)
+│   │   ├── kow-artefacts.json ← Magic artefact catalogue (system-level)
+│   │   └── kow-enums.json    ← Canonical unit type/size vocabulary (validated at load)
 │   └── armies/
 │       └── kow/
 │           ├── index.json  ← Manifest of all KoW factions
@@ -165,13 +166,14 @@ warboss-companion/
 
 - `sheets.js` is the only file that touches Google Sheets. When migrating to a new database, only this file changes.
 - `storage.js` is the only file that touches localStorage. Centralises offline fallback.
-- `resolver.js` is the only place effective profiles and effective points are computed. Given a unit, its selected option ids, and an optional equipped artefact, it produces the effective profile (stats, added special rules, added weapons, granted spells) and effective points; it also decides artefact eligibility (via `kow.json`'s `artefact_rules` plus each artefact's own restrictions) and normalises the saved-army `units` field into a consistent `{ unit_id, options, artefact }` shape. Both Muster (authoring/pricing) and Battle (roster build) consume it, so option/artefact logic is never duplicated. Pure logic — no DOM, localStorage, Sheets, or fetch.
+- `resolver.js` is the only place effective profiles and effective points are computed. Given a unit, its selected option ids, and an optional equipped artefact, it produces the effective profile (stats, added special rules, added weapons, granted spells) and effective points; it also decides artefact eligibility (via `kow.json`'s `artefact_rules` plus each artefact's own restrictions) and normalises the saved-army `units` field into a consistent `{ unit_id, options, artefact }` shape. Both Muster (authoring/pricing) and Battle (roster build) consume it, so option/artefact logic is never duplicated. Pure logic — no DOM, localStorage, Sheets, or fetch. It also exposes `validateUnitEnums()`, which checks each unit's `type`/`size` against `kow-enums.json` at load (see *Enum validation* under Data Flow).
 - `data/systems/kow.json` is the single source of truth for all KoW game rules, turn sequence, and prompts. Adding a new game system means adding a new JSON file alongside it — no code changes required.
 - `data/armies/kow/goblins.json` holds static unit reference data. This belongs in version control, not in Sheets. Sheets stores game results and reflections.
 - `data/armies/kow/index.json` is a manifest listing all available factions for KoW. The app reads this to discover armies without needing to enumerate directory contents (which browsers cannot do natively). Adding a new army means adding the file and one line to this manifest.
 - `data/systems/index.json` is a manifest listing all supported game systems. Adding a new game system means adding a new systems JSON file, a new `armies/{system}/` folder, and one line to this manifest.
 - `data/systems/kow-training.json` holds the Training Ground question bank and its category vocabulary. It is **not** part of the boot chain — `training.js` loads it lazily on first activation of the mode, and the `training_file` manifest field is optional. A missing or malformed bank degrades Training Ground to an empty/error state and cannot affect Muster, Battle, or Chronicle.
 - `data/systems/kow-artefacts.json` holds the magic artefact catalogue at the system level (artefacts are core rules shared by every faction, not faction-specific — so they live here, never in `goblins.json`). The eligibility *rules* live separately in `kow.json`'s `artefact_rules` block; this file is the catalogue only. It is loaded via the optional `artefact_file` manifest field, in parallel with the army index and outside the blocking boot path: a missing/malformed catalogue leaves `WBC.artefactData` null and simply hides the artefact picker/chip, never affecting the core modes (Fail Gracefully — same isolation posture as the Training Ground bank).
+- `data/systems/kow-enums.json` is the canonical `type`/`size` vocabulary for all factions. `resolver.js` validates every unit against it at load; a missing enum file *warns* that the guard is inactive rather than skipping silently, since it is WBC's only defence against faction-data drift as more armies are authored. Loaded via the optional `enum_file` manifest field, same non-blocking posture as the artefact catalogue.
 
 ### Data Flow
 
@@ -181,6 +183,9 @@ On app load
   └── app.js loads kow-artefacts.json in parallel (if the system declares
       artefact_file) — non-blocking; on failure WBC.artefactData stays null
       and the app boots and runs normally without artefacts (Fail Gracefully)
+  └── app.js loads kow-enums.json in parallel (if the system declares
+      enum_file) — non-blocking; once both army data and enums resolve,
+      resolver.js validateUnitEnums() checks every unit's type/size
   └── sheets.js fetches saved armies and past games (with localStorage fallback on failure)
 
 During Muster
@@ -208,6 +213,8 @@ On Training Ground open (first time only)
   └── training.js lazily loads kow-training.json (resolved via index.json → training_file)
   └── Outside the boot chain — on failure or malformed data it shows an empty/error state; core modes unaffected
 ```
+
+**Enum validation — fail-loud validator, catch-and-surface caller.** `resolver.js`'s `validateUnitEnums()` *throws* on any unlisted `type`/`size` — a loud, located signal for the data author. The `app.js` call site (`_validateArmyEnums`, run once both army data and enums have resolved) deliberately reconciles that with Fail Gracefully: it catches the throw, logs the full located detail to `console.error`, and surfaces the first offending `unit_id`+field in the on-screen data notice — but never nulls `armyData` or blocks boot. An enum violation is an authoring bug, not a runtime condition; for a single-user app the right response is a visible warning plus one wrong value, not a bricked Battle/Chronicle mid-session. This is intentional, not an oversight. The same pure validator is reusable in a Node/CI pre-deploy step for the public-release phase (§2, Future Proofing), where rejecting bad data before ship is the correct posture.
 
 ### Google Sheets Schema
 
@@ -297,7 +304,7 @@ localStorage is the source of truth **during an active game only**. On game end,
     {
       "inst_id": "uuid",
       "unit_id": "wiz-hero",
-      "name": "Wiz", "size": "Individual", "type": "Hero (Cav)",
+      "name": "Wiz", "size": "1", "type": "Hero (Cav)",
       "sp": 10, "me": 5, "sh": 4, "de": 4, "att": 1, "ne": 11,
       "special_rules": ["…effective, post-options…"],
       "weapons": [{ "name": "Shortbows", "range": "18\"", "sh": 5, "att": 8 }],
@@ -524,7 +531,7 @@ Allows the app to discover all supported game systems without hardcoding them in
 ```json
 {
   "systems": [
-    { "id": "kow", "name": "Kings of War", "version": "v4", "file": "kow.json", "training_file": "kow-training.json", "artefact_file": "kow-artefacts.json" }
+    { "id": "kow", "name": "Kings of War", "version": "v4", "file": "kow.json", "training_file": "kow-training.json", "artefact_file": "kow-artefacts.json", "enum_file": "kow-enums.json" }
   ]
 }
 ```
@@ -532,6 +539,8 @@ Allows the app to discover all supported game systems without hardcoding them in
 The optional `training_file` field points to a system's Training Ground question bank (see below). It is read only by `training.js`; its absence simply means that system has no Training Ground data yet, and the mode handles that gracefully.
 
 The optional `artefact_file` field points to a system's magic artefact catalogue (see below). `app.js` loads it in parallel with the army index; its absence, or a load failure, simply means Muster/Battle show no artefacts, and everything else works unchanged (Fail Gracefully).
+
+The optional `enum_file` field points to the system's canonical unit type/size vocabulary (see below). `app.js` loads it in parallel with the army index; unlike the other optional files, its absence is *warned about loudly* — it disables the only guard against faction-data drift — though it still never blocks boot (Fail Gracefully).
 
 ### `data/armies/kow/index.json` — Army Manifest
 
@@ -577,6 +586,15 @@ Static reference for the Goblin army. Used in Muster to build rosters and in Bat
 
 > **Note:** Unit roster to be completed. Stats taken from the official Kings of War army lists. This file is reference data only — it does not duplicate anything stored in Google Sheets.
 
+**Unit type & size (controlled vocabulary).** `type` and `size` are orthogonal axes and must never be conflated: `type` is what kind of model the unit is (its rules profile, base footprint, height); `size` is how many models it fields. A Titan's Titan-ness lives in `type`, never in `size`; a single model's single-ness lives in `size` (`"1"`), never duplicated into `type`.
+
+Both fields draw from the fixed vocabulary in `data/systems/kow-enums.json` (below) and are validated against it at load. Mapping from the army-list PDF is mechanical: `size` ← the SIZES column verbatim (`Troop`/`Regiment`/`Horde`/`Legion`, or `"1"` for any single-model unit); `type` ← the TYPE column normalised (`LRG INF` → `Large Infantry`, `HERO/CAV` → `Hero (Cav)`, `MON/CHT` → `Monster/Chariot`, title-cased).
+
+- **`"1"` is the canonical single-model size** — every hero, war engine, monster, titan, and mon/cht. The PDF prints `1` (one model); we store it verbatim. There is no `"Individual"` size.
+- **`Individual` is a *special rule*, not a size** — it lives in `special_rules` on units that carry it (many single-model heroes do; war engines do not), entirely separate from the `size` field.
+- **`Heavy Infantry` and `Monstrous Infantry` are distinct (legacy-labelled) types**, kept separate from `Infantry`/`Large Infantry`: they sit on larger bases but otherwise follow the same rules. The `type_inheritance` map in `kow-enums.json` records this so rules logic can treat `Heavy Infantry` as `Infantry` and `Monstrous Infantry` as `Large Infantry` where a rule keys off the parent type.
+- **Mounted heroes** are authored at their on-foot type; a "Mount on X" option flips `type` via a `set_field`/`modify_field` effect (e.g. → `Hero (Cav)`), never a second base entry.
+
 **Unit options (upgrades).** Units may carry an `options` array. Absence is fully tolerated — Muster renders and points-costs whatever is present, and a unit with no `options` shows no upgrades. Example (real Goblin options):
 
 ```json
@@ -588,7 +606,7 @@ Static reference for the Goblin army. Used in Muster to build rosters and in Bat
   { "id": "wiz-fleabag", "label": "Mount on a fleabag",
     "scope": "self", "cost": 15,
     "effects": [ { "type": "set_field", "field": "sp", "value": 10 },
-                 { "type": "set_field", "field": "type", "value": "Hero/Cav" } ] }
+                 { "type": "set_field", "field": "type", "value": "Hero (Cav)" } ] }
 ]
 ```
 
@@ -756,6 +774,29 @@ System-level catalogue of magic artefacts (core rules shared by every faction, s
 ```
 
 Global exclusions apply to every unit before class gates: War Engines are barred; `Monster`/`Monster/Chariot` are barred *unless* the unit's `type` begins `"Hero"` (so `Hero (Mon)` is eligible, plain Monsters are not); and Unique `[U]` units (those whose `availability.type` is `"unique"`) are barred outright. Class gates then narrow heroic-class artefacts to units whose `type` begins `"Hero"`. Each artefact's own `restrictions` narrow further still. `max_per_unit` (1) and `unique_per_army` (each artefact at most once across the army) are enforced by Muster at selection time, since they require looking across the whole draft. All eligibility logic is implemented once in `resolver.js` (`isArtefactEligibleForUnit`, `getEligibleArtefacts`) and consumed by Muster — never re-implemented.
+
+### `data/systems/kow-enums.json` — Canonical Unit Type/Size Vocabulary
+
+The controlled vocabulary for every unit's `type` and `size`, shared by all factions at the system level (like the artefact catalogue, these are core rules, not faction-specific — so they live here, never in `goblins.json`).
+
+```json
+{
+  "unit_types": ["Infantry", "Heavy Infantry", "Large Infantry", "Monstrous Infantry",
+                 "Cavalry", "Large Cavalry", "Chariot", "Monster", "Titan", "War Engine",
+                 "Hero (Inf)", "Hero (Cav)", "Hero (Lrg Inf)", "Hero (Lrg Cav)",
+                 "Hero (Cht)", "Hero (Mon)", "Hero (Titan)", "Monster/Chariot"],
+  "unit_sizes": ["Troop", "Regiment", "Horde", "Legion", "1"],
+  "type_inheritance": { "Heavy Infantry": "Infantry", "Monstrous Infantry": "Large Infantry" }
+}
+```
+
+| Field | Notes |
+|---|---|
+| `unit_types` | Every legal `type` value across all factions. New combined/unusual forms are added here by decision, never invented ad hoc in a faction file. |
+| `unit_sizes` | `Troop`/`Regiment`/`Horde`/`Legion`, plus `"1"` for single-model units. `Legion` ships only via a Horde upgrade but is a valid produced size. |
+| `type_inheritance` | Records that `Heavy Infantry` and `Monstrous Infantry` follow `Infantry`/`Large Infantry` rules respectively (larger bases only). |
+
+Loaded via the optional `enum_file` manifest field, in parallel with the army index and outside the blocking boot path (same posture as the artefact catalogue). `resolver.js`'s `validateUnitEnums()` checks every unit's `type`/`size` against these lists at load — the sole guard against a typo'd or unnormalised value silently entering a faction JSON and drifting the faction files apart. Because that guard is pure and takes its data as arguments, the identical function runs unchanged in a Node/CI build step — the phase-3 pre-deploy check that rejects bad faction data before it ships (see §3, *Enum validation*).
 
 ---
 
