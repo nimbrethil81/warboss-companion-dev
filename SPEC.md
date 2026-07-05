@@ -64,7 +64,12 @@ Every network call (Google Sheets fetch, any external API) must be wrapped in a 
 
 ### Future Proofing
 Before any structural decision — data schema, function design, file organisation — evaluate implications for:
-- Multiple users
+- **Scaling phase** — evaluate against three possible states, not a single target:
+  1. *Single user* (current) — zero-cost, localStorage + one personal Sheet, no auth.
+  2. *Small group* — a closed set of friends sharing the app; implies shared/multi-user Sheets access and some notion of identity, without public infrastructure.
+  3. *Public release* — many thousands of users; implies real backend scaling (Apps Script quotas, hosting, auth, abuse prevention).
+
+  Ask what breaks first at each phase boundary rather than assuming one generic "what if this scales" framing. No phase beyond (1) is committed — this is an evaluation lens, not a roadmap commitment.
 - Multiple game systems
 - Migration away from Google Sheets to a proper database (e.g. Supabase)
 
