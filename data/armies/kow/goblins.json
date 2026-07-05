@@ -489,7 +489,7 @@
     {
       "unit_id": "winggit-individual",
       "name": "Winggit",
-      "size": "Individual",
+      "size": "1",
       "type": "Monster",
       "sp": 10,
       "me": 5,
@@ -514,7 +514,7 @@
     {
       "unit_id": "goblin-blaster-monster-chariot",
       "name": "Goblin Blaster",
-      "size": "Individual",
+      "size": "1",
       "type": "Monster/Chariot",
       "sp": 5,
       "me": 3,
@@ -544,7 +544,7 @@
     {
       "unit_id": "mincer-individual",
       "name": "Mincer",
-      "size": "Individual",
+      "size": "1",
       "type": "Monster",
       "sp": 7,
       "me": 4,
@@ -610,8 +610,8 @@
     {
       "unit_id": "giant-titan",
       "name": "Giant",
-      "size": "Titan",
-      "type": "Monster",
+      "size": "1",
+      "type": "Titan",
       "sp": 7,
       "me": 4,
       "sh": "-",
@@ -662,8 +662,8 @@
     {
       "unit_id": "goblin-slasher-titan",
       "name": "Goblin Slasher",
-      "size": "Titan",
-      "type": "Monster",
+      "size": "1",
+      "type": "Titan",
       "sp": 7,
       "me": 3,
       "sh": 5,
@@ -682,7 +682,7 @@
     {
       "unit_id": "sharpstick-thrower-war-engine",
       "name": "Sharpstick Thrower",
-      "size": "War Engine",
+      "size": "1",
       "type": "War Engine",
       "sp": 5,
       "me": "-",
@@ -707,7 +707,7 @@
     {
       "unit_id": "big-rocks-thrower-war-engine",
       "name": "Big Rocks Thrower",
-      "size": "War Engine",
+      "size": "1",
       "type": "War Engine",
       "sp": 5,
       "me": "-",
@@ -732,7 +732,7 @@
     {
       "unit_id": "mawpup-launcher-war-engine",
       "name": "Mawpup Launcher",
-      "size": "War Engine",
+      "size": "1",
       "type": "War Engine",
       "sp": 5,
       "me": "-",
@@ -758,7 +758,7 @@
     {
       "unit_id": "troll-bruiser-individual",
       "name": "Troll Bruiser",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Lrg Inf)",
       "sp": 6,
       "me": 3,
@@ -783,7 +783,7 @@
     {
       "unit_id": "war-trombone-war-engine",
       "name": "War-Trombone",
-      "size": "War Engine",
+      "size": "1",
       "type": "War Engine",
       "sp": 5,
       "me": "-",
@@ -807,7 +807,7 @@
     {
       "unit_id": "wiz-hero",
       "name": "Wiz",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Inf)",
       "sp": 5,
       "me": 5,
@@ -911,7 +911,7 @@
     {
       "unit_id": "stinggit-individual",
       "name": "Stinggit",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Inf)",
       "sp": 6,
       "me": 3,
@@ -942,7 +942,7 @@
     {
       "unit_id": "banggit-individual",
       "name": "Banggit",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Inf)",
       "sp": 5,
       "me": 6,
@@ -969,7 +969,7 @@
     {
       "unit_id": "grunk-blackclaw-individual",
       "name": "Grunk Blackclaw",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Lrg Inf)",
       "sp": 5,
       "me": 4,
@@ -997,7 +997,7 @@
     {
       "unit_id": "biggit-individual",
       "name": "Biggit",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Inf)",
       "sp": 5,
       "me": 4,
@@ -1046,7 +1046,7 @@
     {
       "unit_id": "flaggit-hero",
       "name": "Flaggit",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Inf)",
       "sp": 5,
       "me": 5,
@@ -1093,7 +1093,7 @@
     {
       "unit_id": "king-individual",
       "name": "King",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Inf)",
       "sp": 5,
       "me": 4,
@@ -1142,7 +1142,7 @@
     {
       "unit_id": "groany-snark-individual",
       "name": "Groany Snark",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Inf)",
       "sp": 10,
       "me": 4,
@@ -1170,7 +1170,7 @@
     {
       "unit_id": "grupp-longnail-individual",
       "name": "Grupp Longnail",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Inf)",
       "sp": 5,
       "me": 3,
@@ -1202,7 +1202,7 @@
     {
       "unit_id": "king-on-chariot-hero",
       "name": "King on Chariot",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Cht)",
       "sp": 9,
       "me": 4,
@@ -1225,7 +1225,7 @@
     {
       "unit_id": "kuzlo-and-madfall-individual",
       "name": "Kuzlo and Madfall",
-      "size": "Individual",
+      "size": "1",
       "type": "Hero (Lrg Cav)",
       "sp": 8,
       "me": 3,
