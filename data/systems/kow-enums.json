@@ -1,0 +1,33 @@
+{
+  "unit_types": [
+    "Infantry",
+    "Heavy Infantry",
+    "Large Infantry",
+    "Monstrous Infantry",
+    "Cavalry",
+    "Large Cavalry",
+    "Chariot",
+    "Monster",
+    "Titan",
+    "War Engine",
+    "Hero (Inf)",
+    "Hero (Cav)",
+    "Hero (Lrg Inf)",
+    "Hero (Lrg Cav)",
+    "Hero (Cht)",
+    "Hero (Mon)",
+    "Hero (Titan)",
+    "Monster/Chariot"
+  ],
+  "unit_sizes": [
+    "Troop",
+    "Regiment",
+    "Horde",
+    "Legion",
+    "1"
+  ],
+  "type_inheritance": {
+    "Heavy Infantry": "Infantry",
+    "Monstrous Infantry": "Large Infantry"
+  }
+}
