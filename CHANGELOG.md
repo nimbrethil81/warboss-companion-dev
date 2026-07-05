@@ -4,6 +4,37 @@ All notable changes to Warboss Companion are documented here.
 Format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
+- Unit `type`/`size` schema hardening (G1) — introduced a canonical type/size
+  vocabulary and a load-time validation guard, ahead of authoring the remaining
+  19 KoW factions from the audited Goblins template
+  - Added `data/systems/kow-enums.json`: canonical `unit_types` (18) and
+    `unit_sizes` (5, including `"1"` for all single-model units), plus a
+    `type_inheritance` map recording that Heavy/Monstrous Infantry follow
+    Infantry/Large Infantry rules (larger bases only)
+  - `resolver.js`: added `validateUnitEnums(units, enums)` — pure and fail-loud
+    (throws a single located Error listing every offending `unit_id` + field).
+    Being pure, it is reusable unchanged in a future Node/CI pre-deploy check
+  - `app.js`: loads the enum file via a new `enum_file` manifest field
+    (mirroring `artefact_file`), non-blocking; runs the guard once both army
+    data and enums resolve. The fail-loud validator is reconciled with Fail
+    Gracefully at the call site (`_validateArmyEnums`) — the throw is caught,
+    logged in full to `console.error`, and surfaced as a one-line data notice
+    (first offending unit_id + field), without blocking boot or nulling
+    `armyData`. A missing/malformed enum file warns that the guard is INACTIVE
+    rather than skipping silently
+  - `data/systems/index.json`: added `"enum_file": "kow-enums.json"`
+  - `goblins.json`: normalised 21 single-model entries to `size: "1"` and
+    corrected Giant and Goblin Slasher to `type: "Titan"` (previously
+    `Monster`, with Titan mis-stored in `size`). Values-only — no `unit_id`
+    changed, so saved armies are unaffected. `Individual` retained as a special
+    rule, never a size
+  - SPEC.md updated: new *Unit type & size (controlled vocabulary)* subsection,
+    a `data/systems/kow-enums.json` data-structure section, the `enum_file`
+    manifest field, the fail-loud/catch-and-surface pattern under Data Flow,
+    and the file tree
+  - Deploy step (outside this change): bump the service worker cache version
+    (`resolver.js` and `app.js` changed) and add `kow-enums.json` to the
+    precache list so the guard runs offline
 - Rules-accuracy audit of the original 35 Training Ground questions against
   the KoW 4E mini-rulebook and FAQ (structural validation done; rules-
   correctness pending)
