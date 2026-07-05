@@ -1,5 +1,5 @@
 {
   "systems": [
-    { "id": "kow", "name": "Kings of War", "version": "v4", "file": "kow.json", "training_file": "kow-training.json", "artefact_file": "kow-artefacts.json" }
+    { "id": "kow", "name": "Kings of War", "version": "v4", "file": "kow.json", "training_file": "kow-training.json", "artefact_file": "kow-artefacts.json", "enum_file": "kow-enums.json" }
   ]
 }
