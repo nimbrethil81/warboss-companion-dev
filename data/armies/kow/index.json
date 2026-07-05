@@ -1,6 +1,7 @@
 {
   "system": "kow",
   "armies": [
-    { "id": "goblins", "name": "Goblins", "file": "goblins.json" }
+    { "id": "goblins", "name": "Goblins", "file": "goblins.json" },
+    { "id": "elves", "name": "Elves", "file": "elves.json" }
   ]
 }
