@@ -550,10 +550,13 @@ Allows the app to discover all available factions for a given game system.
 {
   "system": "kow",
   "armies": [
-    { "id": "goblins", "name": "Goblins", "file": "goblins.json" }
+    { "id": "goblins", "name": "Goblins", "file": "goblins.json" },
+    { "id": "elves", "name": "Elves", "file": "elves.json" }
   ]
 }
 ```
+
+Registering a faction here is part of the definition-of-done for adding an army reference — a `{faction}.json` file is only discoverable once its `{ id, name, file }` entry exists in this manifest. Adding a faction to an existing system is therefore: (1) author `data/armies/{system}/{faction}.json`; (2) add its entry here.
 
 ### `data/armies/kow/goblins.json` — Army Reference Data
 
@@ -659,6 +662,8 @@ Like `options.scope: "battalion"`, this is capture-only in v1: Muster stores the
 
 Category is **per size**, not per family: the same unit at different sizes can sit in different categories (e.g. Fleabag Riders are `"Auxiliary"` as a Troop, `"Core"` as a Regiment), so it lives on each size-specific `unit_id`.
 
+Deriving category from the army-list PDF: the section **heading** sets a unit's base category, but a heading may span two categories (e.g. **Core and Auxiliary**). Within such a block, a size row printed with an `(AUX)` marker overrides *that row* to `Auxiliary`; unmarked rows take the block's primary category. `(AUX)` is a per-row override, never an inline category tag.
+
 Commander units additionally carry `commander_role` (`"champion"` or `"warlord"`), preserving the rulebook's two distinct constraints without a hardcoded grouping: the Commander unlock (1-4/Battalion) keys off `category == "Commander"`, the Warlord cap (1/Battalion) off `commander_role == "warlord"`. Absent on non-Commanders.
 
 | Field | Required | Notes |
@@ -667,6 +672,12 @@ Commander units additionally carry `commander_role` (`"champion"` or `"warlord"`
 | `commander_role` | Commanders only | `"champion"` or `"warlord"`. Absent otherwise. |
 
 Like `availability`, capture-only in v1 — stored now, not yet enforced.
+
+**Composition notes (inherent list-building rules).** Some Commander units grant army-list rules that reclassify or mutate *other* units in their Battalion — e.g. a hero that makes another unit a `Specialist` or `Core` choice. These are inherent (no cost, no player choice) and not combat special rules, so they live in an optional `composition_notes` array of verbatim strings, kept out of `special_rules`. Present only on units that carry such a rule. Capture-only in v1 — stored verbatim for display and as a clean read-target for the future composition system. Player-*chosen* upgrades that mutate other units remain `options` with `scope: "battalion"`; `composition_notes` covers only always-on, non-chosen rules.
+
+| Field | Required | Notes |
+|---|---|---|
+| `composition_notes` | no | Array of verbatim strings. Inherent (non-chosen) rules affecting *other* units' composition. Absent unless present in the source. |
 
 ### `data/systems/kow-training.json` — Training Ground Question Bank
 
@@ -1020,6 +1031,7 @@ Target: functional at the table within 3 weeks
 - [ ] Reflection tagging — link units and rules to Chronicle entries
 - [ ] Win/loss statistics in Chronicle
 - [ ] Surface Battle mode quick notes in Chronicle (see §5.3)
+- [ ] Army-composition validation/enforcement in Muster — action the capture-only `category` / `commander_role` / `availability` data and battalion-scope options; includes a `resolver.js` extension for **cross-unit battalion effects** (a hero mutating/reclassifying other units — e.g. Elf Archwraith → Boskwraiths, Drakon Lord → Drakon Riders Specialist, Nimue → Gladestalker Regiments Core), which the self-scoped `effects` schema cannot represent
 
 ### Icebox — Maybe one day
 - [ ] Second game system support
