@@ -343,6 +343,55 @@ window.WBCResolver = (() => {
     return artefactCatalogue.filter((a) => isArtefactEligibleForUnit(unit, a, artefactRules));
   }
 
+  // ─── ENUM VALIDATION (type / size) ────────────────────────────────────────
+
+  /**
+   * Validate every unit's `type` and `size` against the canonical enums in
+   * kow-enums.json (G1 §5). Pure — takes the enum data as an argument rather
+   * than fetching it, keeping resolver.js free of I/O.
+   *
+   * Fails loudly rather than warning: an unlisted type/size is a data-authoring
+   * bug (typo, unnormalized PDF value, ad-hoc invention in a faction file),
+   * not a runtime condition the app can degrade gracefully around — better to
+   * surface it immediately at load than have it silently break rules logic
+   * later. Throws a single Error listing every located violation (unit_id +
+   * field + offending value) so multiple bad entries surface at once rather
+   * than one-at-a-time across repeated fixes.
+   *
+   * @param {Array} units — an army's units array (e.g. goblins.json.units)
+   * @param {Object} enums — kow-enums.json contents ({ unit_types, unit_sizes, ... })
+   * @throws {Error} if any unit has a type or size not present in the enums
+   */
+  function validateUnitEnums(units, enums) {
+    if (!Array.isArray(units)) {
+      throw new Error('[Resolver] validateUnitEnums: expected an array of units.');
+    }
+    if (!enums || !Array.isArray(enums.unit_types) || !Array.isArray(enums.unit_sizes)) {
+      throw new Error('[Resolver] validateUnitEnums: enums must include unit_types and unit_sizes arrays.');
+    }
+
+    const validTypes = new Set(enums.unit_types);
+    const validSizes = new Set(enums.unit_sizes);
+    const errors = [];
+
+    for (const unit of units) {
+      const uid = unit && unit.unit_id ? unit.unit_id : '(missing unit_id)';
+      if (!validTypes.has(unit.type)) {
+        errors.push(`unit "${uid}": type "${unit.type}" is not in kow-enums.json unit_types`);
+      }
+      if (!validSizes.has(unit.size)) {
+        errors.push(`unit "${uid}": size "${unit.size}" is not in kow-enums.json unit_sizes`);
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new Error(
+        `[Resolver] Unit enum validation failed (${errors.length} issue(s)):\n` +
+        errors.map((e) => `  - ${e}`).join('\n')
+      );
+    }
+  }
+
   // ─── PUBLIC API ──────────────────────────────────────────────────────────────
 
   return {
@@ -350,6 +399,7 @@ window.WBCResolver = (() => {
     resolve,
     isArtefactEligibleForUnit,
     getEligibleArtefacts,
+    validateUnitEnums,
   };
 
 })();
