@@ -33,6 +33,7 @@
   var STORAGE_KEY_CONFIG      = 'wbc_system_config';
   var STORAGE_KEY_ARMY_INDEX  = 'wbc_army_index';
   var STORAGE_KEY_ARTEFACTS   = 'wbc_artefacts_cache';
+  var STORAGE_KEY_ENUMS       = 'wbc_enums_cache';
   var STORAGE_KEY_SKIN        = 'wbc_skin_key';
   var STORAGE_KEY_ACTIVE_GAME = 'wbc_active_game';
 
@@ -56,6 +57,9 @@
     artefactData : null,   // parsed kow-artefacts.json (catalogue) — may stay null;
                             // absence degrades Muster/Battle to no-artefact display only
                             // (Fail Gracefully — never blocks boot or the core modes)
+    enumData     : null,   // parsed kow-enums.json (type/size vocab) — used only by
+                            // _validateArmyEnums() as a data-integrity guard; may stay
+                            // null (guard inactive, warned loudly) without blocking boot
     isOffline    : false,
 
     /* Called by mode modules after they initialise */
@@ -327,7 +331,12 @@
         WBCStorage.set(STORAGE_KEY_CONFIG, JSON.stringify(config));
         _onConfigReady();
         _loadArtefactData(WBC.currentSystem);   // parallel, non-blocking (Fail Gracefully)
-        return _loadArmyIndex(WBC.currentSystem);
+        var armyPromise = _loadArmyIndex(WBC.currentSystem);
+        var enumPromise = _loadEnumData(WBC.currentSystem);
+        /* Validation needs both — armyData and enumData resolve independently
+           and in either order, so wait on both before running the guard. */
+        Promise.all([armyPromise, enumPromise]).then(_validateArmyEnums);
+        return armyPromise;
       })
       .catch(function (err) {
         console.warn('WBC: config fetch failed, attempting cache fallback:', err);
@@ -344,7 +353,9 @@
         WBC.currentSystem = WBC.config.system_id || DEFAULT_SYSTEM;
         _onConfigReady();
         if (_currentSystemMeta) { _loadArtefactData(WBC.currentSystem); }
-        _loadArmyIndex(WBC.currentSystem);
+        var armyPromise = _loadArmyIndex(WBC.currentSystem);
+        var enumPromise = _currentSystemMeta ? _loadEnumData(WBC.currentSystem) : Promise.resolve();
+        Promise.all([armyPromise, enumPromise]).then(_validateArmyEnums);
         _showDataNotice('Rules loaded from cache. Some data may be out of date.');
       } else {
         _showDataNotice('Could not load game rules. Check your connection and reload.');
@@ -438,6 +449,92 @@
         /* If both fetch and cache fail, WBC.artefactData stays null — the
            app continues to boot and function normally without artefacts. */
       });
+  }
+
+  /* ─── Enum data loading ──────────────────────────────────────────────────── */
+
+  /**
+   * _loadEnumData(systemId)
+   * Fetches the system's canonical type/size enum file (data/systems/{enum_file}),
+   * if the active systems/index.json entry declares one (mirrors artefact_file).
+   *
+   * Unlike the artefact catalogue, this is not a "nice to have" — it's WBC's
+   * only guard against faction-data drift (typo'd/unnormalized type or size
+   * values slipping into a faction JSON; see resolver.js validateUnitEnums()
+   * and the G1 design doc). So an absent or malformed enum_file warns loudly
+   * rather than skipping silently — a deploy that forgets the file shouldn't
+   * quietly disable the only check catching bad faction data.
+   *
+   * Still never blocks boot: Fail Gracefully, same as every other loader here.
+   * A failed/missing enum file just means the guard doesn't run this session.
+   *
+   * @param {string} systemId
+   * @returns {Promise<void>}
+   */
+  function _loadEnumData(systemId) {
+    var fileName = _currentSystemMeta && _currentSystemMeta.enum_file;
+    if (!fileName) {
+      console.warn(
+        'WBC: no enum_file declared for system "' + systemId + '" in systems/index.json — ' +
+        'unit type/size validation guard is INACTIVE this session.'
+      );
+      return Promise.resolve();
+    }
+
+    return _fetchJSON(SYSTEM_BASE_URL + fileName)
+      .then(function (data) {
+        if (!data || !Array.isArray(data.unit_types) || !Array.isArray(data.unit_sizes)) {
+          throw new Error('Enum file malformed for system: ' + systemId);
+        }
+        WBC.enumData = data;
+        WBCStorage.set(STORAGE_KEY_ENUMS, JSON.stringify(data));
+      })
+      .catch(function (err) {
+        console.warn('WBC: enum file fetch failed, attempting cache:', err);
+        try {
+          var raw = WBCStorage.get(STORAGE_KEY_ENUMS);
+          if (raw) { WBC.enumData = JSON.parse(raw); }
+        } catch (cacheErr) {
+          console.error('WBC: enum file cache fallback failed:', cacheErr);
+        }
+        if (!WBC.enumData) {
+          console.warn('WBC: unit type/size validation guard is INACTIVE this session (enum file unavailable).');
+        }
+      });
+  }
+
+  /* ─── Enum validation (post-load guard) ─────────────────────────────────── */
+
+  /**
+   * _validateArmyEnums()
+   * Runs once both WBC.armyData and WBC.enumData have resolved, in whichever
+   * order (see the Promise.all() call sites above). Calls the pure
+   * WBCResolver.validateUnitEnums() guard, which throws fail-loud by design
+   * (a located, detailed Error listing every bad type/size).
+   *
+   * This call site is where that fail-loud validator gets reconciled with
+   * the app's Fail Gracefully posture: catch the throw, log the full located
+   * detail to console.error for debugging, and surface a short, actionable
+   * one-line summary (first offending unit_id + field) via the existing
+   * on-screen data notice — but never block boot or null out armyData.
+   * An enum violation is a data-authoring bug (yours), not a reason to brick
+   * Battle/Chronicle mid-session.
+   *
+   * If enumData never loaded, the guard is skipped — already warned about
+   * in _loadEnumData().
+   */
+  function _validateArmyEnums() {
+    if (!WBC.armyData || !Array.isArray(WBC.armyData.units) || !WBC.enumData) return;
+
+    try {
+      WBCResolver.validateUnitEnums(WBC.armyData.units, WBC.enumData);
+    } catch (err) {
+      console.error('WBC: unit enum validation failed —', err.message);
+      var firstIssue = (err.message.split('\n')[1] || err.message)
+        .replace(/^\s*-\s*/, '')
+        .trim();
+      _showDataNotice('Data issue: ' + firstIssue + ' — see console for full detail.');
+    }
   }
 
   /* ─── Data notice ───────────────────────────────────────────────────────── */
