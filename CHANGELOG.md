@@ -4,6 +4,41 @@ All notable changes to Warboss Companion are documented here.
 Format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
+- Elves army reference — the first faction authored on the hardened type/size
+  template (see G1 below). Transcribed faithfully from the KoW 4E rulebook
+  army-list section, staged (base stats → options/availability → assembled
+  JSON) with a per-unit verification table against the source
+  - Added `data/armies/kow/elves.json`: 27 units / 40 size-entries across the
+    Core & Auxiliary, Specialist, Support, Champion, and Warlord sections.
+    `ne` single-valued (no `+`); every single-model unit `size: "1"`; all
+    `unit_id`s unique; points present on all entries; passes
+    `validateUnitEnums()` against `kow-enums.json`
+  - `data/armies/kow/index.json`: registered the faction (`{ "id": "elves",
+    "name": "Elves", "file": "elves.json" }`). Registration here is now part
+    of the definition-of-done for adding a faction — a faction file is only
+    discoverable once listed in the manifest
+  - Introduced the optional `composition_notes` field (array of verbatim
+    strings) for inherent, non-chosen list-building rules a hero grants to
+    *other* units (Drakon Lord & Dragon Kindred Lord → Drakon Riders become
+    Specialist; Nimue → Kindred Gladestalker Regiments become Core). Kept out
+    of `special_rules`; a clean read-target for the future composition system.
+    Capture-only in v1
+  - Captured the source pattern that one section heading can span two
+    categories ("Core and Auxiliary"), with `(AUX)` on a size row as a per-row
+    Auxiliary override. The Archwraith → Boskwraiths battalion upgrade is
+    stored as a battalion-scope option (description-only — actioning
+    cross-unit effects is a roadmap item)
+  - SPEC.md updated: Elves in the army-manifest example + faction-registration
+    note; the PDF category-derivation note; a `composition_notes` data-
+    structure entry; and a v0.3+ roadmap item for army-composition validation /
+    cross-unit battalion effects
+  - Known gap surfaced (not a code change): Muster has no faction picker — the
+    app auto-loads `armyIndex.armies[0]` (Goblins), so Elves data ships but is
+    not yet selectable in the UI. Faction selection is a new feature still to
+    be designed
+  - Deploy step (outside this change): bump the service worker cache version
+    and add `data/armies/kow/elves.json` to the precache list so the faction
+    loads offline
 - Unit `type`/`size` schema hardening (G1) — introduced a canonical type/size
   vocabulary and a load-time validation guard, ahead of authoring the remaining
   19 KoW factions from the audited Goblins template
