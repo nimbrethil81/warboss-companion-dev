@@ -153,7 +153,8 @@ warboss-companion/
 │   └── armies/
 │       └── kow/
 │           ├── index.json  ← Manifest of all KoW factions
-│           └── goblins.json ← Goblin unit roster with stats
+│           ├── goblins.json ← Goblin unit roster with stats
+│           └── elves.json   ← Elf unit roster with stats
 │
 ├── docs/
 │   └── training-categories.md ← Question-authoring reference (not shipped)
@@ -168,7 +169,9 @@ warboss-companion/
 - `storage.js` is the only file that touches localStorage. Centralises offline fallback.
 - `resolver.js` is the only place effective profiles and effective points are computed. Given a unit, its selected option ids, and an optional equipped artefact, it produces the effective profile (stats, added special rules, added weapons, granted spells) and effective points; it also decides artefact eligibility (via `kow.json`'s `artefact_rules` plus each artefact's own restrictions) and normalises the saved-army `units` field into a consistent `{ unit_id, options, artefact }` shape. Both Muster (authoring/pricing) and Battle (roster build) consume it, so option/artefact logic is never duplicated. Pure logic — no DOM, localStorage, Sheets, or fetch. It also exposes `validateUnitEnums()`, which checks each unit's `type`/`size` against `kow-enums.json` at load (see *Enum validation* under Data Flow).
 - `data/systems/kow.json` is the single source of truth for all KoW game rules, turn sequence, and prompts. Adding a new game system means adding a new JSON file alongside it — no code changes required.
-- `data/armies/kow/goblins.json` holds static unit reference data. This belongs in version control, not in Sheets. Sheets stores game results and reflections.
+- `data/armies/kow/goblins.json`, `data/armies/kow/elves.json`, and every other `{faction}.json` hold static unit reference data. This belongs in version control, not in Sheets. Sheets stores game results and reflections.
+- **Faction data model (keyed cache).** At boot, `app.js` loads *every* faction file listed in the army manifest into `WBC.factionData`, an object keyed by faction id (`{ goblins: {…}, elves: {…} }`). This is the runtime source of truth for unit resolution: Muster and Battle look units up through the single helper `WBC.getFactionData(faction_id)`, so armies of different factions can be priced and resolved side by side in one view (the Battle army dropdown, the Muster saved-army list). Loading all factions at boot (rather than lazily per army) keeps every resolve site a synchronous lookup and re-validates all faction data on every boot; lazy per-army loading is noted as a public-release-phase optimisation, not built. `getFactionData()` defaults a missing or unknown id to the legacy default faction (`goblins`) so armies saved before faction selection existed still resolve.
+- `WBC.armyData` is a **temporary back-compat alias** pointing at the default faction's data, retained only so any call site not yet migrated to `getFactionData()` still functions during the transition. New code must never read it. It is marked for removal (see §7, Roadmap).
 - `data/armies/kow/index.json` is a manifest listing all available factions for KoW. The app reads this to discover armies without needing to enumerate directory contents (which browsers cannot do natively). Adding a new army means adding the file and one line to this manifest.
 - `data/systems/index.json` is a manifest listing all supported game systems. Adding a new game system means adding a new systems JSON file, a new `armies/{system}/` folder, and one line to this manifest.
 - `data/systems/kow-training.json` holds the Training Ground question bank and its category vocabulary. It is **not** part of the boot chain — `training.js` loads it lazily on first activation of the mode, and the `training_file` manifest field is optional. A missing or malformed bank degrades Training Ground to an empty/error state and cannot affect Muster, Battle, or Chronicle.
@@ -180,12 +183,17 @@ warboss-companion/
 ```
 On app load
   └── app.js loads kow.json (turn sequence, prompts, artefact_rules)
+  └── app.js loads EVERY faction file in the army manifest into
+      WBC.factionData, keyed by faction id (load-all-at-boot). Each faction
+      loads independently — one failing leaves only its key absent (with a
+      notice) while the others still work (Fail Gracefully)
   └── app.js loads kow-artefacts.json in parallel (if the system declares
       artefact_file) — non-blocking; on failure WBC.artefactData stays null
       and the app boots and runs normally without artefacts (Fail Gracefully)
   └── app.js loads kow-enums.json in parallel (if the system declares
-      enum_file) — non-blocking; once both army data and enums resolve,
-      resolver.js validateUnitEnums() checks every unit's type/size
+      enum_file) — non-blocking; once the factions and enums resolve,
+      resolver.js validateUnitEnums() checks every unit's type/size in
+      every loaded faction
   └── sheets.js fetches saved armies and past games (with localStorage fallback on failure)
 
 During Muster
@@ -214,7 +222,7 @@ On Training Ground open (first time only)
   └── Outside the boot chain — on failure or malformed data it shows an empty/error state; core modes unaffected
 ```
 
-**Enum validation — fail-loud validator, catch-and-surface caller.** `resolver.js`'s `validateUnitEnums()` *throws* on any unlisted `type`/`size` — a loud, located signal for the data author. The `app.js` call site (`_validateArmyEnums`, run once both army data and enums have resolved) deliberately reconciles that with Fail Gracefully: it catches the throw, logs the full located detail to `console.error`, and surfaces the first offending `unit_id`+field in the on-screen data notice — but never nulls `armyData` or blocks boot. An enum violation is an authoring bug, not a runtime condition; for a single-user app the right response is a visible warning plus one wrong value, not a bricked Battle/Chronicle mid-session. This is intentional, not an oversight. The same pure validator is reusable in a Node/CI pre-deploy step for the public-release phase (§2, Future Proofing), where rejecting bad data before ship is the correct posture.
+**Enum validation — fail-loud validator, catch-and-surface caller.** `resolver.js`'s `validateUnitEnums()` *throws* on any unlisted `type`/`size` — a loud, located signal for the data author. The `app.js` call site (`_validateArmyEnums`, run once the factions and enums have resolved) deliberately reconciles that with Fail Gracefully: it validates **each loaded faction** in turn, and for any that throws it catches, logs the full located detail to `console.error`, and surfaces the faction plus the first offending `unit_id`+field in the on-screen data notice — but never nulls a faction or blocks boot. Because all factions load at boot, this re-checks every faction file on every boot, catching drift anywhere, not just in the default faction. An enum violation is an authoring bug, not a runtime condition; for a single-user app the right response is a visible warning plus one wrong value, not a bricked Battle/Chronicle mid-session. This is intentional, not an oversight. The same pure validator is reusable in a Node/CI pre-deploy step for the public-release phase (§2, Future Proofing), where rejecting bad data before ship is the correct posture.
 
 ### Google Sheets Schema
 
@@ -225,10 +233,13 @@ Four tabs. Each tab represents one entity type — no data duplicated across tab
 |---|---|---|
 | army_id | string | UUID, generated on creation |
 | army_name | string | e.g. "Goblin Raiding Party" |
+| faction_id | string | Manifest faction id, e.g. "goblins" / "elves". Fixed at creation. A missing value (rows created before faction selection existed) is read as the legacy default `"goblins"`; writers always populate it. |
 | game_system | string | e.g. "kow" — matches JSON filename |
 | units | JSON string | Serialised array of unit entries (see below) |
 | created_at | timestamp | ISO 8601 |
 | updated_at | timestamp | ISO 8601 |
+
+> **Physical column order.** The Apps Script backend writes row values by position, so the order of `COLUMNS.armies` in `Code.gs` must match the physical left-to-right column order in the sheet. `faction_id` is the rightmost column (immediately after `updated_at`); if it is ever inserted elsewhere, `COLUMNS.armies` must be reordered to match, or writes land in the wrong columns.
 
 **`armies.units` entry forms.** The serialised array may hold entries in any of
 these shapes, freely mixed:
@@ -247,7 +258,11 @@ armies load unchanged and migrate to the current form the next time they are
 saved in Muster (Fail Gracefully). Id immutability (unit, option, and artefact
 ids alike) is what makes stored references stable across saves. Normalisation to
 a consistent `{ unit_id, options, artefact }` array happens in exactly one
-place — `resolver.js` — never re-implemented per caller.
+place — `resolver.js` — never re-implemented per caller. The `unit_id`s in an
+army resolve against that army's **own faction** (`faction_id` → the keyed
+`WBC.factionData` entry), so Muster pricing and Battle roster build always read
+the correct faction's stats even when several factions' armies are listed
+together.
 
 **`games` tab**
 | Column | Type | Notes |
@@ -323,7 +338,7 @@ localStorage is the source of truth **during an active game only**. On game end,
 
 All stat fields on a roster instance are the **effective** values from
 `resolver.js`, snapshotted once at game start and never re-resolved — mid-game
-state is stable even if `goblins.json` changes before the game ends. `inst_id`
+state is stable even if the army's faction file changes before the game ends. `inst_id`
 is unique per instance so duplicate units (e.g. 6× Goblin Rabble) track routed/
 damage state independently. `weapons`, `spells`, `selected_option_ids`,
 `option_labels`, and the singular `artefact_id`/`artefact_label` are **omitted
@@ -336,6 +351,7 @@ the plural `option_labels`.
 ### PWA & Offline Strategy
 
 - `service-worker.js` caches `index.html`, `style.css`, all JS files, and all JSON files in `/data/`
+- Every faction file in the manifest (`goblins.json`, `elves.json`, …) is named in the precache list, so building and playing armies of any faction works offline. This list currently tracks the manifest by hand; deriving it from the manifest at install is noted as a public-release-phase clean-up
 - The app is fully functional offline for Battle mode (no Sheets required during play)
 - The Training Ground question bank (`kow-training.json`) is precached in the shell, so the quiz works offline; if the file is ever absent, the mode degrades gracefully and the rest of the app is unaffected
 - Muster and Chronicle modes degrade gracefully — cached data is shown with a notice if Sheets is unreachable
@@ -560,7 +576,7 @@ Registering a faction here is part of the definition-of-done for adding an army 
 
 ### `data/armies/kow/goblins.json` — Army Reference Data
 
-Static reference for the Goblin army. Used in Muster to build rosters and in Battle to populate the unit list with relevant stats and special rules.
+Static reference for the Goblin army. Used in Muster to build rosters and in Battle to populate the unit list with relevant stats and special rules. Every faction file (`goblins.json`, `elves.json`, …) shares this shape; at boot all of them are loaded into the keyed `WBC.factionData` cache and resolved via `WBC.getFactionData(faction_id)` (see §3).
 
 ```json
 {
@@ -823,6 +839,14 @@ Loaded via the optional `enum_file` manifest field, in parallel with the army in
 - Save army to Google Sheets
 - Load a saved army into Battle mode
 
+**Faction selection (v0.3):**
+- Creating a new army starts with a **faction choice**. The picker is a dropdown populated from the army manifest; no faction is pre-selected, so the player makes a deliberate choice (an Elf army is genuinely Elves, never a silent Goblin default). Save stays disabled until both a name and a faction are set.
+- **Single-faction shortcut:** if the system exposes only one faction, the picker is skipped and that faction is auto-selected — the new-army flow stays zero-friction for single-faction systems.
+- The unit picker is scoped to the chosen faction: before a faction is picked it shows a "choose a faction first" hint and lists nothing; once picked it lists that faction's units.
+- Changing the faction on a new army after units have been added prompts a confirmation and clears those units, since their `unit_id`s only resolve within their original faction.
+- **Faction is fixed at creation (D4).** Editing a saved army shows its faction as a read-only label, not a control — a `unit_id` maps to exactly one faction, so switching faction means creating a new army.
+- The chosen `faction_id` is written on every save (see §4, `armies` tab); `game_system` is taken from the chosen faction file's own `game_system` field. Existing Goblin armies gain `faction_id: "goblins"` the next time they are saved.
+
 **Options authoring (v0.3 — Options Consumption):**
 - The draft is an **index-addressed** array of `{ unit_id, options, artefact }` entries, not a flat `unit_id` list, so two copies of the same unit can carry different options/artefact. Removal and per-row editing address a row by its array index.
 - Each selected unit with options and/or eligible artefacts shows an expand control (⚙ + fitted-count badge, counting options + artefact) opening an inline panel:
@@ -869,7 +893,7 @@ Loaded via the optional `enum_file` manifest field, in parallel with the army in
 - Displays all units in the loaded army
 - One-tap "Routed" toggle per unit — routed units are visually marked and moved to a collapsed section
 - Units not yet engaged remain prominent
-- Each unit card reflects the **effective** profile from the resolver — the mounted/upgraded/artefact-bearing unit, not the base entry — with fitted options and the equipped artefact shown as chips under the unit name (the artefact chip visually distinct), and any added weapons / granted spells shown as compact sub-lines (v0.3, Options + Artefacts Consumption). Armies referencing a now-`retired` unit_id still resolve and display (unit_id immutability protects the reference).
+- Each unit card reflects the **effective** profile from the resolver — the mounted/upgraded/artefact-bearing unit, not the base entry — with fitted options and the equipped artefact shown as chips under the unit name (the artefact chip visually distinct), and any added weapons / granted spells shown as compact sub-lines (v0.3, Options + Artefacts Consumption). Armies referencing a now-`retired` unit_id still resolve and display (unit_id immutability protects the reference). Resolution is **faction-scoped** (v0.3): the army-select dropdown prices each saved army against its own faction, and the game-start roster resolves the chosen army against its `faction_id`, so a mixed list of Goblin and Elf armies prices and loads correctly.
 
 *Phase prompts*
 - At the start of each phase, display relevant prompts from `kow.json`
@@ -1025,12 +1049,14 @@ Target: functional at the table within 3 weeks
 - [x] Training Ground (beta): multiple-choice rules-recall quiz mode
 - [x] Options Consumption: unit options (upgrades) authored in Muster and shown in Battle; shared `resolver.js`; effective-profile roster; category grouping + availability badges (display-only); retired-unit resolution fix
 - [x] Artefacts Consumption: magic artefact catalogue (`kow-artefacts.json`); `artefact_rules` eligibility in `kow.json`; per-unit artefact authoring in Muster with unique-per-army enforcement; artefact chip + effective profile in Battle; `modify_field` effect type
+- [x] Faction selection: choose a faction when creating an army; `faction_id` persisted on the army record; keyed `WBC.factionData` cache with load-all-at-boot and per-faction enum validation; faction-scoped resolution in Muster and Battle; faction fixed at creation (read-only on edit); single-faction auto-select shortcut; faction files precached for offline. Introduced the temporary `WBC.armyData` back-compat alias noted for removal below.
 - [ ] Training Ground: rules-accuracy audit of the question bank against the KoW 4E mini-rulebook and FAQ (structural validation done; rules-correctness pending)
 - [ ] Per-unit damage tracking in Battle mode
 - [ ] Quick reference rule cards accessible mid-game
 - [ ] Reflection tagging — link units and rules to Chronicle entries
 - [ ] Win/loss statistics in Chronicle
 - [ ] Surface Battle mode quick notes in Chronicle (see §5.3)
+- [ ] **Remove the temporary `WBC.armyData` back-compat alias** — a transition scaffold left in place during faction selection so any call site not yet reading `WBC.getFactionData(faction_id)` still resolves against the default faction. It is a *possible future direction / cleanup*, not a permanent part of the design: once no reader of `WBC.armyData` remains, delete the field, the `_syncArmyDataAlias()` helper, and its call in `app.js`.
 - [ ] Army-composition validation/enforcement in Muster — action the capture-only `category` / `commander_role` / `availability` data and battalion-scope options; includes a `resolver.js` extension for **cross-unit battalion effects** (a hero mutating/reclassifying other units — e.g. Elf Archwraith → Boskwraiths, Drakon Lord → Drakon Riders Specialist, Nimue → Gladestalker Regiments Core), which the self-scoped `effects` schema cannot represent
 
 ### Icebox — Maybe one day
