@@ -148,11 +148,16 @@ window.WBCSheets = (() => {
    * {
    *   army_id:     string,   — UUID
    *   army_name:   string,   — display name
+   *   faction_id:  string,   — manifest army id, e.g. "goblins" / "elves"
    *   game_system: string,   — e.g. "kow"
-   *   units:       string,   — JSON.stringify(unit_ids[]) — array of unit_id strings only
+   *   units:       string,   — JSON.stringify(entries[]) — { unit_id, options[], artefact }
    *   created_at:  string,   — ISO 8601
    *   updated_at:  string,   — ISO 8601
    * }
+   *
+   * faction_id and game_system pass straight through to the Apps Script proxy;
+   * this wrapper is transparent to the record shape. The armies tab and the
+   * Apps Script COLUMNS.armies list must both include faction_id.
    *
    * @param {Object} army
    * @returns {Promise<{ success: boolean, error: string|null }>}
