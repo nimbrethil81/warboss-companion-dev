@@ -19,21 +19,21 @@
  *   Sheets (with cache fallback). The chosen army's saved units field is
  *   normalised via WBCResolver.normalizeArmyUnits() (accepts legacy
  *   bare-unit_id entries and current {unit_id, options, artefact} entries),
- *   then each entry is resolved via WBCResolver.resolve() against
- *   WBC.armyData (goblins.json) and WBC.artefactData (kow-artefacts.json)
- *   to build the in-game roster. The EFFECTIVE profile (post-options,
- *   post-artefact) is snapshotted into each roster instance at game start
- *   and never re-resolved — mid-game state stays stable even if goblins.json
- *   or kow-artefacts.json changes before the game ends. The selected army is
- *   held in WBCStorage.KEYS.SELECTED_ARMY for the duration of setup; it is
- *   cleared once the game object is built.
+ *   then each entry is resolved via WBCResolver.resolve() against the army's
+ *   own faction data (WBC.getFactionData(army.faction_id)) and
+ *   WBC.artefactData (kow-artefacts.json) to build the in-game roster. The
+ *   EFFECTIVE profile (post-options, post-artefact) is snapshotted into each
+ *   roster instance at game start and never re-resolved — mid-game state stays
+ *   stable even if the faction file or kow-artefacts.json changes before the
+ *   game ends. The selected army is held in WBCStorage.KEYS.SELECTED_ARMY for
+ *   the duration of setup; it is cleared once the game object is built.
  *
  * Dependencies (must be loaded before this file):
  *   - storage.js  (WBCStorage)
  *   - resolver.js (WBCResolver) — all saved-army normalisation and
  *                                 option/effect resolution goes through this
  *   - sheets.js   (WBCSheets)
- *   - app.js      (window.WBC — provides WBC.systemConfig, WBC.armyData,
+ *   - app.js      (window.WBC — provides WBC.systemConfig, WBC.getFactionData,
  *                  WBC.switchTab)
  *
  * Module isolation rules:
@@ -298,7 +298,7 @@ var WBCBattle = (function () {
       var entries = WBCResolver.normalizeArmyUnits(a.units);
 
       var pts = entries.reduce(function (sum, entry) {
-        var u = _findUnitInArmyData(entry.unit_id);
+        var u = _findUnitInArmyData(entry.unit_id, a.faction_id);
         var art = _findArtefact(entry.artefact);
         return sum + (u ? WBCResolver.resolve(u, entry.options, art).pts : 0);
       }, 0);
@@ -319,11 +319,16 @@ var WBCBattle = (function () {
   }
 
   /**
-   * Look up a unit in WBC.armyData by unit_id.
-   * Returns null if not found (handles retired/unknown units gracefully).
+   * Look up a unit by unit_id within a specific faction's data.
+   * Resolves via WBC.getFactionData(factionId), which defaults a missing/
+   * unknown factionId to the legacy faction — so armies saved before
+   * faction_id existed still resolve. Returns null if not found (handles
+   * retired/unknown units gracefully).
+   * @param {string} unitId
+   * @param {string} factionId — the army's faction_id
    */
-  function _findUnitInArmyData(unitId) {
-    var armyData = window.WBC && window.WBC.armyData;
+  function _findUnitInArmyData(unitId, factionId) {
+    var armyData = window.WBC && window.WBC.getFactionData(factionId);
     if (!armyData || !Array.isArray(armyData.units)) return null;
     for (var i = 0; i < armyData.units.length; i++) {
       if (armyData.units[i].unit_id === unitId) return armyData.units[i];
@@ -449,24 +454,25 @@ var WBCBattle = (function () {
       return;
     }
 
-    /* Resolve saved-army entries → full unit objects from WBC.armyData
-       (goblins.json), running each through the shared WBCResolver so the
-       roster snapshots the EFFECTIVE profile (post-options), not the base
-       one. unit_id identifies the UNIT TYPE and stays untouched — Muster/
-       Sheets still key off it. Duplicate entries in the army (e.g. 6x
-       Goblin Rabble) share that unit_id, so each gets its own inst_id here
-       to track routed/damage state per instance.
+    /* Resolve saved-army entries → full unit objects from the army's OWN
+       faction data (WBC.getFactionData(armyRecord.faction_id)), running each
+       through the shared WBCResolver so the roster snapshots the EFFECTIVE
+       profile (post-options), not the base one. unit_id identifies the UNIT
+       TYPE and stays untouched — Muster/Sheets still key off it. Duplicate
+       entries in the army (e.g. 6x Goblin Rabble) share that unit_id, so each
+       gets its own inst_id here to track routed/damage state per instance.
 
        The snapshot is taken once, at game start, and never re-resolved:
-       mid-game state stays stable even if goblins.json or kow-artefacts.json
-       changes before the game ends (decision 4, Options Consumption design;
-       extended to artefacts on the same basis). */
+       mid-game state stays stable even if the faction file or
+       kow-artefacts.json changes before the game ends (decision 4, Options
+       Consumption design; extended to artefacts on the same basis). */
     var entries = WBCResolver.normalizeArmyUnits(armyRecord.units);
+    var factionId = armyRecord.faction_id;
 
     var units = [];
     var missing = [];
     entries.forEach(function (entry) {
-      var u = _findUnitInArmyData(entry.unit_id);
+      var u = _findUnitInArmyData(entry.unit_id, factionId);
       if (u) {
         var artefact = _findArtefact(entry.artefact);
         var resolved = WBCResolver.resolve(u, entry.options, artefact);
@@ -514,7 +520,8 @@ var WBCBattle = (function () {
     if (missing.length > 0) {
       /* Non-fatal: warn but continue with the units that did resolve */
       console.warn('[battle] ' + missing.length + ' unit(s) could not be resolved. '
-        + 'They may have been retired from goblins.json.');
+        + 'They may have been retired from the faction data, or the army\'s '
+        + 'faction file failed to load.');
     }
 
     if (units.length === 0) {
