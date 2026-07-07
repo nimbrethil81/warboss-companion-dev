@@ -2,8 +2,9 @@
  * muster.js — Muster mode logic for Warboss Companion (v0.3 — Options + Artefacts Consumption)
  *
  * Responsibilities:
- *   - Browse units from WBC.armyData (goblins.json) and add/remove them
- *     to build a named army list
+ *   - Browse units from the selected faction's data (via
+ *     WBC.getFactionData(faction_id)) and add/remove them to build a named
+ *     army list. The faction is chosen at creation and fixed thereafter.
  *   - Author unit options (upgrades) per selected unit — independent toggles,
  *     mutually-exclusive groups, and informational battalion-scope options
  *   - Author a single magic artefact per eligible unit (WBC.artefactData —
@@ -33,14 +34,15 @@
  *   - resolver.js (WBCResolver) — all option/effect/artefact resolution +
  *                                 saved-army entry normalisation goes through this
  *   - sheets.js   (WBCSheets)
- *   - app.js      (window.WBC — provides WBC.armyData, WBC.systemConfig,
- *                  WBC.artefactData, WBC.switchTab)
+ *   - app.js      (window.WBC — provides WBC.getFactionData, WBC.armyIndex,
+ *                  WBC.systemConfig, WBC.artefactData, WBC.switchTab)
  *
  * Module isolation rules:
  *   - This file NEVER touches localStorage directly — all reads/writes go via WBCStorage
  *   - This file NEVER reads Sheets directly — all reads/writes go via WBCSheets
  *   - This file NEVER computes effective stats/points itself — always via WBCResolver
- *   - No unit stat values are hardcoded here — all data comes from WBC.armyData at runtime
+ *   - No unit stat values are hardcoded here — all data comes from the
+ *     selected faction's data (WBC.getFactionData) at runtime
  *   - DOM manipulation is scoped to #page-muster and its children only
  */
 
@@ -58,6 +60,10 @@ var WBCMuster = (function () {
   var _draft = {
     army_id:    null,       // null = new army; UUID = editing existing
     army_name:  '',
+    faction_id: null,       // manifest army id (e.g. 'goblins','elves'); null on a
+                            // new army until the user picks one (D5). Fixed once the
+                            // army is saved (D4). Legacy saved armies with no
+                            // faction_id are read as DEFAULT_FACTION on the edit path.
     entries:    [],
     pts_limit:  2000,
   };
@@ -100,31 +106,103 @@ var WBCMuster = (function () {
 
   // ─── Data helpers ─────────────────────────────────────────────────────────
 
+  /* Legacy back-compat default: a saved army with no faction_id (created
+     before faction selection existed) is treated as this faction (D3). Mirrors
+     app.js DEFAULT_FACTION; the two must agree. */
+  var DEFAULT_FACTION = 'goblins';
+
   /**
-   * All units eligible for NEW selection from goblins.json — retired units
-   * excluded. Used ONLY by the picker.
+   * The factions available to build from, straight from the army manifest
+   * (armies/kow/index.json → WBC.armyIndex.armies). Each is { id, name, file }.
+   * Empty array if the manifest never loaded (Fail Gracefully — Muster shows a
+   * "no factions available" state rather than throwing).
+   * @returns {Array<{id:string,name:string,file:string}>}
+   */
+  function _factions() {
+    var idx = window.WBC && window.WBC.armyIndex;
+    return (idx && Array.isArray(idx.armies)) ? idx.armies : [];
+  }
+
+  /**
+   * If the manifest exposes exactly one faction, return its id (D5 shortcut:
+   * auto-select it, skip the picker). Otherwise null (force an explicit pick,
+   * or there are no factions at all).
+   * @returns {string|null}
+   */
+  function _soleFactionId() {
+    var f = _factions();
+    return f.length === 1 ? f[0].id : null;
+  }
+
+  /**
+   * Human-readable faction name for a manifest id, for the fixed label shown
+   * on the edit path and the single-faction new-army path. Falls back to the
+   * raw id if the manifest has no matching entry.
+   * @param {string} factionId
+   * @returns {string}
+   */
+  function _factionName(factionId) {
+    var f = _factions();
+    for (var i = 0; i < f.length; i++) {
+      if (f[i].id === factionId) return f[i].name || f[i].id;
+    }
+    return factionId || '';
+  }
+
+  /**
+   * A fresh empty draft for a NEW army. faction_id starts as the sole faction
+   * when the manifest exposes exactly one (D5 zero-friction shortcut), else
+   * null to force an explicit pick.
+   * @returns {Object}
+   */
+  function _newDraft() {
+    return {
+      army_id:    null,
+      army_name:  '',
+      faction_id: _soleFactionId(),
+      entries:    [],
+      pts_limit:  2000,
+    };
+  }
+
+  /**
+   * All units eligible for NEW selection for a given faction — retired units
+   * excluded. Used ONLY by the picker. Reads the faction's data via the
+   * app-level defaulting lookup. When no faction is chosen yet (new army,
+   * pre-pick) this returns [] so the picker stays empty until the user picks
+   * a faction (D5) — that guard is here, NOT in getFactionData (which always
+   * defaults a missing id so SAVED armies still resolve).
+   * @param {string} factionId
    * @returns {Array}
    */
-  function _availableUnits() {
-    var armyData = window.WBC && window.WBC.armyData;
+  function _availableUnits(factionId) {
+    if (!factionId) return [];
+    var armyData = window.WBC && window.WBC.getFactionData(factionId);
     if (!armyData || !Array.isArray(armyData.units)) return [];
     return armyData.units.filter(function (u) { return !u.retired; });
   }
 
   /**
-   * Look up a unit object by unit_id from WBC.armyData — searches ALL units,
-   * including retired ones. Used everywhere an already-selected entry (in
-   * the draft, or in a previously-saved army) needs to resolve: unit_id
-   * immutability means a retired unit must still resolve correctly for
-   * armies that reference it; retirement only hides it from the picker.
+   * Look up a unit object by unit_id within a specific faction's data —
+   * searches ALL units, including retired ones. Used everywhere an
+   * already-selected entry (in the draft, or in a previously-saved army) needs
+   * to resolve: unit_id immutability means a retired unit must still resolve
+   * correctly for armies that reference it; retirement only hides it from the
+   * picker.
+   *
+   * factionId defaults to the current draft's faction when omitted, so the many
+   * draft-context callers stay unchanged; saved-army-context callers (pricing
+   * the roster list) pass the army's own faction_id explicitly.
    *
    * Returns null only for a genuinely unknown/malformed unit_id.
    *
    * @param {string} unitId
+   * @param {string} [factionId] — defaults to _draft.faction_id
    * @returns {Object|null}
    */
-  function _resolveUnit(unitId) {
-    var armyData = window.WBC && window.WBC.armyData;
+  function _resolveUnit(unitId, factionId) {
+    if (factionId === undefined) factionId = _draft.faction_id;
+    var armyData = window.WBC && window.WBC.getFactionData(factionId);
     if (!armyData || !Array.isArray(armyData.units)) return null;
     for (var i = 0; i < armyData.units.length; i++) {
       if (armyData.units[i].unit_id === unitId) return armyData.units[i];
@@ -208,8 +286,8 @@ var WBCMuster = (function () {
    * @param {{unit_id: string, options: string[], artefact: string|null}} entry
    * @returns {number}
    */
-  function _entryPts(entry) {
-    var u = _resolveUnit(entry.unit_id);
+  function _entryPts(entry, factionId) {
+    var u = _resolveUnit(entry.unit_id, factionId);
     if (!u) return 0;
     var artefact = _resolveArtefact(entry.artefact);
     return WBCResolver.resolve(u, entry.options, artefact).pts;
@@ -227,13 +305,17 @@ var WBCMuster = (function () {
 
   /**
    * Sum effective points for a normalised entries array belonging to a
-   * SAVED army (not the live draft) — used by the army list cards.
+   * SAVED army (not the live draft) — used by the army list cards. Resolves
+   * against the army's OWN faction (a missing faction_id defaults to the
+   * legacy faction inside getFactionData), so the roster list prices armies of
+   * different factions correctly side by side.
    * @param {Array<{unit_id:string, options:string[]}>} entries
+   * @param {string} factionId — the saved army's faction_id
    * @returns {number}
    */
-  function _savedArmyPts(entries) {
+  function _savedArmyPts(entries, factionId) {
     return entries.reduce(function (sum, entry) {
-      return sum + _entryPts(entry);
+      return sum + _entryPts(entry, factionId);
     }, 0);
   }
 
@@ -267,7 +349,7 @@ var WBCMuster = (function () {
     var newBtn = _el('muster-new-btn');
     if (newBtn) {
       newBtn.addEventListener('click', function () {
-        _draft = { army_id: null, army_name: '', entries: [], pts_limit: 2000 };
+        _draft = _newDraft();
         _expandedIndices = new Set();
         _renderBuilder();
       });
@@ -306,7 +388,7 @@ var WBCMuster = (function () {
 
     armies.forEach(function (army) {
       var entries = WBCResolver.normalizeArmyUnits(army.units);
-      var pts = _savedArmyPts(entries);
+      var pts = _savedArmyPts(entries, army.faction_id);
 
       html += [
         '<div class="muster-army-card" data-army-id="' + _escapeHtml(army.army_id) + '">',
@@ -321,6 +403,7 @@ var WBCMuster = (function () {
         '    <button class="muster-card-btn muster-card-btn--edit"',
         '            data-army-id="' + _escapeHtml(army.army_id) + '"',
         '            data-army-name="' + _escapeHtml(army.army_name || '') + '"',
+        '            data-faction-id="' + _escapeHtml(army.faction_id || DEFAULT_FACTION) + '"',
         '            data-entries="' + _escapeHtml(JSON.stringify(entries)) + '"',
         '            aria-label="Edit ' + _escapeHtml(army.army_name || 'army') + '">',
         '      Edit',
@@ -344,10 +427,11 @@ var WBCMuster = (function () {
         var entries;
         try { entries = JSON.parse(this.getAttribute('data-entries')); } catch (e) { entries = []; }
         _draft = {
-          army_id:   this.getAttribute('data-army-id'),
-          army_name: this.getAttribute('data-army-name'),
-          entries:   entries,
-          pts_limit: 2000,
+          army_id:    this.getAttribute('data-army-id'),
+          army_name:  this.getAttribute('data-army-name'),
+          faction_id: this.getAttribute('data-faction-id') || DEFAULT_FACTION,
+          entries:    entries,
+          pts_limit:  2000,
         };
         _expandedIndices = new Set();
         _renderBuilder();
@@ -390,9 +474,13 @@ var WBCMuster = (function () {
     var page = _el('page-muster');
     if (!page) return;
 
-    var isNew     = !_draft.army_id;
-    var total     = _draftTotal();
-    var overLimit = total > _draft.pts_limit;
+    var isNew        = !_draft.army_id;
+    var total        = _draftTotal();
+    var overLimit    = total > _draft.pts_limit;
+    /* A name is always required; a faction is required too (D5 — no silent
+       default on a new army). Editing always carries a faction, so this only
+       actually gates the new-army flow before a faction is picked. */
+    var saveDisabled = _draft.army_name.trim() === '' || !_draft.faction_id;
 
     /* #page-muster is a non-scrolling flex column (see style.css); this
        inner wrapper does the actual scrolling. .muster-builder-actions
@@ -415,6 +503,11 @@ var WBCMuster = (function () {
       '         placeholder="e.g. Green Tide" maxlength="60"',
       '         value="' + _escapeHtml(_draft.army_name) + '" />',
       '</div>',
+
+      /* Faction: a picker on a new army (unless the system has only one
+         faction), a fixed read-only label when editing (D4) or single-faction
+         (D5). */
+      _renderFactionField(isNew),
 
       /* Points summary */
       '<div id="muster-pts-bar" class="muster-pts-bar' + (overLimit ? ' muster-pts-bar--over' : '') + '">',
@@ -444,7 +537,7 @@ var WBCMuster = (function () {
          live inside it so feedback stays visible alongside the button. */
       '<div class="muster-builder-actions">',
       '  <button id="muster-save-btn" class="muster-primary-btn"',
-      '          ' + (_draft.army_name.trim() === '' ? 'disabled' : '') + '>',
+      '          ' + (saveDisabled ? 'disabled' : '') + '>',
       '    Save Army',
       '  </button>',
       '  <div id="muster-save-status"  class="muster-status"   style="display:none;">Saving…</div>',
@@ -453,6 +546,60 @@ var WBCMuster = (function () {
     ].join('');
 
     _bindBuilderEvents();
+  }
+
+  /**
+   * The faction field for the builder. A <select> only when creating a NEW
+   * army in a system that has more than one faction; otherwise a fixed,
+   * read-only label — because editing locks the faction (D4) and a
+   * single-faction system has nothing to choose (D5).
+   * @param {boolean} isNew
+   * @returns {string}
+   */
+  function _renderFactionField(isNew) {
+    var factions = _factions();
+    var editable = isNew && factions.length > 1;
+
+    if (!editable) {
+      var labelText;
+      if (_draft.faction_id) {
+        labelText = _escapeHtml(_factionName(_draft.faction_id));
+      } else if (factions.length === 0) {
+        labelText = 'No factions available';
+      } else {
+        labelText = '—';
+      }
+      /* Reuse setup-input styling; disabled so it reads as a fixed value with
+         no new CSS. The value isn't read back from the DOM — faction_id lives
+         on _draft — so disabled (non-submitting) is fine. */
+      return [
+        '<div class="muster-field">',
+        '  <label class="setup-label">Faction</label>',
+        '  <input id="muster-faction-label" class="setup-input" type="text"',
+        '         value="' + _escapeHtml(labelText) + '" disabled />',
+        '</div>',
+      ].join('');
+    }
+
+    var opts = [
+      '<option value=""' + (_draft.faction_id ? '' : ' selected') + ' disabled>— choose a faction —</option>',
+    ];
+    factions.forEach(function (f) {
+      opts.push(
+        '<option value="' + _escapeHtml(f.id) + '"' +
+        (f.id === _draft.faction_id ? ' selected' : '') + '>' +
+        _escapeHtml(f.name || f.id) + '</option>'
+      );
+    });
+
+    return [
+      '<div class="muster-field">',
+      '  <label class="setup-label" for="muster-faction-select">Faction</label>',
+      '  <select id="muster-faction-select" class="setup-input">',
+      '    ' + opts.join(''),
+      '  </select>',
+      '</div>',
+    ].join('');
   }
 
   function _renderSelectedList() {
@@ -613,8 +760,14 @@ var WBCMuster = (function () {
   }
 
   function _renderPickerRows() {
-    var units = _availableUnits();
-    if (units.length === 0) return '<p class="setup-hint">No units available.</p>';
+    /* No faction chosen yet (new army, pre-pick): the picker is intentionally
+       empty with a prompt, rather than defaulting to any faction's units. */
+    if (!_draft.faction_id) {
+      return '<p class="setup-hint">Choose a faction above to add units.</p>';
+    }
+
+    var units = _availableUnits(_draft.faction_id);
+    if (units.length === 0) return '<p class="setup-hint">No units available for this faction.</p>';
 
     /* Group by category, fixed rulebook order; unknown/missing category
        falls through to a trailing "Other" group (defensive — every audited
@@ -704,8 +857,34 @@ var WBCMuster = (function () {
     if (nameInput) {
       nameInput.addEventListener('input', function () {
         _draft.army_name = this.value;
-        var saveBtn = _el('muster-save-btn');
-        if (saveBtn) saveBtn.disabled = this.value.trim() === '';
+        _refreshSaveDisabled();
+      });
+    }
+
+    /* Faction select — present only in the new-army flow of a multi-faction
+       system. Changing faction after units are added discards them (their
+       unit_ids only resolve within their own faction), after a confirm. */
+    var factionSelect = _el('muster-faction-select');
+    if (factionSelect) {
+      factionSelect.addEventListener('change', function () {
+        var newFaction = this.value;
+        if (!newFaction || newFaction === _draft.faction_id) return;
+
+        if (_draft.entries.length > 0) {
+          var ok = window.confirm(
+            'Changing faction will remove the units you have added, ' +
+            'because they belong to the other faction. Continue?'
+          );
+          if (!ok) {
+            this.value = _draft.faction_id || '';
+            return;
+          }
+          _draft.entries = [];
+          _expandedIndices = new Set();
+        }
+
+        _draft.faction_id = newFaction;
+        _renderBuilder();   /* repopulates the picker and refreshes Save state */
       });
     }
 
@@ -891,6 +1070,18 @@ var WBCMuster = (function () {
     }
   }
 
+  /**
+   * Enable/disable Save based on the two requirements: a non-empty name and a
+   * chosen faction. Shared by the name input and faction select handlers so
+   * both gates stay in sync without a full re-render.
+   */
+  function _refreshSaveDisabled() {
+    var saveBtn = _el('muster-save-btn');
+    if (saveBtn) {
+      saveBtn.disabled = _draft.army_name.trim() === '' || !_draft.faction_id;
+    }
+  }
+
   // ─── Save ──────────────────────────────────────────────────────────────────
 
   function _saveArmy() {
@@ -900,6 +1091,12 @@ var WBCMuster = (function () {
     if (!name) {
       var errEl = _el('muster-save-error');
       if (errEl) { errEl.textContent = 'Please give your army a name.'; errEl.style.display = 'block'; }
+      return;
+    }
+
+    if (!_draft.faction_id) {
+      var errElF = _el('muster-save-error');
+      if (errElF) { errElF.textContent = 'Please choose a faction for this army.'; errElF.style.display = 'block'; }
       return;
     }
 
@@ -922,10 +1119,16 @@ var WBCMuster = (function () {
       return { unit_id: entry.unit_id, options: entry.options.slice(), artefact: entry.artefact || null };
     });
 
+    /* game_system comes from the chosen faction's own data (its game_system
+       field), not a global — so it is always correct for the faction being
+       saved. faction_id is written on every save (D3 writer half): existing
+       Goblin armies gain faction_id:"goblins" the next time they're saved. */
+    var factionData = window.WBC && window.WBC.getFactionData(_draft.faction_id);
     var record = {
       army_id:     armyId,
       army_name:   name,
-      game_system: (window.WBC && window.WBC.armyData && window.WBC.armyData.game_system) || 'kow',
+      faction_id:  _draft.faction_id,
+      game_system: (factionData && factionData.game_system) || 'kow',
       units:       JSON.stringify(unitsPayload),
       created_at:  _draft.army_id ? undefined : now,  // only set on create
       updated_at:  now,
@@ -953,7 +1156,7 @@ var WBCMuster = (function () {
         if (!existing) cached.push(Object.assign({}, record, { army_id: armyId }));
         WBCStorage.saveArmiesCache(cached);
 
-        _draft = { army_id: null, army_name: '', entries: [], pts_limit: 2000 };
+        _draft = _newDraft();
         _expandedIndices = new Set();
         _renderList();
       } else {
