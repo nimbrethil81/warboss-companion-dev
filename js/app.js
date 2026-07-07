@@ -40,6 +40,10 @@
   var DEFAULT_SKIN    = 'gf';
   var DEFAULT_MODE    = 'muster';
   var DEFAULT_SYSTEM  = 'kow';
+  /* Legacy back-compat default (D3): armies saved before faction_id existed,
+     or referencing a faction that failed to load, resolve against this faction.
+     It is also the target of the WBC.armyData transition alias. */
+  var DEFAULT_FACTION = 'goblins';
 
   /* ─── Public namespace ─────────────────────────────────────────────────── */
   /*
@@ -53,7 +57,17 @@
     config       : null,   // parsed kow.json — alias: systemConfig (both kept in sync)
     systemConfig : null,   // same object — battle.js and chronicle.js read this name
     armyIndex    : null,   // parsed armies/kow/index.json
-    armyData     : null,   // parsed goblins.json (the active army file)
+    factionData  : {},     // { factionId: parsedArmyFile } — EVERY faction listed
+                           // in the army manifest, loaded at boot (D1/D2). This is
+                           // the keyed source of truth for unit resolution: Muster
+                           // and Battle look units up via WBC.getFactionData(id),
+                           // so armies of different factions can coexist in one view
+                           // (the Battle army dropdown, the Muster saved-army list).
+    armyData     : null,   // BACK-COMPAT ALIAS → factionData[DEFAULT_FACTION].
+                           // Kept during the faction-selection transition so any
+                           // un-migrated call site still resolves against the default
+                           // faction. New code must read WBC.getFactionData(factionId),
+                           // never this field. Safe to delete once no reader remains.
     artefactData : null,   // parsed kow-artefacts.json (catalogue) — may stay null;
                             // absence degrades Muster/Battle to no-artefact display only
                             // (Fail Gracefully — never blocks boot or the core modes)
@@ -66,10 +80,11 @@
     onModeReady  : null,   // optional callback hook
 
     /* Public methods */
-    switchTab    : switchTab,
-    openModal    : openModal,
-    closeModal   : closeModal,
-    setSkinAxis  : setSkinAxis,
+    switchTab      : switchTab,
+    openModal      : openModal,
+    closeModal     : closeModal,
+    setSkinAxis    : setSkinAxis,
+    getFactionData : getFactionData,
   };
 
   /* ─── Internal state ───────────────────────────────────────────────────── */
@@ -390,17 +405,15 @@
         }
         WBC.armyIndex = index;
         WBCStorage.set(STORAGE_KEY_ARMY_INDEX, JSON.stringify(index));
-        /* Load the first army data file automatically (MVP: single army) */
-        if (index.armies.length > 0) {
-          var firstArmy = index.armies[0];
-          return _fetchJSON(ARMY_INDEX_BASE + systemId + '/' + firstArmy.file)
-            .then(function (armyData) {
-              WBC.armyData = armyData;
-            })
-            .catch(function (err) {
-              console.warn('WBC: army data fetch failed:', err);
-            });
-        }
+        /* Load EVERY faction file in the manifest into WBC.factionData, keyed
+           by manifest id (D1/D2 — load-all-at-boot into a keyed cache). Each
+           faction loads independently: one failing leaves only its key absent
+           (and surfaces a notice) while the others still work, matching the
+           isolation posture of the artefact/enum optional loads. Offline
+           availability comes from the service-worker precache (SHELL_FILES). */
+        return Promise.all(index.armies.map(function (armyMeta) {
+          return _loadOneFaction(systemId, armyMeta);
+        })).then(_syncArmyDataAlias);
       })
       .catch(function (err) {
         console.warn('WBC: army index fetch failed, attempting cache:', err);
@@ -413,6 +426,75 @@
           console.error('WBC: army index cache fallback failed:', cacheErr);
         }
       });
+  }
+
+  /**
+   * _loadOneFaction(systemId, armyMeta)
+   * Fetch a single faction's unit file into WBC.factionData[armyMeta.id].
+   * Isolated failure (Fail Gracefully): a fetch/parse failure leaves that
+   * faction's key absent and surfaces a data notice, but never rejects the
+   * outer Promise.all — every other faction and the rest of the app carry on.
+   * Offline availability is provided by the service-worker precache, not
+   * localStorage (same as goblins.json has always been).
+   *
+   * @param {string} systemId
+   * @param {{id:string, name:string, file:string}} armyMeta
+   * @returns {Promise<void>}
+   */
+  function _loadOneFaction(systemId, armyMeta) {
+    if (!armyMeta || !armyMeta.id || !armyMeta.file) {
+      console.warn('WBC: malformed army manifest entry, skipping:', armyMeta);
+      return Promise.resolve();
+    }
+    return _fetchJSON(ARMY_INDEX_BASE + systemId + '/' + armyMeta.file)
+      .then(function (armyData) {
+        if (!armyData || !Array.isArray(armyData.units)) {
+          throw new Error('Faction data malformed for: ' + armyMeta.id);
+        }
+        WBC.factionData[armyMeta.id] = armyData;
+      })
+      .catch(function (err) {
+        console.warn('WBC: faction data fetch failed for "' + armyMeta.id + '":', err);
+        _showDataNotice(
+          'Faction data for "' + (armyMeta.name || armyMeta.id) + '" could not be ' +
+          'loaded. Armies of that faction may be unavailable until you reconnect.'
+        );
+      });
+  }
+
+  /**
+   * _syncArmyDataAlias()
+   * Repoint the legacy WBC.armyData alias at the default faction's data, for
+   * any call site not yet migrated to WBC.getFactionData() (decision: retain
+   * alias during transition). Delete this, its call, and the WBC.armyData field
+   * once no reader of WBC.armyData remains.
+   */
+  function _syncArmyDataAlias() {
+    WBC.armyData = WBC.factionData[DEFAULT_FACTION] || null;
+  }
+
+  /**
+   * getFactionData(factionId)
+   * The single defaulting lookup every consumer uses to resolve unit data.
+   * Returns the parsed army file for factionId; when factionId is missing or
+   * unknown, falls back to the default faction's data (D3 legacy default —
+   * armies saved before faction_id existed, or referencing a faction that
+   * failed to load, still resolve). Returns null only if even the default
+   * faction failed to load.
+   *
+   * Note: this deliberately defaults a missing id to the default faction so
+   * SAVED armies always resolve. Callers that must distinguish "no faction
+   * chosen yet" (e.g. the Muster new-army picker, which should be empty until
+   * a faction is picked) guard on the id themselves before calling this.
+   *
+   * @param {string} factionId
+   * @returns {Object|null}
+   */
+  function getFactionData(factionId) {
+    if (factionId && WBC.factionData[factionId]) {
+      return WBC.factionData[factionId];
+    }
+    return WBC.factionData[DEFAULT_FACTION] || null;
   }
 
   /* ─── Artefact catalogue loading ────────────────────────────────────────── */
@@ -507,34 +589,42 @@
 
   /**
    * _validateArmyEnums()
-   * Runs once both WBC.armyData and WBC.enumData have resolved, in whichever
-   * order (see the Promise.all() call sites above). Calls the pure
-   * WBCResolver.validateUnitEnums() guard, which throws fail-loud by design
-   * (a located, detailed Error listing every bad type/size).
+   * Runs once every faction in WBC.factionData and WBC.enumData have resolved,
+   * in whichever order (see the Promise.all() call sites above). Validates
+   * EACH loaded faction's units against the canonical enum vocabulary via the
+   * pure WBCResolver.validateUnitEnums() guard, which throws fail-loud by
+   * design (a located, detailed Error listing every bad type/size). With
+   * load-all-at-boot (D2) this re-checks all faction data on every boot, so
+   * drift in any faction file is caught, not just the default one.
    *
    * This call site is where that fail-loud validator gets reconciled with
-   * the app's Fail Gracefully posture: catch the throw, log the full located
-   * detail to console.error for debugging, and surface a short, actionable
-   * one-line summary (first offending unit_id + field) via the existing
-   * on-screen data notice — but never block boot or null out armyData.
-   * An enum violation is a data-authoring bug (yours), not a reason to brick
-   * Battle/Chronicle mid-session.
+   * the app's Fail Gracefully posture: catch the throw per faction, log the
+   * full located detail to console.error for debugging, and surface a short,
+   * actionable one-line summary (faction + first offending unit_id + field)
+   * via the existing on-screen data notice — but never block boot or null out
+   * any faction. An enum violation is a data-authoring bug (yours), not a
+   * reason to brick Battle/Chronicle mid-session.
    *
    * If enumData never loaded, the guard is skipped — already warned about
    * in _loadEnumData().
    */
   function _validateArmyEnums() {
-    if (!WBC.armyData || !Array.isArray(WBC.armyData.units) || !WBC.enumData) return;
+    if (!WBC.enumData) return;
 
-    try {
-      WBCResolver.validateUnitEnums(WBC.armyData.units, WBC.enumData);
-    } catch (err) {
-      console.error('WBC: unit enum validation failed —', err.message);
-      var firstIssue = (err.message.split('\n')[1] || err.message)
-        .replace(/^\s*-\s*/, '')
-        .trim();
-      _showDataNotice('Data issue: ' + firstIssue + ' — see console for full detail.');
-    }
+    Object.keys(WBC.factionData).forEach(function (factionId) {
+      var data = WBC.factionData[factionId];
+      if (!data || !Array.isArray(data.units)) return;
+
+      try {
+        WBCResolver.validateUnitEnums(data.units, WBC.enumData);
+      } catch (err) {
+        console.error('WBC: unit enum validation failed for faction "' + factionId + '" —', err.message);
+        var firstIssue = (err.message.split('\n')[1] || err.message)
+          .replace(/^\s*-\s*/, '')
+          .trim();
+        _showDataNotice('Data issue in "' + factionId + '": ' + firstIssue + ' — see console for full detail.');
+      }
+    });
   }
 
   /* ─── Data notice ───────────────────────────────────────────────────────── */
