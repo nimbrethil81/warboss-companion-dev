@@ -4,6 +4,55 @@ All notable changes to Warboss Companion are documented here.
 Format is based on [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
+- Faction selection in Muster — the player now chooses a faction when creating
+  an army, and Muster/Battle resolve each army against its own faction. Closes
+  the "no faction picker" gap flagged in the Elves entry below (Elves data is
+  now reachable in the UI, not just shipped) and completes the deferred
+  service-worker deploy step. Built in three staged passes (faction-data model +
+  schema → Muster picker → Battle resolve + offline), verified against existing
+  Goblin armies at each stage boundary
+  - `app.js`: replaced the single `WBC.armyData` global (which auto-loaded
+    `armyIndex.armies[0]`) with `WBC.factionData`, a cache keyed by faction id.
+    Every faction in the manifest is loaded at boot (`_loadOneFaction`), each
+    isolated so one failing surfaces a notice without blocking the others.
+    Added `WBC.getFactionData(id)` — the single defaulting lookup (missing or
+    unknown id → legacy `goblins`, so pre-faction armies still resolve).
+    `_validateArmyEnums` now validates every loaded faction, not just the
+    default. `WBC.armyData` retained as a **temporary** back-compat alias
+    (`_syncArmyDataAlias`, pointing at the default faction) — marked for removal
+    (SPEC §7)
+  - `muster.js`: the new-army flow gains a faction picker (a dropdown built from
+    the army manifest; auto-selected and shown as a fixed label when only one
+    faction exists). No silent default — Save stays disabled until a faction is
+    chosen. The unit picker is scoped to the chosen faction (empty, with a
+    "choose a faction first" hint, until one is picked); changing faction after
+    units are added confirms and clears them. Editing a saved army shows its
+    faction as a read-only label (fixed at creation). `_resolveUnit`,
+    `_entryPts`, and `_savedArmyPts` thread a faction id (defaulting to the
+    draft's); the save payload writes `faction_id` and takes `game_system` from
+    the chosen faction's own data
+  - `battle.js`: `_findUnitInArmyData(unitId, factionId)` now resolves via
+    `getFactionData`. The army-select dropdown prices each saved army against
+    its own faction, and the game-start roster resolves the chosen army against
+    its `faction_id`. `resolver.js` unchanged — it already takes the unit object
+    as input, so only the *source* of that object changed
+  - `sheets.js`: no behaviour change (records pass through the proxy
+    transparently); the `saveArmy` doc shape now documents `faction_id`
+  - `Code.gs` (Apps Script backend): added `faction_id` to `COLUMNS.armies` as
+    the rightmost column. Writes place values by position, so this must match
+    the physical column order in the sheet — noted in the file header and
+    SPEC §4
+  - `service-worker.js`: added `data/armies/kow/elves.json` to the precache and
+    bumped the cache version `wbc-v25` → `wbc-v26`, completing the deploy step
+    deferred in the Elves entry
+  - Google Sheet (manual, outside the code change): `faction_id` column added to
+    the `armies` tab and backfilled to `goblins` for existing rows
+  - SPEC.md updated: faction data model + `WBC.armyData` alias under
+    Architecture; load-all-at-boot and per-faction validation in Data Flow;
+    `faction_id` in the `armies` schema (with the column-order caveat);
+    faction-scoped resolution notes; a Faction selection subsection in Muster
+    (§5.1) and a Battle (§5.2) note; roadmap entries for the shipped feature and
+    the `WBC.armyData` alias-removal cleanup
 - Elves army reference — the first faction authored on the hardened type/size
   template (see G1 below). Transcribed faithfully from the KoW 4E rulebook
   army-list section, staged (base stats → options/availability → assembled
