@@ -30,7 +30,7 @@
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 
-const CACHE_VERSION  = 'wbc-v25';
+const CACHE_VERSION  = 'wbc-v26';
 const CACHE_SHELL    = CACHE_VERSION + '-shell';   // app shell + data
 const CACHE_FONTS    = CACHE_VERSION + '-fonts';   // Google Fonts responses
 
@@ -59,6 +59,7 @@ const SHELL_FILES = [
   './data/systems/kow-artefacts.json',
   './data/armies/kow/index.json',
   './data/armies/kow/goblins.json',
+  './data/armies/kow/elves.json',
   './assets/icons/icon-192.png',
   './assets/icons/icon-512.png',
   './assets/icons/apple-touch-icon.png',
