@@ -813,6 +813,286 @@
       "answer": 1,
       "explanation": "A unit that Withdraws! must drop any Loot Counter it's carrying at the start of that order -- you can't retreat and keep the loot in the same move.",
       "source": "FAQ v1.0, Errata -- Loot Counters"
+    },
+    {
+      "id": "q_movement_007",
+      "category": "movement",
+      "question": "Your Goblin regiment has Speed 6 and is given a Back! order. How far can it move, and can it turn at all?",
+      "options": [
+        "Up to 6\" straight back (its full Speed), no pivot allowed",
+        "2D6\" straight back, like a Withdraw!",
+        "Up to 3\" straight back (half its Speed), plus one pivot of up to 90°",
+        "Up to 3\" straight back, but it may not pivot at all"
+      ],
+      "answer": 2,
+      "explanation": "A Back! order moves the unit straight backwards up to half its Speed (3\" for Speed 6), and it may also make one pivot of up to 90° at any point in that move. Full Speed is the Advance! distance, and 2D6\" back is the Withdraw! move — both common mix-ups.",
+      "source": "Rulebook, The Movement Phase — Back!"
+    },
+    {
+      "id": "q_movement_008",
+      "category": "movement",
+      "question": "Your unit passes its Nerve test and successfully Withdraws! Its 2D6\" move takes it back through a friendly unit. When does passing through that friend leave your unit Wavering?",
+      "options": [
+        "Whenever it passes through a friendly unit at all",
+        "Only if the distance rolled was too short to clear the friend, so the move had to be extended",
+        "Never — friendly units are ignored completely during a Withdraw!",
+        "Only if it also crossed Difficult Terrain on the way"
+      ],
+      "answer": 1,
+      "explanation": "A withdrawing unit can move through friends freely, and is only left Wavering if the roll wasn't enough to end clear of them — so it had to keep going (extend the move) to get clear. If the rolled distance already clears the friend, there's no Wavering.",
+      "source": "FAQ v0.1 — Withdrawing Through Friendly Units"
+    },
+    {
+      "id": "q_ranged_007",
+      "category": "ranged",
+      "question": "Your opponent's archers shoot at one of your lone heroes, which has the Individual special rule. How does being an Individual affect their to-hit roll?",
+      "options": [
+        "Enemies shooting at an Individual suffer an extra -1 to hit",
+        "An Individual can never be targeted by ranged attacks",
+        "It has no effect on shooting — the penalty only applies in Combat",
+        "Enemies shooting at an Individual suffer an extra -2 to hit"
+      ],
+      "answer": 0,
+      "explanation": "Individuals are hard to pin down at range, so enemies shooting at them take an additional -1 to hit. They can still be shot at (unlike Engaged units), and the modifier is -1, not -2.",
+      "source": "Rulebook, Other Units — Individuals (Ranged)"
+    },
+    {
+      "id": "q_ranged_008",
+      "category": "ranged",
+      "question": "You have rolled your hits and are now rolling to damage a target. Which dice results are automatic, regardless of any modifiers?",
+      "options": [
+        "Nothing is automatic — every die is affected by modifiers",
+        "Only a natural 1 is special (an automatic fail); 6s are not",
+        "Only a natural 6 is special (automatic damage); 1s are not",
+        "A natural 6 always causes damage and a natural 1 always fails, regardless of modifiers"
+      ],
+      "answer": 3,
+      "explanation": "On the roll to damage, a 6 always scores damage and a 1 always fails, whatever the modifiers — the same fixed rule used for both ranged and Combat damage rolls.",
+      "source": "Rulebook, The Ranged Phase — Damaging the Target"
+    },
+    {
+      "id": "q_melee_007",
+      "category": "melee",
+      "question": "Your Goblins are Engaged with an enemy War Engine and strike it in Combat. How are their Attacks treated?",
+      "options": [
+        "As a normal front attack — no bonus",
+        "Doubled, as if hitting a flank",
+        "Trebled — attacks on a War Engine always count as hitting its rear",
+        "You choose front, flank or rear each time"
+      ],
+      "answer": 2,
+      "explanation": "Combat attacks against a War Engine always count as rear attacks no matter where the attacker actually is, so they are trebled before rolling to hit. That's a unit-type exception baked into the War Engine rules, not a positioning question.",
+      "source": "Rulebook, Other Units — War Engines (Combat)"
+    },
+    {
+      "id": "q_melee_008",
+      "category": "melee",
+      "question": "Your unit Routs every enemy it was Engaged with and you give it a Forward! post-combat order. How far does it move?",
+      "options": [
+        "D3\" forward",
+        "D6\" forward",
+        "2D6\" forward",
+        "It cannot move — it must stay put after a Combat"
+      ],
+      "answer": 1,
+      "explanation": "After Routing all its foes, a unit may take a post-combat order: Forward! moves it D6\" (Fall Back! and Sideways! move D3\", Hold! stays put and may pivot). The full rolled distance must be moved, stopping before contacting an enemy.",
+      "source": "Rulebook, The Combat Phase — Combat Outcomes (Target Routed)"
+    },
+    {
+      "id": "q_morale_010",
+      "category": "morale",
+      "question": "You test an enemy unit's Nerve in Combat and roll double 6 (We Are Doomed!), but the total still doesn't reach its Nerve value, so it passes. What happens?",
+      "options": [
+        "Nothing — it simply passes as normal",
+        "It is Routed automatically despite passing",
+        "It passes, but suffers D6 additional points of damage (which triggers no further Nerve test)",
+        "It becomes Wavering instead of passing"
+      ],
+      "answer": 2,
+      "explanation": "A We Are Doomed! (double 6) that still passes has different effects by source: from Combat (or a Withdraw! test), the unit takes D6 extra damage that does not trigger another Nerve test; from Ranged attacks it becomes Wavering instead.",
+      "source": "Rulebook, Nerve — Exceptional Morale Results (We Are Doomed!)"
+    },
+    {
+      "id": "q_morale_011",
+      "category": "morale",
+      "question": "Your unit has Iron Resolve (1). It Withdraws! from combat and passes the Withdraw! Nerve test. Does Iron Resolve do anything here?",
+      "options": [
+        "Yes — passing the Withdraw! test counts, so it regains 1 point of previously suffered damage",
+        "No — Iron Resolve only works on Nerve tests caused by enemy attacks",
+        "No — Iron Resolve only applies during the Combat Phase",
+        "Only if it rolled a double to pass"
+      ],
+      "answer": 0,
+      "explanation": "Iron Resolve (n) heals up to n points of damage (max 3) whenever the unit is Steady from a Nerve test, and a passed Withdraw! test counts — so an Iron Resolve (1) unit regains a point. It isn't limited to defensive tests or to the Combat Phase.",
+      "source": "FAQ v0.1 — Iron Resolve and the Withdraw! Test"
+    },
+    {
+      "id": "q_magic_007",
+      "category": "magic",
+      "question": "A spellcaster's profile lists a spell as 'Lightning Bolt (3)'. When it casts that spell, how many dice does it roll to hit?",
+      "options": [
+        "3 — the number shown in brackets after the spell",
+        "A number equal to the caster's Attacks stat",
+        "Just 1 die per spell",
+        "2D6 dice"
+      ],
+      "answer": 0,
+      "explanation": "For spells you roll the number of dice shown by the (n) value on the spell — so Lightning Bolt (3) rolls 3 dice. The caster's own Attacks stat is only used for its Combat or non-magical ranged attacks, like a bow.",
+      "source": "Rulebook, Magic — Spells"
+    },
+    {
+      "id": "q_magic_008",
+      "category": "magic",
+      "question": "Most spells cannot be cast at units that are Engaged in Combat. Which marking on a spell's profile lets it target a unit that is in Combat?",
+      "options": [
+        "Magical Missile",
+        "Friendly",
+        "Blast (n)",
+        "CC (Combat Casting)"
+      ],
+      "answer": 3,
+      "explanation": "Spells marked CC (Combat Casting) are the exception that may target units in Combat. Magical Missile only changes how to-hit modifiers apply, Friendly limits targets to your own side, and Blast affects how many hits are generated.",
+      "source": "Rulebook, Magic — Spells"
+    },
+    {
+      "id": "q_command_004",
+      "category": "command",
+      "question": "You issue the Elf Command Order 'Rodinar's Presence' to one of your units. What does it grant, and for how long?",
+      "options": [
+        "The unit gains Headstrong and Inspiring (Self) until the start of its next Turn",
+        "The unit permanently increases its Speed by 1",
+        "The unit may re-roll all of its failed to-hit dice this Turn",
+        "The unit becomes Fearless for the rest of the game"
+      ],
+      "answer": 0,
+      "explanation": "Rodinar's Presence grants the receiving unit the Headstrong and Inspiring (Self) special rules until the start of its next Turn — a temporary buff issued through the Command Orders subsystem, not a permanent stat change.",
+      "source": "Rulebook, Elves — Command Orders (Core and Auxiliary)"
+    },
+    {
+      "id": "q_command_005",
+      "category": "command",
+      "question": "The Elf Command Order 'Hunting Cat' can only be issued to units carrying a particular Trait. Which Trait is required?",
+      "options": [
+        "The Sylvan Trait",
+        "The Kindred Trait",
+        "Any Elf unit qualifies — there is no Trait restriction",
+        "Only units with the Spellcaster Trait"
+      ],
+      "answer": 1,
+      "explanation": "Hunting Cat may only be issued to units with the Kindred Trait; it then lets that unit make a special ranged attack (12\", Att 6) hitting on 3+ regardless of modifiers. Trait-restricted eligibility is a common feature of army Command Orders.",
+      "source": "Rulebook, Elves — Command Orders (Core and Auxiliary)"
+    },
+    {
+      "id": "q_special_rules_006",
+      "category": "special_rules",
+      "question": "Your Kindred Tallspears have the Phalanx special rule. Which enemies are Hindered when they Charge the Tallspears' front?",
+      "options": [
+        "All Infantry units",
+        "Every enemy that charges the front",
+        "Only enemy War Engines",
+        "Cavalry, Large Cavalry, and units with the Fly special rule"
+      ],
+      "answer": 3,
+      "explanation": "Phalanx Hinders (-1 to hit in the ensuing Combat) Cavalry, Large Cavalry, and Fly units that Charge the unit's front — it doesn't blunt charging Infantry or War Engines. It's why spear blocks like Tallspears punish enemy horse.",
+      "source": "Rulebook, Special Rules — Phalanx"
+    },
+    {
+      "id": "q_special_rules_007",
+      "category": "special_rules",
+      "question": "A unit with Crushing Strength (1) rolls to damage in Combat. How does the rule change those rolls?",
+      "options": [
+        "It adds +1 to the unit's to-hit roll instead",
+        "It grants the unit one extra Attack",
+        "Each of its damage rolls gets +1 (so a rolled 4 counts as a 5)",
+        "It ignores the target's Defence value entirely"
+      ],
+      "answer": 2,
+      "explanation": "Crushing Strength (n) adds n to each roll to damage in Combat — with Crushing Strength (1), a rolled 4 becomes a 5. It doesn't help you hit, add Attacks, or bypass Defence; it just makes each hit more likely to wound.",
+      "source": "Rulebook, Special Rules — Crushing Strength (n)"
+    },
+    {
+      "id": "q_unit_stats_004",
+      "category": "unit_stats",
+      "question": "On a 4th-edition profile a unit's Nerve is shown as a single value (e.g. 15+), not two numbers. What does that single value tell you?",
+      "options": [
+        "The first number is the Waver score and the second is the Rout score",
+        "How much damage the unit can take before it is automatically destroyed",
+        "The score the unit itself rolls each Turn to hold its ground",
+        "The break threshold: if a Nerve-test total (2D6 + current damage + modifiers) reaches or exceeds it, the unit breaks"
+      ],
+      "answer": 3,
+      "explanation": "Nerve is now a single break threshold: reach or exceed it on the test and the unit fails. Whether that failure is a Waver or a Rout depends on what caused the damage (ranged vs combat), not on a second number — the old two-value '13/15' style is 3rd-edition legacy.",
+      "source": "Rulebook, Units — Stats (Nerve)"
+    },
+    {
+      "id": "q_unit_stats_006",
+      "category": "unit_stats",
+      "question": "How does a Troop compare in size to the same unit fielded as a Regiment?",
+      "options": [
+        "Same depth, but half the width",
+        "Same width, but half the depth (and so half the base size)",
+        "Same width, but double the depth",
+        "Identical footprint — only the stats differ"
+      ],
+      "answer": 1,
+      "explanation": "A Troop keeps the Regiment's width but has half its depth, giving it half the base size. A Horde, by contrast, is twice the Regiment's width at the same depth.",
+      "source": "Rulebook, Units — Troops and Hordes"
+    },
+    {
+      "id": "q_terrain_006",
+      "category": "terrain",
+      "question": "By the terrain guidelines, how big can a low wall or hedge be and still count as an Obstacle rather than Blocking Terrain?",
+      "options": [
+        "Up to 2\" high, with any thickness",
+        "Any size, as long as a model could see over it",
+        "No more than 1\" thick and 1\" high — anything larger is Blocking Terrain",
+        "Up to 3\" thick but no taller than 1\""
+      ],
+      "answer": 2,
+      "explanation": "Obstacles are long, narrow pieces no more than 1\" thick and 1\" high; anything thicker or taller is treated as Blocking Terrain instead. As always, agree each piece with your opponent before the game.",
+      "source": "Rulebook, Terrain — Terrain Types (Obstacles)"
+    },
+    {
+      "id": "q_terrain_007",
+      "category": "terrain",
+      "question": "Your Height (2) unit is standing on a Height (3) hill. For Line of Sight, what is its effective Height while up there?",
+      "options": [
+        "Still Height (2) — hills don't change a unit's own Height",
+        "Height (3) — it uses the hill's Height instead of its own",
+        "Height (3) — its own Height plus 1",
+        "Height (5) — its own Height plus the hill's Height"
+      ],
+      "answer": 3,
+      "explanation": "A unit standing on a hill adds the hill's Height to its own, so a Height (2) unit on a Height (3) hill counts as Height (5) for drawing and blocking Line of Sight. A unit counts as 'on' the hill only when its centre-point is on the hill's footprint.",
+      "source": "Rulebook, Terrain and Line of Sight — Hills"
+    },
+    {
+      "id": "q_scenario_007",
+      "category": "scenario",
+      "question": "In a scenario that uses Loot Counters, can one of your lone heroes with the Individual special rule pick up and carry a Loot Counter?",
+      "options": [
+        "Yes, exactly like any other unit",
+        "Yes, but its Speed is then capped at 5",
+        "Only if the hero is your Warlord",
+        "No — units with the Individual special rule cannot pick up or carry Loot Counters"
+      ],
+      "answer": 3,
+      "explanation": "The errata specifies that units with the Individual special rule cannot pick up or carry Loot Counters at all — so lone heroes can't be your loot-runners, regardless of their Speed or role.",
+      "source": "FAQ v0.1 — Errata (Loot Counters and Individuals)"
+    },
+    {
+      "id": "q_scenario_008",
+      "category": "scenario",
+      "question": "You're playing a scenario with objective tokens. When do you normally check which player controls them?",
+      "options": [
+        "At the end of every Round",
+        "At the end of the game, unless a scenario specifically says otherwise",
+        "Continuously, the moment control changes",
+        "Only if the game reaches Round 7"
+      ],
+      "answer": 1,
+      "explanation": "The general rule is that objective-token control is checked at the end of the game; if a particular scenario says to check at another point, you follow the scenario instead.",
+      "source": "FAQ v0.1 — Objective Tokens"
     }
   ]
 }
