@@ -138,6 +138,14 @@ Format is based on [Keep a Changelog](https://keepachangelog.com/).
     is a pure content addition
   - Service worker cache bump handled manually (outside this change)
 
+## [0.3.6] - 2026-07-09
+### Added
+- Training Ground: expanded question bank from 55 to 75 questions (+20), 2 new questions per category across all 10 categories.
+- Added 3 Elves-specific questions (Rodinar's Presence, Hunting Cat, Kindred Tallspears' Phalanx) alongside 17 generic/Goblin-compatible questions.
+
+### Changed
+- Service worker cache bumped to `wbc-v27` to serve the updated `kow-training.json` to existing installs.
+
 ## [0.3.5] - 2026-07-04
 ### Fixed
 - Settings and Training Ground buttons could render above the page title — level with the iOS status bar icons — when Warboss Companion was installed as a standalone PWA via "Add to Home Screen". Caused by `#gear-btn` and `#training-btn` using a fixed `top: 14px` while the page title correctly accounted for `env(safe-area-inset-top)`. Both buttons now use `calc(env(safe-area-inset-top, 0px) + 14px)`, matching the title's inset handling. No visual change in Safari or desktop browsers (inset is `0px` there).
